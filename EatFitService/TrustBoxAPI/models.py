@@ -8,7 +8,19 @@
 from __future__ import unicode_literals
 
 from django.db import models
+from django.dispatch.dispatcher import receiver
+from django.db.models.signals import post_save
+from rest_framework.authtoken.models import Token
+from django.contrib.auth.models import User
+from django.conf import settings
 
+class ImportLog(models.Model):
+    import_timestamp = models.DateTimeField()
+    successful = models.BooleanField()
+    failed_reason = models.CharField(max_length=500, blank=True, null=True)
+
+    class Meta:
+        db_table = 'import_log'
 
 class LmpCategory(models.Model):
     lmp_id = models.IntegerField(primary_key=True)
@@ -122,7 +134,7 @@ class Product(models.Model):
     target_market_country_code = models.SmallIntegerField(blank=True, null=True)
     gln = models.BigIntegerField(blank=True, null=True)
     gtin = models.BigIntegerField()
-    status = models.BigIntegerField(blank=True, null=True)
+    status = models.CharField(max_length=255, blank=True, null=True)
     image_url = models.CharField(max_length=255, blank=True, null=True)
     nwd_main_category = models.ForeignKey(NwdMainCategory, models.DO_NOTHING, blank=True, null=True)
     nwd_subcategory = models.ForeignKey(NwdSubcategory, models.DO_NOTHING, blank=True, null=True)
@@ -149,3 +161,17 @@ class ProductName(models.Model):
 
     class Meta:
         db_table = 'product_name'
+
+class AgreedData(models.Model):
+    value = models.CharField(max_length=255, blank=True, null=True)
+    agreed_id = models.CharField(max_length=255, blank=True, null=True)
+    product = models.ForeignKey(Product, models.DO_NOTHING, blank=True, null=True)
+
+    class Meta:
+        db_table = 'agreed_data'
+
+
+@receiver(post_save, sender=settings.AUTH_USER_MODEL)
+def create_auth_token(sender, instance=None, created=False, **kwargs):
+    if created:
+        Token.objects.create(user=instance)

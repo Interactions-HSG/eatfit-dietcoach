@@ -1,3 +1,4 @@
 *.pyc
 EatFitService/env/
 EatFitService/db.sqlite3
+EatFitService/.vs/EatFitService/v14/.suo

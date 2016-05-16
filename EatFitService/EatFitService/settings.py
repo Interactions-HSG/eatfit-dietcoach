@@ -16,6 +16,8 @@ import posixpath
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+BROKER_URL = 'django://'
+CELERYBEAT_SCHEDULER = 'djcelery.schedulers.DatabaseScheduler'
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.9/howto/deployment/checklist/
@@ -25,6 +27,10 @@ SECRET_KEY = '7a3ff875-85c2-41eb-be28-aa5ad3d284b9'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
+
+TRUSTBOX_USERNAME = "autoidlabs_admin"
+TRUSTBOX_PASSWORD = "1p$H@-!6m0"
+TRUSTBOX_URL = "http://trustbox.stepcom.ch/trustBox/WS?wsdl"
 
 ALLOWED_HOSTS = [    
     'localhost',
@@ -42,6 +48,7 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.BasicAuthentication',
+        'rest_framework.authentication.TokenAuthentication',
     )
 }
 
@@ -49,6 +56,9 @@ REST_FRAMEWORK = {
 
 INSTALLED_APPS = [
     'rest_framework',
+    'rest_framework.authtoken',
+    'djcelery',
+    'kombu.transport.django',
     'TrustBoxAPI',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -131,7 +141,7 @@ USE_I18N = True
 
 USE_L10N = True
 
-USE_TZ = True
+USE_TZ = False
 
 
 # Static files (CSS, JavaScript, Images)
