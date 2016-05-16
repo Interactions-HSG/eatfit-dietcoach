@@ -4,7 +4,7 @@
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
     <Name>EatFitService</Name>
     <RootNamespace>EatFitService</RootNamespace>
-    <InterpreterId>{588a13b3-ffde-4c4d-8745-abdb5685832c}</InterpreterId>
+    <InterpreterId>{9aa7aa13-bb90-47f7-8207-dbf0b29d8b96}</InterpreterId>
     <InterpreterVersion>2.7</InterpreterVersion>
   </PropertyGroup>
   <PropertyGroup>
@@ -29,8 +29,28 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="EatFitService\celery.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="TrustBoxAPI\database.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="TrustBoxAPI\fill_db.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="TrustBoxAPI\forms.py" />
+    <Compile Include="TrustBoxAPI\migrations\0001_initial.py" />
+    <Compile Include="TrustBoxAPI\migrations\0002_auto_20160516_1428.py" />
     <Compile Include="TrustBoxAPI\models.py" />
+    <Compile Include="TrustBoxAPI\product_views.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="TrustBoxAPI\serializer.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="TrustBoxAPI\tasks.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="TrustBoxAPI\tests.py" />
     <Compile Include="TrustBoxAPI\urls.py">
       <SubType>Code</SubType>
@@ -55,7 +75,6 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="requirements.txt" />
-    <Content Include="db.sqlite3" />
   </ItemGroup>
   <ItemGroup>
     <None Include="readme.mht">
@@ -64,7 +83,7 @@
   </ItemGroup>
   <ItemGroup>
     <Interpreter Include="env\">
-      <Id>{588a13b3-ffde-4c4d-8745-abdb5685832c}</Id>
+      <Id>{9aa7aa13-bb90-47f7-8207-dbf0b29d8b96}</Id>
       <BaseInterpreter>{2af0f10d-7135-4994-9156-5d01c9c11b7e}</BaseInterpreter>
       <Version>2.7</Version>
       <Description>env (Python 2.7)</Description>
