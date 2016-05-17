@@ -125,7 +125,7 @@ else:
             'OPTIONS': {
                 'driver': 'FreeTDS',
                 'host_is_server' : True,
-                'dns' : 'EatFitDB'
+                'dsn' : 'EatFitDB'
 #                'MARS_Connection': 'True',
             }
         }
