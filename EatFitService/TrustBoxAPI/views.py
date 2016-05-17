@@ -9,7 +9,7 @@ from datetime import datetime
 from fill_db import *
 from TrustBoxAPI import database, tasks
 
-#database.setup_database()
+#database.setup_database() 
 
 def home(request):
     """Renders the home page."""

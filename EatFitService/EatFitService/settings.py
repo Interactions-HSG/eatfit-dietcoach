@@ -28,6 +28,7 @@ SECRET_KEY = '7a3ff875-85c2-41eb-be28-aa5ad3d284b9'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
+USE_DEBUG_DB = False
 
 TRUSTBOX_USERNAME = "autoidlabs_admin"
 TRUSTBOX_PASSWORD = "1p$H@-!6m0"
@@ -104,12 +105,29 @@ WSGI_APPLICATION = 'EatFitService.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/1.9/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+if USE_DEBUG_DB:
+
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'sql_server.pyodbc',
+            'NAME': 'EatFitDB',
+            'USER': 'eatfit@eatfitdb',
+            'PASSWORD': 'nRbUrdMUCZycQHsNv9dX',
+            'HOST': 'eatfitdb.database.windows.net',
+            'PORT': '1433',
+            'OPTIONS': {
+                'driver': 'FreeTDS',
+#                'MARS_Connection': 'True',
+            }
+        }
+    }
 
 
 # Password validation

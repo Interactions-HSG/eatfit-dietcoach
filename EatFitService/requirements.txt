@@ -4,8 +4,10 @@ billiard==3.3.0.23
 celery==3.1.23
 Django==1.9.6
 django-celery==3.1.17
+django-pyodbc-azure==1.9.3.0
 djangorestframework==3.3.3
 kombu==3.0.35
+pyodbc==3.0.10
 pytz==2016.4
 suds==0.4
 wheel==0.24.0
