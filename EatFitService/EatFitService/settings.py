@@ -124,6 +124,8 @@ else:
             'PORT': '1433',
             'OPTIONS': {
                 'driver': 'FreeTDS',
+                'host_is_server' : True,
+                'dns' : 'EatFitDB'
 #                'MARS_Connection': 'True',
             }
         }
