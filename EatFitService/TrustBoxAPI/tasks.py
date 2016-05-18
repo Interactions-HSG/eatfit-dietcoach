@@ -5,7 +5,8 @@ from celery.task.base import periodic_task
 from celery.schedules import crontab
 
 
-@periodic_task(run_every=(crontab(minute='*/2')), name="some_task")
+#@periodic_task(run_every=(crontab(minute='*/2')), name="some_task")
+@shared_task
 def add():
     return "hello"
 
