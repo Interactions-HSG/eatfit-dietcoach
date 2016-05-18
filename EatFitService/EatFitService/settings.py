@@ -125,7 +125,8 @@ else:
             'OPTIONS': {
                 'driver': 'FreeTDS',
                 'host_is_server' : True,
-                'extra_params': "TDS_VERSION=8.0"
+                'extra_params': "TDS_VERSION=8.0",
+                'use_legacy_datetime' : True,
 #                'MARS_Connection': 'True',
             }
         }
