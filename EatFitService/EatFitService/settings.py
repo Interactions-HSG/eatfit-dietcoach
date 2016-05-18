@@ -166,7 +166,7 @@ USE_L10N = True
 
 USE_TZ = False
 
-
+CELERY_ENABLE_UTC = True
 
 CELERYBEAT_SCHEDULE = {
     "load_trustbox_data" : {
