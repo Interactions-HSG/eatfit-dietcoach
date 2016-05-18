@@ -9,10 +9,11 @@ https://docs.djangoproject.com/en/1.9/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.9/ref/settings/
 """
-
+from __future__ import absolute_import
 import os
 import posixpath
 from os import path
+from celery.schedules import crontab
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -165,6 +166,14 @@ USE_L10N = True
 
 USE_TZ = False
 
+
+
+CELERYBEAT_SCHEDULE = {
+    "load_trustbox_data" : {
+        "task" : "TrustBoxAPI.tasks.get_trustbox_data",
+        "schedule" : crontab(minute = "0", hour="2"),   
+        },
+}
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.9/howto/static-files/

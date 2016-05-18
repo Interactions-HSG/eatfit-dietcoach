@@ -14,6 +14,6 @@ def add(x,y):
 def get_trustbox_data_by_call():
     load_changed_data()
 
-@periodic_task(run_every=(crontab(minute=0, hour=2)), name="get_trustbox_data")
+#@periodic_task(run_every=(crontab(minute=0, hour=2)), name="get_trustbox_data")
 def get_trustbox_data():
     trustbox_connector.load_changed_data()
