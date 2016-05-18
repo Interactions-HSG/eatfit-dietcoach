@@ -19,30 +19,24 @@ def load_changed_data():
         first = True
         i = 0
         for article in result.article:
-            if first:
-                first = False
-                gtin_list = gtin_list + article.gtin
-            else:
-                gtin_list = gtin_list + "," +  article.gtin
+            products = client.service.getTrustedDataByGTIN(str(article.gtin), settings.TRUSTBOX_USERNAME, settings.TRUSTBOX_PASSWORD)
 
-        products = client.service.getTrustedDataByGTIN(gtin_list, settings.TRUSTBOX_USERNAME, settings.TRUSTBOX_PASSWORD)
-
-        for product_list in products.productList:
-            for product in product_list:
-                for p in product[1]:
-                    try:
-                        i = i + 1
-                        print("adding product: " + str(i))
-                        db_product, created = Product.objects.update_or_create(
-                            gtin=p._gtin,
-                            defaults={'gln': p._gln, "target_market_country_code" : p._targetMarketCountryCode, "status" : p._status},
-                        )
-                        create_or_update_product_names(p, db_product)
-                        create_or_update_product_attributes(p, db_product)
-                        create_or_update_nutrition(p, db_product)
-                        create_or_update_agreed_data(p, db_product)
-                    except Exception as e:
-                        ImportLog.objects.create(import_timestamp = datetime.now(), successful=False, failed_reason = str(e))
+            for product_list in products.productList:
+                for product in product_list:
+                    for p in product[1]:
+                        try:
+                            i = i + 1
+                            print("adding product: " + str(i))
+                            db_product, created = Product.objects.update_or_create(
+                                gtin=p._gtin,
+                                defaults={'gln': p._gln, "target_market_country_code" : p._targetMarketCountryCode, "status" : p._status},
+                            )
+                            create_or_update_product_names(p, db_product)
+                            create_or_update_product_attributes(p, db_product)
+                            create_or_update_nutrition(p, db_product)
+                            create_or_update_agreed_data(p, db_product)
+                        except Exception as e:
+                            ImportLog.objects.create(import_timestamp = datetime.now(), successful=False, failed_reason = str(e))
         ImportLog.objects.create(import_timestamp = datetime.now(), successful=True)
     except Exception as e:
         ImportLog.objects.create(import_timestamp = datetime.now(), successful=False, failed_reason = str(e))
