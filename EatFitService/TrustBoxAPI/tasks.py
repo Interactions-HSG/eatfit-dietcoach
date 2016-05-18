@@ -10,7 +10,7 @@ from TrustBoxAPI import trustbox_connector
 def add(x,y):
     return "hello"
 
-@shared_task
+@task
 def get_trustbox_data_by_call():
     trustbox_connector.load_changed_data()
 
