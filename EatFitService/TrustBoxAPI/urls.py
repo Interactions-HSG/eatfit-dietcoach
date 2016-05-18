@@ -18,8 +18,7 @@ urlpatterns = [
      url(r'^product/byname/(?P<name>.+)', product_views.product_by_name),
      url(r'^product/importlog/all', product_views.import_log_all),
      url(r'^product/importlog/latest', product_views.import_log_latest),
-     url(r'fill/', views.fill_db),
-     url(r'celery/', views.test_celery),
+     url(r'^product/importdata', product_views.import_data),
      url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
      url(r'^api-token-auth/', auth_views.obtain_auth_token)
 ]

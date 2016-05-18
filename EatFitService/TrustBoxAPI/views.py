@@ -6,7 +6,7 @@ from django.shortcuts import render
 from django.http import HttpRequest, HttpResponse
 from django.template import RequestContext
 from datetime import datetime
-from fill_db import *
+from trustbox_connector import *
 from TrustBoxAPI import database, tasks
 
 #database.setup_database() 
@@ -28,6 +28,6 @@ def test_celery(request):
     return HttpResponse("ok")
 
 def fill_db(request):
-    fill()
+    load_changed_data()
     return HttpResponse("asdasd")
 

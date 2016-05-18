@@ -35,7 +35,7 @@
     <Compile Include="TrustBoxAPI\database.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="TrustBoxAPI\fill_db.py">
+    <Compile Include="TrustBoxAPI\trustbox_connector.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="TrustBoxAPI\forms.py" />

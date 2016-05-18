@@ -4,10 +4,17 @@ from EatFitService import settings
 from TrustBoxAPI.models import Product, ProductName, ProductAttribute, Nutrition, NutritionAttribute, NutritionFactsGroup, NutritionFact, AgreedData, ImportLog, NutritionLabel, NutritionGroupAttribute
 from datetime import datetime
 
-def fill():
+DEFAULT_START_TIME = "2000-01-01T00:00:00Z"
+
+def load_changed_data():
     try:
+        log = ImportLog.objects.filter(successful=True).latest("import_timestamp")
+        if log.exists():
+            start_time = log[0].strftime("%Y-%m-%dT%H:%M:%SZ")
+        else:
+            start_time = DEFAULT_START_TIME
         client = Client(settings.TRUSTBOX_URL)
-        result = client.service.getChangedArticles('2016-04-18T07:30:47Z', settings.TRUSTBOX_USERNAME, settings.TRUSTBOX_PASSWORD)
+        result = client.service.getChangedArticles(start_time, settings.TRUSTBOX_USERNAME, settings.TRUSTBOX_PASSWORD)
         gtin_list = ""
         first = True
         i = 0
