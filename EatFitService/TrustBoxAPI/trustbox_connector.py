@@ -8,9 +8,10 @@ DEFAULT_START_TIME = "2000-01-01T00:00:00Z"
 
 def load_changed_data():
     try:
-        log = ImportLog.objects.filter(successful=True).latest("import_timestamp")
+        log = ImportLog.objects.filter(successful=True)
         if log.exists():
-            start_time = log[0].strftime("%Y-%m-%dT%H:%M:%SZ")
+            latest_log = log.latest("import_timestamp")
+            start_time = latest_log.import_timestamp.strftime("%Y-%m-%dT%H:%M:%SZ")
         else:
             start_time = DEFAULT_START_TIME
         client = Client(settings.TRUSTBOX_URL)
