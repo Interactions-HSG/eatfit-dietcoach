@@ -17,15 +17,15 @@ from django.conf import settings
 class ImportLog(models.Model):
     import_timestamp = models.DateTimeField()
     successful = models.BooleanField()
-    failed_reason = models.CharField(max_length=500, blank=True, null=True)
+    failed_reason = models.TextField(max_length=500, blank=True, null=True)
 
     class Meta:
         db_table = 'import_log'
 
 class LmpCategory(models.Model):
     lmp_id = models.IntegerField(primary_key=True)
-    description = models.CharField(max_length=1024, blank=True, null=True)
-    canonical_name = models.CharField(max_length=1024, blank=True, null=True)
+    description = models.TextField(max_length=1024, blank=True, null=True)
+    canonical_name = models.TextField(max_length=1024, blank=True, null=True)
 
     class Meta:
         db_table = 'lmp_category'
@@ -42,7 +42,7 @@ class NutritionAttribute(models.Model):
     value = models.CharField(max_length=1024, blank=True, null=True)
     language_code = models.CharField(max_length=255, blank=True, null=True)
     country_code = models.CharField(max_length=255, blank=True, null=True)
-    canonical_name = models.CharField(max_length=1024, blank=True, null=True)
+    canonical_name = models.TextField(max_length=1024, blank=True, null=True)
     nutrition = models.ForeignKey(Nutrition, models.DO_NOTHING, blank=True, null=True)
 
     class Meta:
@@ -52,11 +52,11 @@ class NutritionAttribute(models.Model):
 class NutritionFact(models.Model):
     amount = models.CharField(max_length=255, blank=True, null=True)
     unit_of_measure = models.CharField(max_length=255, blank=True, null=True)
-    combined_amount_and_measure = models.CharField(max_length=1024, blank=True, null=True)
+    combined_amount_and_measure = models.TextField(max_length=1024, blank=True, null=True)
     daily_percent = models.CharField(max_length=255, blank=True, null=True)
     language_code = models.CharField(max_length=255, blank=True, null=True)
     country_code = models.CharField(max_length=255, blank=True, null=True)
-    canonical_name = models.CharField(max_length=1024, blank=True, null=True)
+    canonical_name = models.TextField(max_length=1024, blank=True, null=True)
     nutrition_facts_group = models.ForeignKey('NutritionFactsGroup', models.DO_NOTHING, blank=True, null=True)
 
     class Meta:
@@ -74,7 +74,7 @@ class NutritionGroupAttribute(models.Model):
     value = models.CharField(max_length=1024, blank=True, null=True)
     language_code = models.CharField(max_length=255, blank=True, null=True)
     country_code = models.CharField(max_length=255, blank=True, null=True)
-    canonical_name = models.CharField(max_length=1024, blank=True, null=True)
+    canonical_name = models.TextField(max_length=1024, blank=True, null=True)
     nutrition_facts_group = models.ForeignKey(NutritionFactsGroup, models.DO_NOTHING, blank=True, null=True)
 
     class Meta:
@@ -82,7 +82,7 @@ class NutritionGroupAttribute(models.Model):
 
 
 class NutritionLabel(models.Model):
-    value = models.CharField(max_length=1024, blank=True, null=True)
+    value = models.TextField(max_length=1024, blank=True, null=True)
     label_id = models.IntegerField(blank=True, null=True)
     nutrition = models.ForeignKey(Nutrition, models.DO_NOTHING, blank=True, null=True)
 
@@ -92,8 +92,8 @@ class NutritionLabel(models.Model):
 
 class NwdMainCategory(models.Model):
     nwd_main_category_id = models.IntegerField(primary_key=True)
-    description = models.CharField(max_length=1024, blank=True, null=True)
-    canonical_name = models.CharField(max_length=1024, blank=True, null=True)
+    description = models.TextField(max_length=1024, blank=True, null=True)
+    canonical_name = models.TextField(max_length=1024, blank=True, null=True)
     lmp = models.ForeignKey(LmpCategory, models.DO_NOTHING, blank=True, null=True)
 
     class Meta:
@@ -103,7 +103,7 @@ class NwdMainCategory(models.Model):
 class NwdMainCategoryMinNutritionFactDifference(models.Model):
     min_absolute = models.FloatField(blank=True, null=True)
     min_relative = models.IntegerField(blank=True, null=True)
-    nutrition_fact_canonical_name = models.CharField(max_length=1024)
+    nutrition_fact_canonical_name = models.TextField(max_length=1024)
     nwd_main_category = models.ForeignKey(NwdMainCategory, models.DO_NOTHING, blank=True, null=True)
 
     class Meta:
@@ -112,7 +112,7 @@ class NwdMainCategoryMinNutritionFactDifference(models.Model):
 
 class NwdSubcategory(models.Model):
     nwd_subcategory_id = models.CharField(max_length=255, blank=True, null=True)
-    description = models.CharField(max_length=1024, blank=True, null=True)
+    description = models.TextField(max_length=1024, blank=True, null=True)
     nwd_main_category = models.ForeignKey(NwdMainCategory, models.DO_NOTHING, blank=True, null=True)
     lmp = models.ForeignKey(LmpCategory, models.DO_NOTHING, blank=True, null=True)
 
@@ -144,17 +144,17 @@ class Product(models.Model):
 
 
 class ProductAttribute(models.Model):
-    value = models.CharField(max_length=1024, blank=True, null=True)
+    value = models.TextField(max_length=1024, blank=True, null=True)
     language_code = models.CharField(max_length=255, blank=True, null=True)
     country_code = models.CharField(max_length=255, blank=True, null=True)
-    canonical_name = models.CharField(max_length=1024, blank=True, null=True)
+    canonical_name = models.TextField(max_length=1024, blank=True, null=True)
     product = models.ForeignKey(Product, models.DO_NOTHING, blank=True, null=True)
 
     class Meta:
         db_table = 'product_attribute'
 
 class ProductName(models.Model):
-    name = models.CharField(max_length=1024, blank=True, null=True)
+    name = models.TextField(max_length=1024, blank=True, null=True)
     language_code = models.CharField(max_length=255, blank=True, null=True)
     country_code = models.CharField(max_length=255, blank=True, null=True)
     product = models.ForeignKey(Product, models.DO_NOTHING, blank=True, null=True)
@@ -163,7 +163,7 @@ class ProductName(models.Model):
         db_table = 'product_name'
 
 class AgreedData(models.Model):
-    value = models.CharField(max_length=1024, blank=True, null=True)
+    value = models.TextField(max_length=1024, blank=True, null=True)
     agreed_id = models.CharField(max_length=255, blank=True, null=True)
     product = models.ForeignKey(Product, models.DO_NOTHING, blank=True, null=True)
 
