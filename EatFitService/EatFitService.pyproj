@@ -35,6 +35,9 @@
     <Compile Include="TrustBoxAPI\database.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="TrustBoxAPI\reebate_connector.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="TrustBoxAPI\trustbox_connector.py">
       <SubType>Code</SubType>
     </Compile>

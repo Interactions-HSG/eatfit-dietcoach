@@ -37,10 +37,10 @@ def load_changed_data():
                             create_or_update_nutrition(p, db_product)
                             create_or_update_agreed_data(p, db_product)
                         except Exception as e:
-                            ImportLog.objects.create(import_timestamp = datetime.now(), successful=False, failed_reason = str(e))
+                            ImportLog.objects.create(import_timestamp = datetime.now(), successful=False, failed_reason = "Product: " + str(p._gtin) + " " + str(e))
         ImportLog.objects.create(import_timestamp = datetime.now(), successful=True)
     except Exception as e:
-        ImportLog.objects.create(import_timestamp = datetime.now(), successful=False, failed_reason = str(e))
+        ImportLog.objects.create(import_timestamp = datetime.now(), successful=False, failed_reason = "General error: " +  str(e))
 
 def create_or_update_agreed_data(product, db_product):
     if hasattr(product, 'agreedData'):
