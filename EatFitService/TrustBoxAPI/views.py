@@ -7,7 +7,7 @@ from django.http import HttpRequest, HttpResponse
 from django.template import RequestContext
 from datetime import datetime
 from trustbox_connector import *
-from TrustBoxAPI import database, tasks
+from TrustBoxAPI import database, tasks, reebate_connector
 
 #database.setup_database() 
 
@@ -27,7 +27,7 @@ def test_celery(request):
     tasks.add.delay(4,5)
     return HttpResponse("ok")
 
-def fill_db(request):
-    load_changed_data()
+def test_reebate(request):
+    reebate_connector.get_customer_trace()
     return HttpResponse("asdasd")
 

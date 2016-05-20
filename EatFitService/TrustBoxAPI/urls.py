@@ -19,6 +19,9 @@ urlpatterns = [
      url(r'^product/importlog/all', product_views.import_log_all),
      url(r'^product/importlog/latest', product_views.import_log_latest),
      url(r'^product/importdata', product_views.import_data),
+     url(r'^product/category/import', product_views.import_categories),
+     url(r'^product/category/map', product_views.map_categories),
+     url(r'^reebate', views.test_reebate),
      url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
      url(r'^api-token-auth/', auth_views.obtain_auth_token)
 ]

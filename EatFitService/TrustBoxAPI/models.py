@@ -94,7 +94,6 @@ class NwdMainCategory(models.Model):
     nwd_main_category_id = models.IntegerField(primary_key=True)
     description = models.TextField(max_length=1024, blank=True, null=True)
     canonical_name = models.TextField(max_length=1024, blank=True, null=True)
-    lmp = models.ForeignKey(LmpCategory, models.DO_NOTHING, blank=True, null=True)
 
     class Meta:
         db_table = 'nwd_main_category'

@@ -29,7 +29,7 @@ SECRET_KEY = '7a3ff875-85c2-41eb-be28-aa5ad3d284b9'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-USE_DEBUG_DB = False
+USE_DEBUG_DB = True
 
 TRUSTBOX_USERNAME = "autoidlabs_admin"
 TRUSTBOX_PASSWORD = "1p$H@-!6m0"
@@ -186,3 +186,8 @@ STATIC_URL = '/static/'
 
 #STATIC_ROOT = posixpath.join(*(BASE_DIR.split(os.path.sep) + ['static']))
 STATIC_ROOT = path.join(BASE_DIR, 'static').replace('\\', '/')
+
+
+MEDIA_URL = '/media/'
+
+MEDIA_ROOT = path.join(BASE_DIR, 'media').replace('\\', '/')

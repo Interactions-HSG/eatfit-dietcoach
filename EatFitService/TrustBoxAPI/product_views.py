@@ -1,11 +1,13 @@
 from rest_framework import viewsets, status, permissions
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, parser_classes
 from TrustBoxAPI.serializer import ProductSerializer, ImportLogSerializer
 from TrustBoxAPI.models import Product, ProductName, ImportLog
 from sets import Set
-from TrustBoxAPI import tasks
+from TrustBoxAPI import tasks, category_handler
+from EatFitService import settings
+from rest_framework.parsers import FileUploadParser, FormParser
 
 @permission_classes((permissions.IsAuthenticated,))
 class ProductViewSet(viewsets.ViewSet):
@@ -66,5 +68,17 @@ def import_log_latest(request):
 @permission_classes((permissions.IsAuthenticated,))
 def import_data(request):
     tasks.get_trustbox_data_by_call.delay()
+    return Response(status = status.HTTP_200_OK)
+
+@api_view(['GET'])
+@permission_classes((permissions.IsAuthenticated,))
+def import_categories(request):
+    category_handler.import_categories()
+    return Response(status = status.HTTP_200_OK)
+
+@api_view(['GET'])
+@permission_classes((permissions.IsAuthenticated,))
+def map_categories(request):
+    tasks.map_categories_to_gtin.delay()
     return Response(status = status.HTTP_200_OK)
 
