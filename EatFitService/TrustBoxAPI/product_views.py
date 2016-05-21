@@ -5,7 +5,7 @@ from rest_framework.decorators import api_view, permission_classes, parser_class
 from TrustBoxAPI.serializer import ProductSerializer, ImportLogSerializer
 from TrustBoxAPI.models import Product, ProductName, ImportLog
 from sets import Set
-from TrustBoxAPI import tasks, category_handler
+from TrustBoxAPI import tasks, category_handler, trustbox_connector
 from EatFitService import settings
 from rest_framework.parsers import FileUploadParser, FormParser
 
@@ -78,7 +78,12 @@ def import_categories(request):
 
 @api_view(['GET'])
 @permission_classes((permissions.IsAuthenticated,))
-def map_categories(request):
-    tasks.map_categories_to_gtin.delay()
+def map_categories(request, iteration):
+    tasks.map_categories_to_gtin(iteration)
     return Response(status = status.HTTP_200_OK)
 
+@api_view(['GET'])
+@permission_classes((permissions.IsAuthenticated,))
+def get_product_from_trustbox(request, gtin):
+    trustbox_product = trustbox_connector.get_single_product(gtin)
+    return Response(trustbox_product)

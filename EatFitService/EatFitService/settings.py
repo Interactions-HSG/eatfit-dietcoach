@@ -14,7 +14,7 @@ import os
 import posixpath
 from os import path
 from celery.schedules import crontab
-import local_settings
+from EatFitService import local_settings
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

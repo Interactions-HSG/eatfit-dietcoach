@@ -4,7 +4,7 @@ import xlrd
 from xlrd.sheet import ctype_text
 from TrustBoxAPI.models import NwdMainCategory, NwdSubcategory, Product
 
-MAPPING_V1 = "Trustbox_Produkte_kategorisiert_v1.xlsx"
+MAPPING_FILE_NAME = "Trustbox_Produkte_kategorisiert_v"
 CATEGORIES = "Categories_NWD.xlsx"
 
 def import_categories():
@@ -31,8 +31,8 @@ def import_categories():
                         defaults={'description':nwd_description.value, "nwd_main_category" : main_category})
         i = i+1
 
-def map_categories():
-    path = settings.BASE_DIR + "/TrustBoxAPI/static/category/" + MAPPING_V1
+def map_categories(iteration):
+    path = settings.BASE_DIR + "/TrustBoxAPI/static/category/" + MAPPING_FILE_NAME + str(iteration) + ".xlsx"
     book = xlrd.open_workbook(path)
     sh = book.sheet_by_index(0)
     i = 0

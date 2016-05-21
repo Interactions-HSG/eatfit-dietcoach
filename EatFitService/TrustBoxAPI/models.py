@@ -39,10 +39,10 @@ class Nutrition(models.Model):
 
 
 class NutritionAttribute(models.Model):
-    value = models.CharField(max_length=1024, blank=True, null=True)
+    value = models.CharField(max_length=4000, blank=True, null=True)
     language_code = models.CharField(max_length=255, blank=True, null=True)
     country_code = models.CharField(max_length=255, blank=True, null=True)
-    canonical_name = models.TextField(max_length=1024, blank=True, null=True)
+    canonical_name = models.TextField(max_length=4000, blank=True, null=True)
     nutrition = models.ForeignKey(Nutrition, models.DO_NOTHING, blank=True, null=True)
 
     class Meta:
@@ -56,7 +56,7 @@ class NutritionFact(models.Model):
     daily_percent = models.CharField(max_length=255, blank=True, null=True)
     language_code = models.CharField(max_length=255, blank=True, null=True)
     country_code = models.CharField(max_length=255, blank=True, null=True)
-    canonical_name = models.TextField(max_length=1024, blank=True, null=True)
+    canonical_name = models.TextField(max_length=4000, blank=True, null=True)
     nutrition_facts_group = models.ForeignKey('NutritionFactsGroup', models.DO_NOTHING, blank=True, null=True)
 
     class Meta:
@@ -71,7 +71,7 @@ class NutritionFactsGroup(models.Model):
 
 
 class NutritionGroupAttribute(models.Model):
-    value = models.CharField(max_length=1024, blank=True, null=True)
+    value = models.CharField(max_length=4000, blank=True, null=True)
     language_code = models.CharField(max_length=255, blank=True, null=True)
     country_code = models.CharField(max_length=255, blank=True, null=True)
     canonical_name = models.TextField(max_length=1024, blank=True, null=True)
@@ -82,7 +82,7 @@ class NutritionGroupAttribute(models.Model):
 
 
 class NutritionLabel(models.Model):
-    value = models.TextField(max_length=1024, blank=True, null=True)
+    value = models.TextField(max_length=4000, blank=True, null=True)
     label_id = models.IntegerField(blank=True, null=True)
     nutrition = models.ForeignKey(Nutrition, models.DO_NOTHING, blank=True, null=True)
 
@@ -143,7 +143,7 @@ class Product(models.Model):
 
 
 class ProductAttribute(models.Model):
-    value = models.TextField(max_length=1024, blank=True, null=True)
+    value = models.TextField(max_length=4000, blank=True, null=True)
     language_code = models.CharField(max_length=255, blank=True, null=True)
     country_code = models.CharField(max_length=255, blank=True, null=True)
     canonical_name = models.TextField(max_length=1024, blank=True, null=True)
@@ -153,7 +153,7 @@ class ProductAttribute(models.Model):
         db_table = 'product_attribute'
 
 class ProductName(models.Model):
-    name = models.TextField(max_length=1024, blank=True, null=True)
+    name = models.TextField(max_length=4000, blank=True, null=True)
     language_code = models.CharField(max_length=255, blank=True, null=True)
     country_code = models.CharField(max_length=255, blank=True, null=True)
     product = models.ForeignKey(Product, models.DO_NOTHING, blank=True, null=True)

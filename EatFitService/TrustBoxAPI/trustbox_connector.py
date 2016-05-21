@@ -147,3 +147,13 @@ def create_or_update_nutrition_group_attrs(nutrition_facts_group, db_nutrition_f
             if hasattr(groupAttr, '_canonicalName'):
                 filter_arguments["canonical_name"] = groupAttr._canonicalName
             db_nutrition_group_attr, created = NutritionGroupAttribute.objects.update_or_create(defaults={'value': groupAttr.value.encode('utf8')},**filter_arguments )
+
+
+def get_single_product(gtin):
+    client = Client(settings.TRUSTBOX_URL)
+    products = client.service.getTrustedDataByGTIN(gtin, settings.TRUSTBOX_USERNAME, settings.TRUSTBOX_PASSWORD)
+    for product_list in products.productList:
+                for product in product_list:
+                    for p in product[1]:
+                        return p
+    return None
