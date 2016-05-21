@@ -14,6 +14,7 @@ import os
 import posixpath
 from os import path
 from celery.schedules import crontab
+import local_settings
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -28,8 +29,8 @@ CELERYBEAT_SCHEDULER = 'djcelery.schedulers.DatabaseScheduler'
 SECRET_KEY = '7a3ff875-85c2-41eb-be28-aa5ad3d284b9'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
-USE_DEBUG_DB = False
+DEBUG = local_settings.DEBUG
+USE_DEBUG_DB = local_settings.USE_DEBUG_DB
 
 TRUSTBOX_USERNAME = "autoidlabs_admin"
 TRUSTBOX_PASSWORD = "1p$H@-!6m0"
@@ -119,23 +120,7 @@ if USE_DEBUG_DB:
         }
     }
 else:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'sql_server.pyodbc',
-            'NAME': 'EatFitDB',
-            'USER': 'eatfit@eatfitdb',
-            'PASSWORD': 'nRbUrdMUCZycQHsNv9dX',
-            'HOST': 'eatfitdb.database.windows.net',
-            'PORT': '1433',
-            'OPTIONS': {
-                'driver': 'FreeTDS',
-                'host_is_server' : True,
-                'extra_params': "TDS_VERSION=8.0",
-                'use_legacy_datetime' : True,
-#                'MARS_Connection': 'True',
-            }
-        }
-    }
+    DATABASES = local_settings.DATABASES
 
 
 # Password validation
