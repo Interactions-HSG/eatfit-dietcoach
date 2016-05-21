@@ -28,8 +28,8 @@ CELERYBEAT_SCHEDULER = 'djcelery.schedulers.DatabaseScheduler'
 SECRET_KEY = '7a3ff875-85c2-41eb-be28-aa5ad3d284b9'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-USE_DEBUG_DB = True
+DEBUG = False
+USE_DEBUG_DB = False
 
 TRUSTBOX_USERNAME = "autoidlabs_admin"
 TRUSTBOX_PASSWORD = "1p$H@-!6m0"
