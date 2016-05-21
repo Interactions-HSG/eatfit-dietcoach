@@ -79,7 +79,7 @@ def import_categories(request):
 @api_view(['GET'])
 @permission_classes((permissions.IsAuthenticated,))
 def map_categories(request, iteration):
-    tasks.map_categories_to_gtin(iteration)
+    tasks.map_categories_to_gtin.delay(iteration)
     return Response(status = status.HTTP_200_OK)
 
 @api_view(['GET'])
