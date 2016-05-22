@@ -18,6 +18,7 @@ class ImportLog(models.Model):
     import_timestamp = models.DateTimeField()
     successful = models.BooleanField()
     failed_reason = models.TextField(max_length=500, blank=True, null=True)
+    product_gtin = models.TextField(max_length=500, blank=True, null=True)
 
     class Meta:
         db_table = 'import_log'
