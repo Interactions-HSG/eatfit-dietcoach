@@ -66,18 +66,21 @@ def create_or_update_product_names(product, db_product):
 def create_or_update_product_attributes(product, db_product):
     if hasattr(product, 'productAttributes'):
         for product_attribute in product.productAttributes:
-            filter_arguments = {}
-            filter_arguments["product"] = db_product
-            filter_arguments["language_code"] = None
-            filter_arguments["country_code"] = None
-            filter_arguments["canonical_name"] = None
-            if hasattr(product_attribute, '_languageCode'):
-                filter_arguments["language_code"] = product_attribute._languageCode
-            if hasattr(product_attribute, '_countryCode'):
-                filter_arguments["country_code"] = product_attribute._countryCode
-            if hasattr(product_attribute, '_canonicalName'):
-                filter_arguments["canonical_name"] = product_attribute._canonicalName
-            db_product_attribute, created = ProductAttribute.objects.update_or_create(defaults={'value': product_attribute.value.encode('utf8')}, **filter_arguments)
+            try:
+                filter_arguments = {}
+                filter_arguments["product"] = db_product
+                filter_arguments["language_code"] = None
+                filter_arguments["country_code"] = None
+                filter_arguments["canonical_name"] = None
+                if hasattr(product_attribute, '_languageCode'):
+                    filter_arguments["language_code"] = product_attribute._languageCode
+                if hasattr(product_attribute, '_countryCode'):
+                    filter_arguments["country_code"] = product_attribute._countryCode
+                if hasattr(product_attribute, '_canonicalName'):
+                    filter_arguments["canonical_name"] = product_attribute._canonicalName
+                db_product_attribute, created = ProductAttribute.objects.update_or_create(defaults={'value': product_attribute.value.encode('utf8')}, **filter_arguments)
+            except Exception as e:
+                print(str(e))
 
 def create_or_update_nutrition(product, db_product):
     db_nutrition, created = Nutrition.objects.get_or_create(
