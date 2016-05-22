@@ -115,7 +115,7 @@ def create_or_update_nutrition_fact(nutrition_facts_group, db_nutrition_facts_gr
         for nutrition_fact in nutrition_facts_group.nutritionFacts:
             filter_arguments = {}
             filter_arguments["nutrition_facts_group"] = db_nutrition_facts_group
-            ilter_arguments["language_code"] = None
+            filter_arguments["language_code"] = None
             filter_arguments["country_code"] = None
             filter_arguments["canonical_name"] = None
             if hasattr(nutrition_fact, '_languageCode'):
@@ -142,8 +142,8 @@ def create_or_update_nutrition_lables(nutrition, db_nutrition):
         for nutrition_label in nutrition.nutritionLabels:
             filter_arguments = {}
             filter_arguments["nutrition"] = db_nutrition
-            filter_arguments["language_code"] = None
-            if hasattr(nutrition_label, '_languageCode'):
+            filter_arguments["label_id"] = None
+            if hasattr(nutrition_label, 'label_id'):
                 filter_arguments["label_id"] = nutrition_label._labelID
             db_nutrition_label, created = NutritionLabel.objects.update_or_create(defaults={'value': nutrition_label.value.encode('utf8')},**filter_arguments)
 
