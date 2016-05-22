@@ -87,3 +87,10 @@ def map_categories(request, iteration):
 def get_product_from_trustbox(request, gtin):
     trustbox_product = trustbox_connector.get_single_product(gtin)
     return Response(trustbox_product)
+
+@api_view(['GET'])
+@permission_classes((permissions.IsAuthenticated,))
+def product_from_trustbox_in_db(request, gtin):
+    trustbox_connector.single_product_to_db(gtin)
+    return Response(status = status.HTTP_200_OK)
+
