@@ -174,7 +174,7 @@ CELERY_ENABLE_UTC = True
 
 CELERYBEAT_SCHEDULE = {
     "load_trustbox_data" : {
-        "task" : "TrustBoxAPI.tasks.get_trustbox_data",
+        "task" : "TrustBoxAPI.tasks.get_trustbox_data_by_call",
         "schedule" : crontab(minute = "0", hour="2"),   
         },
 }
