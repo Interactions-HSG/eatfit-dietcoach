@@ -32,6 +32,9 @@
     <Compile Include="EatFitService\celery.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="EatFitService\local_settings.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="TrustBoxAPI\category_handler.py">
       <SubType>Code</SubType>
     </Compile>
@@ -84,6 +87,7 @@
     <Content Include="requirements.txt" />
     <Content Include="TrustBoxAPI\static\category\Categories_NWD.xlsx" />
     <Content Include="TrustBoxAPI\static\category\Trustbox_Produkte_kategorisiert_v1.xlsx" />
+    <Content Include="TrustBoxAPI\static\category\Trustbox_Produkte_kategorisiert_v2.xlsx" />
   </ItemGroup>
   <ItemGroup>
     <None Include="readme.mht">

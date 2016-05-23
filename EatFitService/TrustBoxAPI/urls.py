@@ -20,7 +20,9 @@ urlpatterns = [
      url(r'^product/importlog/latest', product_views.import_log_latest),
      url(r'^product/importdata', product_views.import_data),
      url(r'^product/category/import', product_views.import_categories),
-     url(r'^product/category/map', product_views.map_categories),
+     url(r'^product/category/map/(?P<iteration>[0-9]+)', product_views.map_categories),
+     url(r'^product/from_trustbox/(?P<gtin>[0-9]+)', product_views.get_product_from_trustbox),
+     url(r'^product/from_trustbox_to_db/(?P<gtin>[0-9]+)', product_views.product_from_trustbox_in_db),
      url(r'^reebate', views.test_reebate),
      url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
      url(r'^api-token-auth/', auth_views.obtain_auth_token)

@@ -15,5 +15,5 @@ def get_trustbox_data_by_call():
     trustbox_connector.load_changed_data()
 
 @task
-def map_categories_to_gtin():
-    category_handler.map_categories()
+def map_categories_to_gtin(iteration):
+    category_handler.map_categories(iteration)
