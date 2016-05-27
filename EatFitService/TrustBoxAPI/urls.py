@@ -24,6 +24,7 @@ urlpatterns = [
      url(r'^product/category/export-products', product_views.export_unmapped_products),
      url(r'^product/from_trustbox/(?P<gtin>[0-9]+)', product_views.get_product_from_trustbox),
      url(r'^product/from_trustbox_to_db/(?P<gtin>[0-9]+)', product_views.product_from_trustbox_in_db),
+     url(r'^product/(?P<product_pk>[0-9]+)/name', product_views.names_of_product),
      url(r'^reebate', views.test_reebate),
      url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
      url(r'^api-token-auth/', auth_views.obtain_auth_token)

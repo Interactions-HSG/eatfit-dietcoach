@@ -77,7 +77,7 @@ def create_or_update_product_attributes(product, db_product):
                 if hasattr(product_attribute, '_countryCode'):
                     filter_arguments["country_code"] = product_attribute._countryCode
                 if hasattr(product_attribute, '_canonicalName'):
-                    filter_arguments["canonical_name"] = product_attribute._canonicalName
+                    filter_arguments["canonical_name"] = product_attribute._canonicalName.encode('utf8')
                 db_product_attribute, created = ProductAttribute.objects.update_or_create(defaults={'value': product_attribute.value.encode('utf8')}, **filter_arguments)
             except Exception as e:
                 print(str(e))
@@ -103,7 +103,7 @@ def create_or_update_nutrition_attributes(nutrition, db_nutrition):
             if hasattr(nutrition_atts, '_countryCode'):
                 filter_arguments["country_code"] = nutrition_atts._countryCode
             if hasattr(nutrition_atts, '_canonicalName'):
-                filter_arguments["canonical_name"] = nutrition_atts._canonicalName
+                filter_arguments["canonical_name"] = nutrition_atts._canonicalName.encode('utf8')
             db_nutrition_att, created = NutritionAttribute.objects.update_or_create(defaults={'value': nutrition_atts.value.encode('utf8')},**filter_arguments)
 
 def create_or_update_nutrition_facts_group(nutrition, db_nutrition):
@@ -126,7 +126,7 @@ def create_or_update_nutrition_fact(nutrition_facts_group, db_nutrition_facts_gr
             if hasattr(nutrition_fact, '_countryCode'):
                 filter_arguments["country_code"] = nutrition_fact._countryCode
             if hasattr(nutrition_fact, '_canonicalName'):
-                filter_arguments["canonical_name"] = nutrition_fact._canonicalName
+                filter_arguments["canonical_name"] = nutrition_fact._canonicalName.encode('utf8')
             
             data = {}
             if hasattr(nutrition_fact, 'amount'):
@@ -163,7 +163,7 @@ def create_or_update_nutrition_group_attrs(nutrition_facts_group, db_nutrition_f
             if hasattr(groupAttr, '_countryCode'):
                 filter_arguments["country_code"] = groupAttr._countryCode
             if hasattr(groupAttr, '_canonicalName'):
-                filter_arguments["canonical_name"] = groupAttr._canonicalName
+                filter_arguments["canonical_name"] = groupAttr._canonicalName.encode('utf8')
             db_nutrition_group_attr, created = NutritionGroupAttribute.objects.update_or_create(defaults={'value': groupAttr.value.encode('utf8')},**filter_arguments )
 
 

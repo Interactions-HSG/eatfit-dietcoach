@@ -2,7 +2,7 @@ from rest_framework import viewsets, status, permissions
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from rest_framework.decorators import api_view, permission_classes, parser_classes
-from TrustBoxAPI.serializer import ProductSerializer, ImportLogSerializer
+from TrustBoxAPI.serializer import ProductSerializer, ImportLogSerializer, ProductNameSerializer
 from TrustBoxAPI.models import Product, ProductName, ImportLog
 from sets import Set
 from TrustBoxAPI import tasks, category_handler, trustbox_connector
@@ -47,6 +47,13 @@ def product_by_name(request, name):
     for name in names:
         products.add(Product.objects.get(pk=name.product.pk))
     serializer = ProductSerializer(products, many=True)
+    return Response(serializer.data)
+
+@api_view(['GET'])
+@permission_classes((permissions.IsAuthenticated,))
+def names_of_product(request, product_pk):
+    names = ProductName.objects.filter(product=product_pk)
+    serializer = ProductNameSerializer(names, many=True)
     return Response(serializer.data)
 
 
