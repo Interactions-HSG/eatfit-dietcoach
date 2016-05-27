@@ -137,6 +137,8 @@ def __add_value(w_sheet, row, column, queryset, color, takeUnit):
                 value = float(queryset[0].amount)
             else:
                  value = str(queryset[0].amount)
+                 if value == "None":
+                     value = ""
             w_sheet.write(row, column, value, style)
             if takeUnit:
                  if hasattr(queryset[0], "unit_of_measure"):
