@@ -121,10 +121,9 @@ def export_unmapped_products():
         __add_value(w_sheet, row, 15, salt, "salt_color", True)
         __add_value(w_sheet, row, 17, natrium, "salt_color", True)
 
-        nutrition_attributes = NutritionAttribute.objects.filter(nutrition__product = product, language_code = "de")
+        nutrition_attributes = NutritionAttribute.objects.filter(nutrition__product = product, language_code = "de", canonical_name="ingredients")
         if nutrition_attributes.exists():
-            if hasattr(nutrition_attributes[0], "ingredients"):
-                w_sheet.write(row, 20, nutrition_attributes[0].ingredients)
+            w_sheet.write(row, 20, nutrition_attributes[0].canonical_name)
         row = row + 1
     workbook.save(settings.BASE_DIR + "/TrustBoxAPI/static/category/" + UNCATEGORISED_FILE_NAME) 
 
@@ -142,7 +141,11 @@ def __add_value(w_sheet, row, column, queryset, color, takeUnit):
             w_sheet.write(row, column, value, style)
             if takeUnit:
                  if hasattr(queryset[0], "unit_of_measure"):
-                      w_sheet.write(row, column+1, str(queryset[0].unit_of_measure), style)
+                     if str(queryset[0].unit_of_measure) == None:
+                         unit = ""
+                     else:
+                         unit = str(queryset[0].unit_of_measure)
+                     w_sheet.write(row, column+1, unit, style)
 
 def isint(x):
     try:
