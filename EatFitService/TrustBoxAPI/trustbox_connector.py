@@ -46,7 +46,7 @@ def create_or_update_agreed_data(product, db_product):
     if hasattr(product, 'agreedData'):
         for agreed_data in product.agreedData:
            db_agreed_data, created = AgreedData.objects.update_or_create(
-                agreed_id=agreed_data._agreedID, value = agreed_data.value.encode('utf8'),product =  db_product,
+                agreed_id=agreed_data._agreedID, value = agreed_data.value.encode('utf16'),product =  db_product,
             )
 
 def create_or_update_product_names(product, db_product):
@@ -60,7 +60,7 @@ def create_or_update_product_names(product, db_product):
                 filter_arguments["language_code"] = product_names._languageCode
             if hasattr(product_names, '_countryCode'):
                 filter_arguments["country_code"] = product_names._countryCode
-            db_product_name, created = ProductName.objects.update_or_create(defaults={'name': product_names.name.encode('utf8')},**filter_arguments)
+            db_product_name, created = ProductName.objects.update_or_create(defaults={'name': product_names.name.encode('utf16')},**filter_arguments)
 
 
 def create_or_update_product_attributes(product, db_product):
@@ -77,8 +77,8 @@ def create_or_update_product_attributes(product, db_product):
                 if hasattr(product_attribute, '_countryCode'):
                     filter_arguments["country_code"] = product_attribute._countryCode
                 if hasattr(product_attribute, '_canonicalName'):
-                    filter_arguments["canonical_name"] = product_attribute._canonicalName.encode('utf8')
-                db_product_attribute, created = ProductAttribute.objects.update_or_create(defaults={'value': product_attribute.value.encode('utf8')}, **filter_arguments)
+                    filter_arguments["canonical_name"] = product_attribute._canonicalName.encode('utf16')
+                db_product_attribute, created = ProductAttribute.objects.update_or_create(defaults={'value': product_attribute.value.encode('utf16')}, **filter_arguments)
             except Exception as e:
                 print(str(e))
 
@@ -103,8 +103,8 @@ def create_or_update_nutrition_attributes(nutrition, db_nutrition):
             if hasattr(nutrition_atts, '_countryCode'):
                 filter_arguments["country_code"] = nutrition_atts._countryCode
             if hasattr(nutrition_atts, '_canonicalName'):
-                filter_arguments["canonical_name"] = nutrition_atts._canonicalName.encode('utf8')
-            db_nutrition_att, created = NutritionAttribute.objects.update_or_create(defaults={'value': nutrition_atts.value.encode('utf8')},**filter_arguments)
+                filter_arguments["canonical_name"] = nutrition_atts._canonicalName.encode('utf16')
+            db_nutrition_att, created = NutritionAttribute.objects.update_or_create(defaults={'value': nutrition_atts.value.encode('utf16')},**filter_arguments)
 
 def create_or_update_nutrition_facts_group(nutrition, db_nutrition):
     db_nutrition_facts_group, created = NutritionFactsGroup.objects.get_or_create(
@@ -126,17 +126,17 @@ def create_or_update_nutrition_fact(nutrition_facts_group, db_nutrition_facts_gr
             if hasattr(nutrition_fact, '_countryCode'):
                 filter_arguments["country_code"] = nutrition_fact._countryCode
             if hasattr(nutrition_fact, '_canonicalName'):
-                filter_arguments["canonical_name"] = nutrition_fact._canonicalName.encode('utf8')
+                filter_arguments["canonical_name"] = nutrition_fact._canonicalName.encode('utf16')
             
             data = {}
             if hasattr(nutrition_fact, 'amount'):
-                data["amount"] = nutrition_fact.amount.encode('utf8')
+                data["amount"] = nutrition_fact.amount.encode('utf16')
             if hasattr(nutrition_fact, 'unitOfMeasure'):
-                data["unit_of_measure"] = nutrition_fact.unitOfMeasure.encode('utf8')
+                data["unit_of_measure"] = nutrition_fact.unitOfMeasure.encode('utf16')
             if hasattr(nutrition_fact, 'combinedAmountAndMeasure'):
-                data["combined_amount_and_measure"] = nutrition_fact.combinedAmountAndMeasure.encode('utf8')
+                data["combined_amount_and_measure"] = nutrition_fact.combinedAmountAndMeasure.encode('utf16')
             if hasattr(nutrition_fact, 'dailyPercent'):
-                data["daily_percent"] = nutrition_fact.dailyPercent.encode('utf8')
+                data["daily_percent"] = nutrition_fact.dailyPercent.encode('utf16')
 
             db_nutrition_fact, created = NutritionFact.objects.update_or_create(defaults=data,**filter_arguments)
 
@@ -148,7 +148,7 @@ def create_or_update_nutrition_lables(nutrition, db_nutrition):
             filter_arguments["label_id"] = None
             if hasattr(nutrition_label, 'label_id'):
                 filter_arguments["label_id"] = nutrition_label._labelID
-            db_nutrition_label, created = NutritionLabel.objects.update_or_create(defaults={'value': nutrition_label.value.encode('utf8')},**filter_arguments)
+            db_nutrition_label, created = NutritionLabel.objects.update_or_create(defaults={'value': nutrition_label.value.encode('utf16')},**filter_arguments)
 
 def create_or_update_nutrition_group_attrs(nutrition_facts_group, db_nutrition_facts_group):
     if hasattr(nutrition_facts_group, "nutritionGroupAttributes"):
@@ -163,8 +163,8 @@ def create_or_update_nutrition_group_attrs(nutrition_facts_group, db_nutrition_f
             if hasattr(groupAttr, '_countryCode'):
                 filter_arguments["country_code"] = groupAttr._countryCode
             if hasattr(groupAttr, '_canonicalName'):
-                filter_arguments["canonical_name"] = groupAttr._canonicalName.encode('utf8')
-            db_nutrition_group_attr, created = NutritionGroupAttribute.objects.update_or_create(defaults={'value': groupAttr.value.encode('utf8')},**filter_arguments )
+                filter_arguments["canonical_name"] = groupAttr._canonicalName.encode('utf16')
+            db_nutrition_group_attr, created = NutritionGroupAttribute.objects.update_or_create(defaults={'value': groupAttr.value.encode('utf16')},**filter_arguments )
 
 
 def single_product_to_db(gtin):
