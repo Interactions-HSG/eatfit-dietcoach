@@ -84,6 +84,12 @@ def map_categories(request, iteration):
 
 @api_view(['GET'])
 @permission_classes((permissions.IsAuthenticated,))
+def export_unmapped_products(request):
+    category_handler.export_unmapped_products()
+    return Response(status = status.HTTP_200_OK)
+
+@api_view(['GET'])
+@permission_classes((permissions.IsAuthenticated,))
 def get_product_from_trustbox(request, gtin):
     trustbox_product = trustbox_connector.get_single_product(gtin)
     return Response(trustbox_product)

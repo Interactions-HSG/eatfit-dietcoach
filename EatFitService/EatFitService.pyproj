@@ -86,6 +86,7 @@
   <ItemGroup>
     <Content Include="requirements.txt" />
     <Content Include="TrustBoxAPI\static\category\Categories_NWD.xlsx" />
+    <Content Include="TrustBoxAPI\static\category\Trustbox_Produkte_blank.xls" />
     <Content Include="TrustBoxAPI\static\category\Trustbox_Produkte_kategorisiert_v1.xlsx" />
     <Content Include="TrustBoxAPI\static\category\Trustbox_Produkte_kategorisiert_v2.xlsx" />
   </ItemGroup>
