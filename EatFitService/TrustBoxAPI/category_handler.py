@@ -123,7 +123,8 @@ def export_unmapped_products():
 
         nutrition_attributes = NutritionAttribute.objects.filter(nutrition__product = product, language_code = "de", canonical_name="ingredients")
         if nutrition_attributes.exists():
-            w_sheet.write(row, 20, nutrition_attributes[0].canonical_name)
+            if hasattr(nutrition_attributes[0], "value"):
+                w_sheet.write(row, 20, nutrition_attributes[0].value)
         row = row + 1
     workbook.save(settings.BASE_DIR + "/TrustBoxAPI/static/category/" + UNCATEGORISED_FILE_NAME) 
 
