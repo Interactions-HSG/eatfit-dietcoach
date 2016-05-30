@@ -149,10 +149,10 @@ def __add_value(w_sheet, row, column, queryset, color, takeUnit):
                 value = str(queryset[0].combined_amount_and_measure)
         else:
             value = ""
-            w_sheet.write(row, column, value, style)
+        w_sheet.write(row, column, value, style)
         if takeUnit:
                 if hasattr(queryset[0], "unit_of_measure"):
-                    if str(queryset[0].unit_of_measure) == None:
+                    if queryset[0].unit_of_measure == None:
                         unit = ""
                     else:
                         unit = str(queryset[0].unit_of_measure)
