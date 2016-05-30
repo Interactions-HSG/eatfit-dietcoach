@@ -137,12 +137,12 @@ def export_unmapped_products():
 def __add_value(w_sheet, row, column, queryset, color, takeUnit):
     if queryset.exists():
         style = xlwt.easyxf('pattern: pattern solid, fore_colour ' + color + ';')
-        if hasattr(queryset[0], "amount"):
+        if hasattr(queryset[0], "amount") and queryset[0].amount != None:
             if is_number(str(queryset[0].amount)):
                 value = float(queryset[0].amount)
             else:
                 value = str(queryset[0].amount)
-        elif hasattr(queryset[0], "combined_amount_and_measure"):
+        elif hasattr(queryset[0], "combined_amount_and_measure") and queryset[0].combined_amount_and_measure != None:
             if is_number(str(queryset[0].combined_amount_and_measure)): 
                 value = float(queryset[0].combined_amount_and_measure)
             else:
