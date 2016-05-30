@@ -36,8 +36,8 @@ TRUSTBOX_USERNAME = "autoidlabs_admin"
 TRUSTBOX_PASSWORD = "1p$H@-!6m0"
 TRUSTBOX_URL = "http://trustbox.stepcom.ch/trustBox/WS?wsdl"
 
-REEBATE_URL = "https://reebate.com/shoco/receipts"
-REEBATE_USERNAME = "klausfuchs"
+REEBATE_URL = "https://autoidlabs.reebate.net:8443/shoco/receipts"
+REEBATE_USERNAME = "klauslfuchs"
 REEBATE_PASSWORD = "autoidlabs"
 
 ALLOWED_HOSTS = [    
