@@ -126,7 +126,7 @@ def export_unmapped_products():
             if hasattr(nutrition_attributes[0], "value"):
                 w_sheet.write(row, 20, nutrition_attributes[0].value)
 
-        product_attributes = ProductAttribute.objetcs.filter(product = product, canonical_name="packageSize")
+        product_attributes = ProductAttribute.objects.filter(product = product, canonical_name="packageSize")
         if product_attributes.exists():
             if hasattr(product_attributes[0], "value"):
                 w_sheet.write(row, 19, product_attributes[0].value)
