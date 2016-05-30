@@ -29,5 +29,9 @@ def test_celery(request):
 
 def test_reebate(request):
     reebate_connector.get_customer_trace()
-    return HttpResponse("asdasd")
+    return HttpResponse("ok")
+
+def reebate_excel_to_db(request):
+    reebate_connector.excel_trace_to_db()
+    return HttpResponse("ok")
 
