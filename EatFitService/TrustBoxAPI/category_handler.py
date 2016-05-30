@@ -4,7 +4,7 @@ import xlwt, xlrd
 from xlutils.copy import copy
 from xlrd.sheet import ctype_text
 from django.db.models import Q
-from TrustBoxAPI.models import NwdMainCategory, NwdSubcategory, Product, ProductName, NutritionFact, NutritionAttribute
+from TrustBoxAPI.models import NwdMainCategory, NwdSubcategory, Product, ProductName, NutritionFact, NutritionAttribute, ProductAttribute
 
 MAPPING_FILE_NAME = "Trustbox_Produkte_kategorisiert_v"
 CATEGORIES = "Categories_NWD.xlsx"
@@ -125,6 +125,11 @@ def export_unmapped_products():
         if nutrition_attributes.exists():
             if hasattr(nutrition_attributes[0], "value"):
                 w_sheet.write(row, 20, nutrition_attributes[0].value)
+
+        product_attributes = ProductAttribute.objetcs.filter(product = product, canonical_name="packageSize")
+        if product_attributes.exists():
+            if hasattr(product_attributes[0], "value"):
+                w_sheet.write(row, 19, product_attributes[0].value)
         row = row + 1
     workbook.save(settings.BASE_DIR + "/TrustBoxAPI/static/category/" + UNCATEGORISED_FILE_NAME) 
 
