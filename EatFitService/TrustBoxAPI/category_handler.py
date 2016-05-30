@@ -138,9 +138,15 @@ def __add_value(w_sheet, row, column, queryset, color, takeUnit):
     if queryset.exists():
         style = xlwt.easyxf('pattern: pattern solid, fore_colour ' + color + ';')
         if hasattr(queryset[0], "amount"):
-            value = float(queryset[0].amount)
+            if is_number(str(queryset[0].amount)):
+                value = float(queryset[0].amount)
+            else:
+                value = str(queryset[0].amount)
         elif hasattr(queryset[0], "combined_amount_and_measure"):
-             value = float(queryset[0].combined_amount_and_measure)
+            if is_number(str(queryset[0].combined_amount_and_measure)): 
+                value = float(queryset[0].combined_amount_and_measure)
+            else:
+                value = str(queryset[0].combined_amount_and_measure)
         else:
             value = ""
             w_sheet.write(row, column, value, style)
