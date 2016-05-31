@@ -15,14 +15,26 @@ def excel_trace_to_db():
     sh = book.sheet_by_index(0)
     matches = 0
     product_names = ProductName.objects.filter(language_code="de")
+    reebate_article_names = {}
     for rx in range(sh.nrows):
         if rx < 1: #first line is excel header
             pass
         else:
-            article_name = sh.row(rx)[5]
-            for product_name in product_names:
-                r = fuzz.token_set_ratio(product_name.name, article_name)
-                if r > 80:
-                    print("product name: " + str(product_name.name) + " article name: " + str(article_name))
-                    matches = matches + 1
-    print("# of matches: " + str(matches))
+            article_name = str(sh.row(rx)[5]).encode("utf8")
+            if not article_name in reebate_article_names:
+                print("processing new article_name")
+                reebate_article_names[article_name] = ""
+                best_fitting_product_name_score = 0
+                for product_name in product_names:
+                    r = fuzz.token_set_ratio(product_name.name.encode("utf8"), article_name)
+                    if r > 70:
+                        if r > best_fitting_product_name_score:
+                            reebate_article_names[article_name] = product_name.name.encode("utf8")
+                            best_fitting_product_name_score = r 
+                        matches = matches + 1
+    print("# of matches: " + str([1 for r in reebate_article_names and r!=""])
+    i = 0
+    for k in reebate_article_names:
+        if i<20:
+            print(k + " , " + reebate_article_names[k])
+        i = i+ 1 
