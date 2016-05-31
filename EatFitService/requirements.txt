@@ -6,8 +6,10 @@ Django==1.9.6
 django-celery==3.1.17
 django-pyodbc-azure==1.9.3.0
 djangorestframework==3.3.3
+fuzzywuzzy==0.10.0
 kombu==3.0.35
 pyodbc==3.0.10
+python-Levenshtein==0.12.0
 pytz==2016.4
 requests==2.10.0
 suds==0.4
