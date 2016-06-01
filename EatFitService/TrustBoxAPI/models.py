@@ -139,6 +139,10 @@ class Product(models.Model):
     nwd_main_category = models.ForeignKey(NwdMainCategory, models.DO_NOTHING, blank=True, null=True)
     nwd_subcategory = models.ForeignKey(NwdSubcategory, models.DO_NOTHING, blank=True, null=True)
 
+
+    def __unicode__(self):
+        return "Gtin: " + str(self.gtin)
+
     class Meta:
         db_table = 'product'
 

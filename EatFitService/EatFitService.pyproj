@@ -35,6 +35,9 @@
     <Compile Include="EatFitService\local_settings.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="TrustBoxAPI\admin.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="TrustBoxAPI\category_handler.py">
       <SubType>Code</SubType>
     </Compile>
