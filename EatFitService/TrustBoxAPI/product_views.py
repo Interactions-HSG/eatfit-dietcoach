@@ -1,13 +1,15 @@
 from rest_framework import viewsets, status, permissions
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
-from rest_framework.decorators import api_view, permission_classes, parser_classes
-from TrustBoxAPI.serializer import ProductSerializer, ImportLogSerializer, ProductNameSerializer
+from rest_framework.decorators import api_view, permission_classes, parser_classes, renderer_classes
+from TrustBoxAPI.serializer import ProductSerializer, ImportLogSerializer, ProductNameSerializer, ProductWithNameSerializer
 from TrustBoxAPI.models import Product, ProductName, ImportLog
 from sets import Set
 from TrustBoxAPI import tasks, category_handler, trustbox_connector
 from EatFitService import settings
 from rest_framework.parsers import FileUploadParser, FormParser
+from django.db import connection
+from rest_framework.renderers import JSONRenderer
 
 @permission_classes((permissions.IsAuthenticated,))
 class ProductViewSet(viewsets.ViewSet):
@@ -48,6 +50,21 @@ def product_by_name(request, name):
         products.add(Product.objects.get(pk=name.product.pk))
     serializer = ProductSerializer(products, many=True)
     return Response(serializer.data)
+
+@api_view(['GET'])
+@permission_classes((permissions.IsAuthenticated,))
+@renderer_classes((JSONRenderer, ))
+def product_by_name_like(request, name):
+    print(name)
+    cursor = connection.cursor()
+    cursor.execute("Select top 50 n.name,a.value from product_name as n, product_attribute as a where n.language_code='de' and a.language_code='de' and a.canonical_name='productImageURL' and a.product_id=n.product_id and n.name like %s;", ["%" + name + "%"])
+    rows = cursor.fetchall()
+    #products = ProductName.objects.raw("Select top 50 n.* from product_name as n where n.language_code='de' and n.name like %s;", ["%" + name + "%"])
+    #serializer = ProductWithNameSerializer(products, many=True)
+    result = []
+    for row in rows:
+       result.append({"name" : row[0], "image_url" : row[1]})
+    return Response(result)
 
 @api_view(['GET'])
 @permission_classes((permissions.IsAuthenticated,))

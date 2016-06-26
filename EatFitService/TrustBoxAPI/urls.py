@@ -15,7 +15,8 @@ router.register(r'product', ProductViewSet, base_name="product")
 urlpatterns = [
      url(r'^', include(router.urls)),
      url(r'^product/bygtin/(?P<gtin>[0-9]+)', product_views.product_by_gtin),
-     url(r'^product/byname/(?P<name>.+)', product_views.product_by_name),
+     url(r'^product/byname/(?P<name>.+)/', product_views.product_by_name),
+     url(r'^product/likename/(?P<name>.+)/', product_views.product_by_name_like),
      url(r'^product/importlog/all', product_views.import_log_all),
      url(r'^product/importlog/latest', product_views.import_log_latest),
      url(r'^product/importdata', product_views.import_data),

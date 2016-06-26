@@ -12,6 +12,13 @@ class ProductNameSerializer(serializers.ModelSerializer):
         model = ProductName
         fields = '__all__'
 
+class ProductWithNameSerializer(serializers.ModelSerializer):
+    gtin = serializers.IntegerField(source="product.gtin")
+
+    class Meta:
+        model = ProductName
+        fields = '__all__'
+
 class ImportLogSerializer(serializers.ModelSerializer):
     class Meta:
         model = ImportLog
