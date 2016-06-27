@@ -55,7 +55,6 @@ def product_by_name(request, name):
 @permission_classes((permissions.IsAuthenticated,))
 @renderer_classes((JSONRenderer, ))
 def product_by_name_like(request, name):
-    print(name)
     cursor = connection.cursor()
     cursor.execute("Select top 50 n.name,a.value from product_name as n, product_attribute as a where n.language_code='de' and a.language_code='de' and a.canonical_name='productImageURL' and a.product_id=n.product_id and n.name like %s;", ["%" + name + "%"])
     rows = cursor.fetchall()
