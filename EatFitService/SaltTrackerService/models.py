@@ -11,7 +11,7 @@ from django.db import models
 from django.contrib.auth.models import User
 
 class SaltTrackerUser(models.Model):
-    user = models.OneToOneField(User, models.DO_NOTHING, primary_key=True)
+    user = models.OneToOneField(User, models.CASCADE, primary_key=True)
     nickname = models.CharField(unique=True, max_length=50)
     profile_image = models.CharField(max_length=100, blank=True, null=True)
     date_of_birth = models.DateField(blank=True, null=True)
@@ -44,6 +44,7 @@ class MigrosBasket(models.Model):
     external_id = models.CharField(max_length=255)
     date_of_purchase_millis = models.BigIntegerField()
     store = models.CharField(max_length=255)
+    added_date = models.DateTimeField(blank=True)
 
     class Meta:
         managed = False
@@ -58,7 +59,7 @@ class MigrosItem(models.Model):
         db_table = 'migros_item'
 
 class MigrosBasketItem(models.Model):
-    migros_basket = models.ForeignKey(MigrosBasket, models.DO_NOTHING)
+    migros_basket = models.ForeignKey(MigrosBasket, models.CASCADE)
     migros_item = models.ForeignKey(MigrosItem, models.DO_NOTHING)
     quantity = models.FloatField()
     price = models.FloatField()
