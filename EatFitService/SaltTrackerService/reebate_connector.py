@@ -9,7 +9,7 @@ from itertools import izip
 def get_customer_trace(username, password, millis):
     data = {'username':username, "password": password, "lastReceiptMillis" : millis} 
     r = requests.post(settings.REEBATE_URL, json=data)
-    json_data = json.loads(r.text.encode("utf-8"))
+    json_data = json.loads(r.text)
     serializer = ReebateSerializer(data=json_data)
     return serializer
 
@@ -30,7 +30,7 @@ def fill_db():
             for basket in serializer.validated_data["receipts"]:
                 if basket:
                     #print(basket["store"])
-                    m_basket = MigrosBasket.objects.using("salttracker").create(user=reebate_user.user, external_id=basket["externalId"], date_of_purchase_millis = basket["dateOfPurchaseInMillis"], store = basket["store"].encode("utf-8"))
+                    m_basket = MigrosBasket.objects.using("salttracker").create(user=reebate_user.user, external_id=basket["externalId"], date_of_purchase_millis = basket["dateOfPurchaseInMillis"], store = basket["store"])
                     """
                     for item in basket["lineItems"]:
                         if item["name"].encode("utf8") in migros_items:
