@@ -35,6 +35,16 @@
     <Compile Include="EatFitService\local_settings.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="SaltTrackerService\admin.py" />
+    <Compile Include="SaltTrackerService\apps.py" />
+    <Compile Include="SaltTrackerService\migrations\__init__.py" />
+    <Compile Include="SaltTrackerService\models.py" />
+    <Compile Include="SaltTrackerService\reebate_connector.py" />
+    <Compile Include="SaltTrackerService\serializers.py" />
+    <Compile Include="SaltTrackerService\tests.py" />
+    <Compile Include="SaltTrackerService\urls.py" />
+    <Compile Include="SaltTrackerService\views.py" />
+    <Compile Include="SaltTrackerService\__init__.py" />
     <Compile Include="TrustBoxAPI\admin.py">
       <SubType>Code</SubType>
     </Compile>
@@ -77,6 +87,9 @@
     <Compile Include="EatFitService\wsgi.py" />
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="SaltTrackerService\" />
+    <Folder Include="SaltTrackerService\migrations\" />
+    <Folder Include="SaltTrackerService\templates\" />
     <Folder Include="TrustBoxAPI\" />
     <Folder Include="TrustBoxAPI\migrations\" />
     <Folder Include="TrustBoxAPI\static\" />
@@ -88,6 +101,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="requirements.txt" />
+    <Content Include="SaltTrackerService\templates\index.html" />
     <Content Include="TrustBoxAPI\static\category\Categories_NWD.xlsx" />
     <Content Include="TrustBoxAPI\static\category\Trustbox_Produkte_blank.xls" />
     <Content Include="TrustBoxAPI\static\category\Trustbox_Produkte_kategorisiert_v1.xlsx" />
