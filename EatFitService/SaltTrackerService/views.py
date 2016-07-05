@@ -7,4 +7,4 @@ from SaltTrackerService import reebate_connector
 def test(request):
     #reebate_connector.fill_db()
     migros_items_list = MigrosItem.objects.using("salttracker").all()
-    return HttpResponse("ok")
+    return HttpResponse(migros_items_list)
