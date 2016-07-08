@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 # This is an auto-generated Django model module.
 # You'll have to do the following manually to clean this up:
 #   * Rearrange models' order
@@ -116,6 +118,9 @@ class NwdSubcategory(models.Model):
     nwd_main_category = models.ForeignKey(NwdMainCategory, models.DO_NOTHING, blank=True, null=True)
     lmp = models.ForeignKey(LmpCategory, models.DO_NOTHING, blank=True, null=True)
 
+    def __unicode__(self):
+        return self.description
+
     class Meta:
         db_table = 'nwd_subcategory'
 
@@ -173,6 +178,29 @@ class AgreedData(models.Model):
 
     class Meta:
         db_table = 'agreed_data'
+
+class MissingTrustboxItem(models.Model):
+    name = models.CharField(max_length=255, verbose_name="Name")
+    total_weight = models.FloatField(verbose_name="Gesamtgewicht")
+    gtin = models.BigIntegerField(verbose_name="GTIN")
+    nwd_subcategory = models.ForeignKey(NwdSubcategory, models.DO_NOTHING, blank=True, null=True, verbose_name="Kategorie")
+    serving_size = models.FloatField(verbose_name="Serving Size")
+    image_url = models.URLField(blank=True, null=True)
+    salt = models.FloatField(verbose_name="Salz")
+    sodium = models.FloatField(verbose_name="Natrium")
+    energy = models.FloatField(verbose_name="Energie")
+    fat = models.FloatField(verbose_name="Fett")
+    saturated_fat = models.FloatField(verbose_name="Gesaetigtes Fett")
+    carbohydrate = models.FloatField(verbose_name="Kohlenhydrate")
+    sugar = models.FloatField(verbose_name="davon Zucker")
+    fibers = models.FloatField(verbose_name="Ballaststoffe")
+    protein = models.FloatField(verbose_name="Protein")
+
+    def __unicode__(self):
+        return self.name
+
+    class Meta:
+        db_table = 'missing_trustbox_item'
 
 
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
