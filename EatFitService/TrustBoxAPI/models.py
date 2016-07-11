@@ -181,20 +181,21 @@ class AgreedData(models.Model):
 
 class MissingTrustboxItem(models.Model):
     name = models.CharField(max_length=255, verbose_name="Name")
-    total_weight = models.FloatField(verbose_name="Gesamtgewicht")
+    total_weight = models.FloatField(verbose_name="Gesamtgewicht in Gramm")
     gtin = models.BigIntegerField(verbose_name="GTIN")
     nwd_subcategory = models.ForeignKey(NwdSubcategory, models.DO_NOTHING, blank=True, null=True, verbose_name="Kategorie")
     serving_size = models.FloatField(verbose_name="Serving Size")
     image_url = models.URLField(blank=True, null=True)
-    salt = models.FloatField(verbose_name="Salz pro 100g")
-    sodium = models.FloatField(verbose_name="Natrium pro 100g")
-    energy = models.FloatField(verbose_name="Energie pro 100g")
-    fat = models.FloatField(verbose_name="Fett pro 100g")
-    saturated_fat = models.FloatField(verbose_name="Gesättigtes Fett pro 100g")
-    carbohydrate = models.FloatField(verbose_name="Kohlenhydrate pro 100g")
-    sugar = models.FloatField(verbose_name="davon Zucker pro 100g")
-    fibers = models.FloatField(verbose_name="Ballaststoffe pro 100g")
-    protein = models.FloatField(verbose_name="Protein pro 100g")
+    salt = models.FloatField(verbose_name="Salz pro 100g in Gramm")
+    sodium = models.FloatField(verbose_name="Natrium pro 100g in Gramm")
+    energy = models.FloatField(verbose_name="Energie pro 100g in KJ")
+    fat = models.FloatField(verbose_name="Fett pro 100g in Gramm")
+    saturated_fat = models.FloatField(verbose_name="Gesättigtes Fett pro 100g in Gramm")
+    carbohydrate = models.FloatField(verbose_name="Kohlenhydrate pro 100g in Gramm")
+    sugar = models.FloatField(verbose_name="davon Zucker pro 100g in Gramm")
+    fibers = models.FloatField(verbose_name="Ballaststoffe pro 100g in Gramm")
+    protein = models.FloatField(verbose_name="Protein pro 100g in Gramm")
+    price = models.FloatField(verbose_name="Preis in CHF")
 
     def __unicode__(self):
         return self.name
