@@ -195,7 +195,7 @@ class MissingTrustboxItem(models.Model):
     sugar = models.FloatField(verbose_name="davon Zucker pro 100g in Gramm")
     fibers = models.FloatField(verbose_name="Ballaststoffe pro 100g in Gramm")
     protein = models.FloatField(verbose_name="Protein pro 100g in Gramm")
-    price = models.FloatField(verbose_name="Preis in CHF")
+    price = models.FloatField(verbose_name="Preis in CHF", blank=True, null=True)
 
     def __unicode__(self):
         return self.name
