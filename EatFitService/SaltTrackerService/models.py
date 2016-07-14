@@ -53,6 +53,7 @@ class MigrosBasket(models.Model):
 class MigrosItem(models.Model):
     name = models.CharField(max_length=255)
     gtin = models.BigIntegerField(null=True, blank=True)
+    price = models.FloatField()
 
     class Meta:
         managed = False

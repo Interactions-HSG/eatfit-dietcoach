@@ -5,6 +5,7 @@ from TrustBoxAPI.models import Product, ImportLog, Nutrition, NutritionAttribute
 class MissingTrustboxItemAdmin(admin.ModelAdmin):
     list_display = ("name", "gtin", "total_weight")
     search_fields = ('name', 'gtin')
+    save_as = True
 
 admin.site.register(Product)
 admin.site.register(ImportLog)
