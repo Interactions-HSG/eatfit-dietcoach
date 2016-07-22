@@ -54,6 +54,7 @@ class MigrosItem(models.Model):
     name = models.CharField(max_length=255)
     gtin = models.BigIntegerField(null=True, blank=True)
     price = models.FloatField()
+    quantity = models.FloatField(null=True, blank=True, verbose_name="Menge")
 
     class Meta:
         managed = False

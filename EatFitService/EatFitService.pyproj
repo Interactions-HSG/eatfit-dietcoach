@@ -51,6 +51,9 @@
     <Compile Include="TrustBoxAPI\category_handler.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="TrustBoxAPI\clean_trustbox.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="TrustBoxAPI\database.py">
       <SubType>Code</SubType>
     </Compile>
