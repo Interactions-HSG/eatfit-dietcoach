@@ -163,6 +163,10 @@ CELERYBEAT_SCHEDULE = {
         "task" : "TrustBoxAPI.tasks.get_trustbox_data_by_call",
         "schedule" : crontab(minute = "0", hour="2"),   
         },
+    "update_shopping_data" : {
+        "task" : "TrustBoxAPI.tasks.update_shopping_results",
+        "schedule" : crontab(minute = "0", hour="6"),   
+        },
 }
 
 # Static files (CSS, JavaScript, Images)

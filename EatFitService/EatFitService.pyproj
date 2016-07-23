@@ -40,6 +40,9 @@
     <Compile Include="SaltTrackerService\migrations\__init__.py" />
     <Compile Include="SaltTrackerService\models.py" />
     <Compile Include="SaltTrackerService\reebate_connector.py" />
+    <Compile Include="SaltTrackerService\result_calculation.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="SaltTrackerService\serializers.py" />
     <Compile Include="SaltTrackerService\tests.py" />
     <Compile Include="SaltTrackerService\urls.py" />

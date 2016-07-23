@@ -70,3 +70,16 @@ class MigrosBasketItem(models.Model):
         managed = False
         db_table = 'migros_basket_item'
 
+class ShoppingResult(models.Model):
+    gtin  = models.BigIntegerField()
+    purchased = models.DateTimeField()
+    total_salt = models.FloatField()
+    quantity = models.FloatField()
+    user = models.ForeignKey(User)
+    added = models.DateTimeField()
+    nwd_subcategory_name = models.TextField(max_length=1024, blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'shopping_result'
+
