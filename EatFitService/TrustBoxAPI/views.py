@@ -7,7 +7,7 @@ from django.http import HttpRequest, HttpResponse
 from django.template import RequestContext
 from datetime import datetime
 from trustbox_connector import *
-from TrustBoxAPI import database, tasks, reebate_connector
+from TrustBoxAPI import database, tasks, reebate_connector, trustbox_connector
 from TrustBoxAPI import clean_trustbox
 
 #database.setup_database() 
@@ -38,6 +38,7 @@ def reebate_excel_to_db(request):
 
 def clean_trustbox_items(request):
     #clean_trustbox.clean_nutrition_group_attribute()
-    clean_trustbox.clean_nutrition_facts()
+    #clean_trustbox.clean_nutrition_facts()
+    trustbox_connector.__clean_trustbox()
     return HttpResponse("ok")
 

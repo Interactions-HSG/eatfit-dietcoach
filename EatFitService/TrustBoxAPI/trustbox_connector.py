@@ -3,6 +3,7 @@ import json
 from EatFitService import settings
 from TrustBoxAPI.models import Product, ProductName, ProductAttribute, Nutrition, NutritionAttribute, NutritionFactsGroup, NutritionFact, AgreedData, ImportLog, NutritionLabel, NutritionGroupAttribute
 from datetime import datetime
+from django.db.models import Q
 
 DEFAULT_START_TIME = "2000-01-01T00:00:00Z"
 
@@ -38,9 +39,29 @@ def load_changed_data():
                             create_or_update_agreed_data(p, db_product)
                         except Exception as e:
                             ImportLog.objects.create(import_timestamp = datetime.now(), successful=False, product_gtin = str(p._gtin), failed_reason = "Product: " + str(p._gtin) + " " + str(e))
+        __clean_trustbox()
         ImportLog.objects.create(import_timestamp = datetime.now(), successful=True)
     except Exception as e:
         ImportLog.objects.create(import_timestamp = datetime.now(), successful=False, failed_reason = "General error: " +  str(e))
+
+def __clean_trustbox():
+    nutrition_facts = list(NutritionFact.objects.raw("SELECT * FROM nutrition_fact as fact where canonical_name = 'sodium' and amount <> '0' and isnumeric(amount) = 1 and nutrition_facts_group_id in (Select nutrition_facts_group_id from [dbo].[nutrition_fact] where canonical_name = 'salt' and amount = '0')"))
+    count = 0
+    for fact in nutrition_facts:
+        try:
+            facts = NutritionFact.objects.filter(nutrition_facts_group = fact.nutrition_facts_group, canonical_name = "salt")
+            if is_number(fact.amount) and facts.exists():
+                salt_fact = facts[0]
+            if fact.unit_of_measure == "g" or fact.unit_of_measure == "g/l":
+                salt_fact.amount = str(float(fact.amount) * 2.54)
+                salt_fact.save()
+                print("saved fact: " + str(count))
+                count = count + 1
+            elif fact.unit_of_measure == "mg":
+                salt_fact.amount = str(float(fact.amount) * 2.54 * 0.001)
+                salt_fact.save()
+        except:
+            pass
 
 def create_or_update_agreed_data(product, db_product):
     if hasattr(product, 'agreedData'):
@@ -194,3 +215,11 @@ def get_single_product(gtin):
                     for p in product[1]:
                         return p
     return None
+
+
+def is_number(s):
+    try:
+        float(s)
+        return True
+    except ValueError:
+        return False
