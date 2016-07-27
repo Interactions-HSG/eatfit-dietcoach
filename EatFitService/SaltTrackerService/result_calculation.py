@@ -2,6 +2,7 @@ from django.db import connection
 from TrustBoxAPI.models import Product, MissingTrustboxItem, NutritionFact, ImportLog
 from SaltTrackerService.models import SaltTrackerUser, MigrosItem, MigrosBasketItem, ShoppingResult
 from datetime import datetime
+from django.db.models.aggregates import Sum
 
 def calculate_shopping_results(user):
     count = 0.0
@@ -51,6 +52,27 @@ def calculate_shopping_results(user):
                 save_count = save_count + 1
                 print("saved item: " + str(save_count))
         ImportLog.objects.create(import_timestamp = datetime.now(), successful=True, failed_reason = "Added shopping results")
+
+
+def get_shopping_tips(user_pk):
+    cursor = connection.cursor()
+    shopping_results = ShoppingResult.objects.using("salttracker").filter(user_id=user_pk).values("nwd_subcategory_name").annotate(total_salt = Sum("total_salt")).order_by("-total_salt")[:5]
+    result_dict = []
+    for shopping_result in shopping_results:
+        sql = "SELECT p.id, p.gtin, fact.amount, att.value FROM nutrition_fact as fact, product as p,  nwd_subcategory as category, nutrition_group_attribute as att where p.nwd_subcategory_id = category.id and category.description = %s and fact.nutrition_facts_group_id = p.id and fact.canonical_name = 'salt' and fact.amount <> '0' and att.nutrition_facts_group_id = p.id and att.canonical_name = 'servingSize' and (att.language_code = 'de' or att.language_code is null) order by fact.amount;"
+        cursor.execute(sql, [shopping_result["nwd_subcategory_name"]])
+        rows = cursor.fetchall()
+        for row in rows:
+            if len(row) > 0:
+                sql = "SELECT names.name, att.value FROM product as p, product_attribute as att, product_name as names where p.id = %s and att.product_id = p.id and att.canonical_name = 'productImageURL' and (att.language_code = 'de' or att.language_code is null) and names.product_id = p.id and (names.language_code = 'de' or names.language_code is null);" % row[0]
+                cursor.execute(sql)
+                result = cursor.fetchone()
+                if len(result) > 0:
+                    result_dict.append({"name" : result[0], "image" : result[1], "gtin" : row[1], "category" : shopping_result["nwd_subcategory_name"]})
+                    break
+    return result_dict
+
+
 
 def is_number(s):
     try:

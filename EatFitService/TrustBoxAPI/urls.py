@@ -28,6 +28,7 @@ urlpatterns = [
      url(r'^product/(?P<product_pk>[0-9]+)/name', product_views.names_of_product),
      url(r'^reebate/$', views.test_reebate),
      url(r'^reebate/excel_to_db', views.reebate_excel_to_db),
+     url(r'^results/shopping-tips/(?P<user_pk>[0-9]+)', product_views.get_shopping_tips),
      url(r'^trustbox/clean', views.clean_trustbox_items),
      url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
      url(r'^api-token-auth/', auth_views.obtain_auth_token)

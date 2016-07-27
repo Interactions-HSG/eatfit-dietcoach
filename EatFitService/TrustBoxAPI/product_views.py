@@ -10,6 +10,7 @@ from EatFitService import settings
 from rest_framework.parsers import FileUploadParser, FormParser
 from django.db import connection
 from rest_framework.renderers import JSONRenderer
+from SaltTrackerService import result_calculation
 
 @permission_classes((permissions.IsAuthenticated,))
 class ProductViewSet(viewsets.ViewSet):
@@ -122,4 +123,11 @@ def get_product_from_trustbox(request, gtin):
 def product_from_trustbox_in_db(request, gtin):
     trustbox_connector.single_product_to_db(gtin)
     return Response(status = status.HTTP_200_OK)
+
+@api_view(['GET'])
+@permission_classes((permissions.IsAuthenticated,))
+@renderer_classes((JSONRenderer, ))
+def get_shopping_tips(request, user_pk):
+    result = result_calculation.get_shopping_tips(user_pk)
+    return Response(result)
 
