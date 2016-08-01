@@ -7,7 +7,6 @@ import datetime
 from SaltTrackerService.models import SaltTrackerUser
 from TrustBoxAPI import tasks
 
-@login_required
 def test(request):
     reebate_connector.fill_db()
     return HttpResponse("ok")
