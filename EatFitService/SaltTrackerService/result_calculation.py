@@ -36,11 +36,13 @@ def calculate_shopping_results(user):
         percent = (count/len(basket_items))*100
         print(str(percent) + " %")
         save_count = 0
+        results = []
         for basket_item in basket_items:
             if "total_salt" in basket_item:
-                __create_shopping_result(basket_item, user.user)
+                results.append(__create_shopping_result(basket_item, user.user))
                 save_count = save_count + 1
                 print("saved item: " + str(save_count))
+        ShoppingResult.objects.using("salttracker").bulk_create(results)
         ImportLog.objects.create(import_timestamp = datetime.now(), successful=True, failed_reason = "Added shopping results")
 
 
@@ -49,15 +51,15 @@ def get_shopping_tips(user_pk):
     shopping_results = ShoppingResult.objects.using("salttracker").filter(user_id=user_pk).values("nwd_subcategory_name").annotate(total_salt = Sum("total_salt")).order_by("-total_salt")[:5]
     result_dict = []
     for shopping_result in shopping_results:
-        fat_results = ShoppingResult.objects.using("salttracker").filter(nwd_subcategory_name=shopping_result["nwd_subcategory_name"], total_fat__gt= 0, serving_size__gt=0).aggregate(average_fat = Avg((F("total_fat")/F("quantity"))))
-        sugar_results = ShoppingResult.objects.using("salttracker").filter(nwd_subcategory_name=shopping_result["nwd_subcategory_name"], total_sugar__gt= 0, serving_size__gt=0).aggregate(average_sugar = Avg((F("total_sugar")/F("quantity"))))
+        fat_results = ShoppingResult.objects.using("salttracker").filter(nwd_subcategory_name=shopping_result["nwd_subcategory_name"], total_fat__gt= 0, serving_size__gt=0).aggregate(average_fat = Avg((F("total_fat"))))
+        sugar_results = ShoppingResult.objects.using("salttracker").filter(nwd_subcategory_name=shopping_result["nwd_subcategory_name"], total_sugar__gt= 0, serving_size__gt=0).aggregate(average_sugar = Avg((F("total_sugar"))))
         sql = "SELECT p.id, p.gtin, fact.amount, att.value, fact2.amount as fat, fact3.amount as sugar FROM nutrition_fact as fact, nutrition_fact as fact2,nutrition_fact as fact3, product as p,  nwd_subcategory as category, nutrition_group_attribute as att where p.nwd_subcategory_id = category.id and category.description = %s and fact.nutrition_facts_group_id = p.id and fact2.nutrition_facts_group_id = p.id and fact3.nutrition_facts_group_id = p.id and fact.canonical_name = 'salt' and fact2.canonical_name='totalFat' and fact3.canonical_name='sugars' and fact.amount <> '0' and att.nutrition_facts_group_id = p.id and att.canonical_name = 'servingSize' and (att.language_code = 'de' or att.language_code is null) order by fact.amount;"
         cursor.execute(sql, [shopping_result["nwd_subcategory_name"]])
         rows = cursor.fetchall()
         for row in rows:
             if len(row) > 0:
-                if is_number(row[3]) and is_number(row[4]) and is_number(row[5]):
-                    if (float(row[3]) * float(row[4])*0.01) < 1.2*fat_results["average_fat"] and (float(row[3]) * float(row[5])*0.01) < 1.2*sugar_results["average_sugar"]:
+                if is_number(row[4]) and is_number(row[5]):
+                    if float(row[4]) < 1.2*fat_results["average_fat"] and float(row[5]) < 1.2*sugar_results["average_sugar"]:
                         sql = "SELECT names.name, att.value FROM product as p, product_attribute as att, product_name as names where p.id = %s and att.product_id = p.id and att.canonical_name = 'productImageURL' and (att.language_code = 'de' or att.language_code is null) and names.product_id = p.id and (names.language_code = 'de' or names.language_code is null);" % row[0]
                         cursor.execute(sql)
                         result = cursor.fetchone()
@@ -69,8 +71,8 @@ def get_shopping_tips(user_pk):
 
 def __get_items_from_missing_trustbox_items(basket_item,missing_items_dict,basket_item_gtin):
     basket_item["total_salt"] = missing_items_dict[basket_item_gtin].serving_size * (missing_items_dict[basket_item_gtin].salt * 0.01) * basket_item["quantity"]
-    basket_item["fat"] = missing_items_dict[basket_item_gtin].serving_size * (missing_items_dict[basket_item_gtin].fat * 0.01) * basket_item["quantity"]
-    basket_item["sugar"] = missing_items_dict[basket_item_gtin].serving_size * (missing_items_dict[basket_item_gtin].sugar * 0.01) * basket_item["quantity"]
+    basket_item["fat"] = missing_items_dict[basket_item_gtin].fat
+    basket_item["sugar"] = missing_items_dict[basket_item_gtin].sugar 
     basket_item["serving_size"] = missing_items_dict[basket_item_gtin].serving_size
     if missing_items_dict[basket_item_gtin].nwd_subcategory:
         basket_item["category"] = missing_items_dict[basket_item_gtin].nwd_subcategory.description
@@ -80,9 +82,9 @@ def __get_items_from_trustbox(basket_item,products_dict,basket_item_gtin):
     if is_number(row[1]) and is_number(row[4]):
         basket_item["total_salt"] = (float(row[1]) * 0.01) * float(row[4]) * basket_item["quantity"]
         if is_number(row[6]):
-            basket_item["fat"] = (float(row[6]) * 0.01) * float(row[4]) * basket_item["quantity"]
+            basket_item["fat"] = float(row[6])
         if is_number(row[7]):
-            basket_item["sugar"] = (float(row[7]) * 0.01) * float(row[4]) * basket_item["quantity"]
+            basket_item["sugar"] = float(row[7])
         basket_item["category"] = row[5]
         basket_item["serving_size"] = row[4]
 
@@ -105,7 +107,8 @@ def __create_shopping_result(basket_item, user):
         create_arguments["serving_size"] = basket_item["serving_size"]
     if "category" in basket_item:
         create_arguments["nwd_subcategory_name"] = basket_item["category"]
-    ShoppingResult.objects.using("salttracker").create(**create_arguments)
+    result = ShoppingResult(**create_arguments)
+    return result
 
 def __get_basket_items(user):
     basket_items = []
