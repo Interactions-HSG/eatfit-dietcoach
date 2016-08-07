@@ -2,7 +2,7 @@ from rest_framework import viewsets, status, permissions
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from rest_framework.decorators import api_view, permission_classes, parser_classes, renderer_classes
-from TrustBoxAPI.serializer import ProductSerializer, ImportLogSerializer, ProductNameSerializer, ProductWithNameSerializer
+from TrustBoxAPI.serializer import ProductSerializer, ImportLogSerializer, ProductNameSerializer, ProductWithNameSerializer, ShoppingTipSerializer
 from TrustBoxAPI.models import Product, ProductName, ImportLog
 from sets import Set
 from TrustBoxAPI import tasks, category_handler, trustbox_connector
@@ -128,6 +128,10 @@ def product_from_trustbox_in_db(request, gtin):
 @permission_classes((permissions.IsAuthenticated,))
 @renderer_classes((JSONRenderer, ))
 def get_shopping_tips(request, user_pk):
-    result = result_calculation.get_shopping_tips(user_pk)
+    products, tips = result_calculation.get_shopping_tips(user_pk)
+    serializer = ShoppingTipSerializer(tips, many=True)
+    result = {}
+    result["products"] = products
+    result["tips"] = serializer.data
     return Response(result)
 

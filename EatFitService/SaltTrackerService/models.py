@@ -86,3 +86,18 @@ class ShoppingResult(models.Model):
         managed = False
         db_table = 'shopping_result'
 
+class ShoppingTip(models.Model):
+    text = models.TextField(verbose_name="Text")
+    nwd_subcategory_name = models.TextField(max_length=1024, blank=True, null=True, verbose_name="(Sub-)Kategoriename")
+    category_color = models.CharField(max_length=255, verbose_name="Kategoriefarbe")
+    is_general = models.BooleanField(default=False, verbose_name="Allgemeiner Tipp")
+    icon = models.ImageField(upload_to ="shopping_tips",null=True, blank=True, verbose_name="Icon")
+
+    def __unicode__(self):
+        return self.text[:20]
+
+    class Meta:
+        managed = True
+        db_table = 'shopping_tip'
+        app_label = 'api' 
+

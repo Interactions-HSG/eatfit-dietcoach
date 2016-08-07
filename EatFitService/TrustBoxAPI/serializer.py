@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from TrustBoxAPI.models import Product, ImportLog, ProductName
+from SaltTrackerService.models import ShoppingTip
 
 class ProductSerializer(serializers.ModelSerializer):
     class Meta:
@@ -23,3 +24,8 @@ class ImportLogSerializer(serializers.ModelSerializer):
     class Meta:
         model = ImportLog
         fields = '__all__'
+
+class ShoppingTipSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ShoppingTip
+        fields = ("text", "nwd_subcategory_name", "category_color", "icon")

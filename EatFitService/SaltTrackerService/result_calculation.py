@@ -1,9 +1,10 @@
 from django.db import connection
 from TrustBoxAPI.models import Product, MissingTrustboxItem, NutritionFact, ImportLog
-from SaltTrackerService.models import SaltTrackerUser, MigrosItem, MigrosBasketItem, ShoppingResult
+from SaltTrackerService.models import SaltTrackerUser, MigrosItem, MigrosBasketItem, ShoppingResult, ShoppingTip
 from datetime import datetime
 from django.db.models.aggregates import Sum, Avg
 from django.db.models import F
+from django.db.models.query_utils import Q
 
 def calculate_shopping_results(user):
     count = 0.0
@@ -49,8 +50,10 @@ def calculate_shopping_results(user):
 def get_shopping_tips(user_pk):
     cursor = connection.cursor()
     shopping_results = ShoppingResult.objects.using("salttracker").filter(user_id=user_pk).values("nwd_subcategory_name").annotate(total_salt = Sum("total_salt")).order_by("-total_salt")[:5]
+    categories = []
     result_dict = []
     for shopping_result in shopping_results:
+        categories.append(shopping_result["nwd_subcategory_name"])
         fat_results = ShoppingResult.objects.using("salttracker").filter(nwd_subcategory_name=shopping_result["nwd_subcategory_name"], total_fat__gt= 0, serving_size__gt=0).aggregate(average_fat = Avg((F("total_fat"))))
         sugar_results = ShoppingResult.objects.using("salttracker").filter(nwd_subcategory_name=shopping_result["nwd_subcategory_name"], total_sugar__gt= 0, serving_size__gt=0).aggregate(average_sugar = Avg((F("total_sugar"))))
         sql = "SELECT p.id, p.gtin, fact.amount, att.value, fact2.amount as fat, fact3.amount as sugar FROM nutrition_fact as fact, nutrition_fact as fact2,nutrition_fact as fact3, product as p,  nwd_subcategory as category, nutrition_group_attribute as att where p.nwd_subcategory_id = category.id and category.description = %s and fact.nutrition_facts_group_id = p.id and fact2.nutrition_facts_group_id = p.id and fact3.nutrition_facts_group_id = p.id and fact.canonical_name = 'salt' and fact2.canonical_name='totalFat' and fact3.canonical_name='sugars' and fact.amount <> '0' and att.nutrition_facts_group_id = p.id and att.canonical_name = 'servingSize' and (att.language_code = 'de' or att.language_code is null) order by fact.amount;"
@@ -66,7 +69,8 @@ def get_shopping_tips(user_pk):
                         if len(result) > 0:
                             result_dict.append({"name" : result[0], "image" : result[1], "gtin" : row[1], "category" : shopping_result["nwd_subcategory_name"]})
                             break
-    return result_dict
+    tips = ShoppingTip.objects.using("salttracker").filter(Q(nwd_subcategory_name__in=categories)|Q(is_general=True)).order_by("-nwd_subcategory_name")[:5]
+    return result_dict, tips
 
 
 def __get_items_from_missing_trustbox_items(basket_item,missing_items_dict,basket_item_gtin):
