@@ -117,6 +117,7 @@ class NwdSubcategory(models.Model):
     description = models.TextField(max_length=1024, blank=True, null=True)
     nwd_main_category = models.ForeignKey(NwdMainCategory, models.DO_NOTHING, blank=True, null=True)
     lmp = models.ForeignKey(LmpCategory, models.DO_NOTHING, blank=True, null=True)
+    icon = models.ImageField(upload_to ="media/subcategory_icons",null=True, blank=True, verbose_name="Icon")
 
     def __unicode__(self):
         return self.description
