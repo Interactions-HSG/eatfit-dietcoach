@@ -101,3 +101,43 @@ class ShoppingTip(models.Model):
         db_table = 'shopping_tip'
         app_label = 'api' 
 
+
+class AutoidScraperMigrosBasket(models.Model):
+    user = models.ForeignKey('SaltTrackerUser', models.DO_NOTHING)
+    storename = models.CharField(max_length=255, blank=True, null=True)
+    transaction_nr = models.FloatField(blank=True, null=True)
+    kst = models.IntegerField(blank=True, null=True)
+    knr = models.IntegerField(blank=True, null=True)
+    purchase_datetime = models.DateTimeField(blank=True, null=True)
+    total_price = models.FloatField(blank=True, null=True)
+    url = models.TextField(blank=True, null=True)  # This field type is a guess.
+    added_datetime = models.DateTimeField(blank=True, null=True)
+    received_points = models.FloatField(blank=True, null=True)
+    generated_id = models.CharField(max_length=255, blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'autoid_scraper_migros_basket'
+
+
+class AutoidScraperMigrosBasketItem(models.Model):
+    quantity = models.FloatField(blank=True, null=True)
+    price = models.FloatField(blank=True, null=True)
+    autoid_scraper_migros_basket = models.ForeignKey(AutoidScraperMigrosBasket, models.DO_NOTHING)
+    autoid_scraper_migros_item = models.ForeignKey('AutoidScraperMigrosItem', models.DO_NOTHING)
+
+    class Meta:
+        managed = False
+        db_table = 'autoid_scraper_migros_basket_item'
+
+
+class AutoidScraperMigrosItem(models.Model):
+    count = models.IntegerField(blank=True, null=True)
+    name = models.CharField(max_length=255, blank=True, null=True)
+    gtin = models.BigIntegerField(blank=True, null=True)
+    avg_price = models.FloatField(blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'autoid_scraper_migros_item'
+

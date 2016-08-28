@@ -1,6 +1,6 @@
 from django.db import connection
 from TrustBoxAPI.models import Product, MissingTrustboxItem, NutritionFact, ImportLog
-from SaltTrackerService.models import SaltTrackerUser, MigrosItem, MigrosBasketItem, ShoppingResult, ShoppingTip
+from SaltTrackerService.models import SaltTrackerUser, MigrosItem, MigrosBasketItem, ShoppingResult, ShoppingTip, AutoidScraperMigrosBasketItem
 from datetime import datetime
 from django.db.models.aggregates import Sum, Avg
 from django.db.models import F
@@ -13,7 +13,7 @@ def calculate_shopping_results(user):
     number_of_items = basket_items.count()
     print(number_of_items)
     if number_of_items > 0:
-        gtins = [x["migros_item__gtin"] for x in basket_items]
+        gtins = [x["autoid_scraper_migros_item__gtin"] for x in basket_items]
         gtin_string_list = ",".join(str(gtin) for gtin in gtins)
         sql = "SELECT p.gtin, fact.amount, fact.unit_of_measure, fact.canonical_name,g.value,category.description, fact2.amount as fat, fact3.amount as sugar FROM nutrition_fact as fact,nutrition_fact as fact2,nutrition_fact as fact3, nutrition_group_attribute as g, product as p, nwd_subcategory as category where p.gtin IN (%s) and p.nwd_subcategory_id = category.id and  fact.nutrition_facts_group_id = p.id and fact2.nutrition_facts_group_id = p.id and fact3.nutrition_facts_group_id = p.id and fact.nutrition_facts_group_id = g.nutrition_facts_group_id and g.canonical_name = 'servingSize' and fact.canonical_name = 'salt' and fact2.canonical_name='totalFat' and fact3.canonical_name ='sugars' and fact.amount is not null and ISNUMERIC(fact.amount)= 1 and fact.amount <> '-' and fact.amount <> '0' and (g.language_code='de' or g.language_code is null)" % gtin_string_list
         nutritions = cursor.execute(sql)
@@ -27,7 +27,7 @@ def calculate_shopping_results(user):
         for row in rows:
             products_dict[row[0]] = row
         for basket_item in basket_items:
-            basket_item_gtin = basket_item["migros_item__gtin"]
+            basket_item_gtin = basket_item["autoid_scraper_migros_item__gtin"]
             if basket_item_gtin in missing_items_dict:
                 __get_items_from_missing_trustbox_items(basket_item, missing_items_dict, basket_item_gtin)
                 count = count +1 
@@ -94,8 +94,8 @@ def __get_items_from_trustbox(basket_item,products_dict,basket_item_gtin):
 
 def __create_shopping_result(basket_item, user):
     create_arguments = {}
-    create_arguments["gtin"] = basket_item["migros_item__gtin"]
-    create_arguments["purchased"] = datetime.fromtimestamp(basket_item["migros_basket__date_of_purchase_millis"]/1000.0)
+    create_arguments["gtin"] = basket_item["autoid_scraper_migros_item__gtin"]
+    create_arguments["purchased"] = basket_item["autoid_scraper_migros_basket__purchase_datetime"]
     create_arguments["total_salt"] = basket_item["total_salt"]
     create_arguments["quantity"] = basket_item["quantity"]
     create_arguments["added"] = datetime.now()
@@ -118,9 +118,9 @@ def __get_basket_items(user):
     basket_items = []
     try:
         latest_entry = ShoppingResult.objects.using("salttracker").filter(user=user.user).latest("added")
-        basket_items = MigrosBasketItem.objects.using("salttracker").filter(migros_basket__user=user, migros_basket__added_date__gt=latest_entry.added, migros_item__gtin__gt=0).values('migros_item__gtin','quantity', "migros_basket__date_of_purchase_millis")
+        basket_items = AutoidScraperMigrosBasketItem.objects.using("salttracker").filter(autoid_scraper_migros_basket__user=user, autoid_scraper_migros_basket__added_datetime__gt=latest_entry.added, autoid_scraper_migros_item__gtin__gt=0).values('autoid_scraper_migros_item__gtin','quantity', "autoid_scraper_migros_basket__purchase_datetime")
     except:
-        basket_items = MigrosBasketItem.objects.using("salttracker").filter(migros_basket__user=user, migros_item__gtin__gt=0).values('migros_item__gtin','quantity', "migros_basket__date_of_purchase_millis")
+        basket_items = AutoidScraperMigrosBasketItem.objects.using("salttracker").filter(autoid_scraper_migros_basket__user=user, autoid_scraper_migros_item__gtin__gt=0).values('autoid_scraper_migros_item__gtin','quantity', "autoid_scraper_migros_basket__purchase_datetime")
     return basket_items
 
 def is_number(s):
