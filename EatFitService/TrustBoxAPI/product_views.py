@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from rest_framework.decorators import api_view, permission_classes, parser_classes, renderer_classes
 from TrustBoxAPI.serializer import ProductSerializer, ImportLogSerializer, ProductNameSerializer, ProductWithNameSerializer, ShoppingTipSerializer
-from TrustBoxAPI.models import Product, ProductName, ImportLog
+from TrustBoxAPI.models import Product, ProductName, ImportLog, NwdSubcategory
 from sets import Set
 from TrustBoxAPI import tasks, category_handler, trustbox_connector
 from EatFitService import settings
@@ -135,3 +135,12 @@ def get_shopping_tips(request, user_pk):
     result["tips"] = serializer.data
     return Response(result)
 
+@api_view(['POST'])
+@permission_classes((permissions.IsAuthenticated,))
+@renderer_classes((JSONRenderer, ))
+def get_icon_urls(request):
+    names = request.data
+    if names:
+        icon_urls = NwdSubcategory.objects.filter(description__in=names).values_list("icon", flat=True)
+        return Response(icon_urls)
+    return Response(status = status.HTTP_400_BAD_REQUEST)
