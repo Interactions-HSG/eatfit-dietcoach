@@ -59,8 +59,6 @@ def product_by_name_like(request, name):
     cursor = connection.cursor()
     cursor.execute("Select top 50 n.name,a.value from product_name as n, product_attribute as a where n.language_code='de' and a.language_code='de' and a.canonical_name='productImageURL' and a.product_id=n.product_id and n.name like %s;", ["%" + name + "%"])
     rows = cursor.fetchall()
-    #products = ProductName.objects.raw("Select top 50 n.* from product_name as n where n.language_code='de' and n.name like %s;", ["%" + name + "%"])
-    #serializer = ProductWithNameSerializer(products, many=True)
     result = []
     for row in rows:
        result.append({"name" : row[0], "image_url" : row[1]})
@@ -135,12 +133,9 @@ def get_shopping_tips(request, user_pk):
     result["tips"] = serializer.data
     return Response(result)
 
-@api_view(['POST'])
+@api_view(['GET'])
 @permission_classes((permissions.IsAuthenticated,))
 @renderer_classes((JSONRenderer, ))
 def get_icon_urls(request):
-    names = request.data
-    if names:
-        icon_urls = NwdSubcategory.objects.filter(description__in=names).values_list("icon", flat=True)
-        return Response(icon_urls)
-    return Response(status = status.HTTP_400_BAD_REQUEST)
+    icon_urls = NwdSubcategory.objects.all().values("description", "icon")
+    return Response(icon_urls)
