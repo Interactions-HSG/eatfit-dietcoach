@@ -47,7 +47,7 @@ def map_categories(iteration):
         else:
             try:
                 gtin = sh.row(rx)[0]
-                nwd_sub_id = sh.row(rx)[5]
+                nwd_sub_id = sh.row(rx)[4]
                 sub_categories = NwdSubcategory.objects.filter(nwd_subcategory_id = str(nwd_sub_id.value))
                 if sub_categories.exists():
                     products = Product.objects.filter(gtin = int(gtin.value))
