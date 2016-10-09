@@ -9,3 +9,13 @@ EatFitService/bin/
 EatFitService/ptvs_virtualenv_proxy.py
 EatFitService/web.config
 EatFitService/web.debug.config
+FoodCoachWebsite/FoodCoachWebsite/obj/
+FoodCoachWebsite/FoodCoachWebsite/env/
+FoodCoachWebsite/FoodCoachWebsite/static/
+FoodCoachWebsite/FoodCoachWebsite/bin/
+FoodCoachWebsite/FoodCoachWebsite/web.debug.config
+FoodCoachWebsite/FoodCoachWebsite/web.config
+FoodCoachWebsite/.vs/FoodCoachWebsite/v14/.suo
+FoodCoachWebsite/FoodCoachWebsite/foodcoachwebsite - Web Deploy.pubxml.user
+FoodCoachWebsite/FoodCoachWebsite/foodcoachwebsite - Web Deploy.pubxml
+FoodCoachWebsite/FoodCoachWebsite/db.sqlite3
