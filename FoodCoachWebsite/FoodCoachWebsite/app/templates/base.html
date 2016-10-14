@@ -1,18 +1,478 @@
 ﻿{% load staticfiles %}
 {% load i18n %}
 
-<!doctype html>
-<html class="no-js" lang="">
+<!DOCTYPE html>
+<html lang="en">
+
 <head>
-    
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>FoodCoach - Wir lieben gesunde Ernährung</title>
+
+    <!-- Bootstrap Core CSS -->
+    <link href="/static/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom Fonts -->
+    <link href="https://fonts.googleapis.com/css?family=Lato" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Catamaran:100,200,300,400,500,600,700,800,900" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Muli" rel="stylesheet">
+
+    <!-- Plugin CSS -->
+    <link rel="stylesheet" href="/static/vendor/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="/static/vendor/simple-line-icons/css/simple-line-icons.css">
+    <link rel="stylesheet" href="/static/vendor/device-mockups/device-mockups.min.css">
+
+    <!-- Theme CSS -->
+    <!--<link href="css/new-age.min.css" rel="stylesheet">-->
+    <link href="/static/css/new-age.css" rel="stylesheet">
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
 </head>
-<body style="background-color: #388e3c; width: 100%; height: 100%;">
-    <div  align="center">
-        <h1 style="color: white">Swiss SaltTracker</h1>
-        <img style="width: 250px;" src="/static/image/icon.png"/>
-        <p style="color: white; font-size: 24px;">Website in progress...</p>
-        <p style="color: white; font-size: 24px;">Check back soon</p>
-    </div>
+
+<body id="page-top">
+
+    <nav id="mainNav" class="navbar navbar-default navbar-fixed-top">
+        <div class="container">
+            <!-- Brand and toggle get grouped for better mobile display -->
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+                    <span class="sr-only">Toggle navigation</span> Menu <i class="fa fa-bars"></i>
+                </button>
+                <a class="navbar-brand page-scroll" href="http://www.autoidlabs.ch" target="_blank">Auto-ID Labs ETH / HSG</a>
+            </div>
+
+            <!-- Collect the nav links, forms, and other content for toggling -->
+            <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a class="page-scroll" href="#download">Download</a>
+                    </li>
+                    <li>
+                        <a class="page-scroll" href="#features">App</a>
+                    </li>
+                    <li>
+                        <a class="page-scroll" href="#partners">Partner</a>
+                    </li>
+                    <li>
+                        <a class="page-scroll" href="#publications">Publikationen</a>
+                    </li>
+                    <li>
+                        <a class="page-scroll" href="#contact">Kontakt</a>
+                    </li>
+                </ul>
+            </div>
+            <!-- /.navbar-collapse -->
+        </div>
+        <!-- /.container-fluid -->
+    </nav>
+
+    <header>
+        <div class="container">
+            <div class="row">
+                <div class="col-sm-7">
+                    <div class="header-content">
+                        <div class="header-content-inner">
+                            <h1><a class="page-scroll" href="#download"><b>Swiss SaltTracker</b></a> hilft Dir, Deinen Salzkonsum aus Ernährung und Einkauf zu verbessern.</h1>
+                            <h1>Damit schonst Du <img src="/static/img/heart.gif" height="70" width="70" alt=""> und Blutkreislauf! </h1>
+                            <a href="#download" class="btn btn-outline btn-xl page-scroll">Start Now for Free!</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-5">
+                    <div class="device-container">
+                        <div class="device-mockup iphone6_plus portrait white">
+                            <div class="device">
+                                <div class="screen">
+                                    <!-- Demo image for screen mockup, you can put an image here, some HTML, an animation, video, or anything else! -->
+                                    <img src="/static/img/demo-screen-1.png" class="img-responsive" alt="">
+                                </div>
+                                <div class="button">
+                                    <!-- You can hook the "home button" to some JavaScript events or just remove it -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <section id="download" class="download bg-primary text-center">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-8 col-md-offset-2">
+                    <ul class="list-inline list-social">
+                      <li class="social-salttrackerlogo">
+                          <img src="/static/img/SaltTracker_animated_icon.gif" height="190" width="190" alt="">
+                      </li>
+                      <li class="social-heartlovelogo">
+                          <img src="/static/img/heart.gif" height="198" width="198" alt="">
+                      </li>
+                      <li class="social-heartorganlogo">
+                          <img src="/static/img/heart_organ.png" height="160" width="120" alt="">
+                      </li>
+                    </ul>
+                    </br>
+                    <h2 class="section-heading">Jetzt App laden &amp; Ernährung verbessern!</h2>
+                    <p>Swiss SaltTracker ist auf Apple iOS und Android verfügbar!</p>
+                    <div class="badges">
+                        <a class="badge-link" href="https://play.google.com/store/apps/details?id=ch.autoidlabs.swiss_salttracker"><img src="/static/img/google-play-badge.svg" alt=""></a>
+                        <a class="badge-link" href="https://itunes.apple.com/us/app/swiss-salttracker/id1154014663?l=de&ls=1&mt=8 "><img src="/static/img/app-store-badge.svg" alt=""></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="features" class="features">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-12 text-center">
+                    <div class="section-heading">
+                        <h2>Swiss SaltTracker ist Dein eigener Ernährungscoach!</h2>
+                        <p class="text-muted">Die App analysiert Deine Ernährung und Einkäufe, hilft Salz zu reduzieren und schon damit Dein <font color="red">❤</font>!</p>
+                        <hr>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="device-container">
+                        <div class="device-mockup iphone6_plus portrait white">
+                            <div class="device">
+                                <div class="screen">
+                                    <!-- Demo image for screen mockup, you can put an image here, some HTML, an animation, video, or anything else! -->
+                                    <img src="/static/img/demo-screen-1.png" class="img-responsive" alt=""> </div>
+                                <div class="button">
+                                    <!-- You can hook the "home button" to some JavaScript events or just remove it -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-8">
+                    <div class="container-fluid">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="feature-item">
+                                    <i class="icon-screen-smartphone text-primary"></i>
+                                    <h3>Auf iOS und Android</h3>
+                                    <p class="text-muted">Swiss SaltTracker ist auf 98% aller Schweizer Smartphones verfügbar!</p>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="feature-item">
+                                    <i class="fa fa-refresh fa-spin fa-3x fa-fw"></i>
+                                    <h3>Einfache Auswertung</h3>
+                                    <p class="text-muted">Swiss SaltTracker wertet Deine Ernährung via Tagesprotokolle und Deine Einkäufe auf Basis Deiner Cumulus-Karte aus!</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="feature-item">
+                                    <i class="icon-present text-primary"></i>
+                                    <h3>Free to Use</h3>
+                                    <p class="text-muted">Die Nutzung von Swiss SaltTracker ist nur gesund, sondern auch komplett gratis!</p>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="feature-item">
+                                    <i class="fa fa-credit-card" aria-hidden="true"></i>
+                                    <h3>Migros Cumulus</h3>
+                                    <p class="text-muted">Du kannst Du Dein Cumulus M-Connect Konto verbinden, um persönliche Einkaufstipps zu erhalten (<a href="https://swiss-salt-tracker.azurewebsites.net/static/resources/manual_m_connect.pdf">Anleitung</a>)!</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+    </section>
+
+    <section class="cta2">
+        <div class="cta2-content">
+            <div class="container">
+                <div class="fullscreen-bg_video">
+                <h2>86% aller Schweizer konsumieren zu viel Salz<sup>1</sup></h2>
+                <h2>Zu hoher Salzkonsum führt zu Bluthochdruck, Herz-Kreislauferkrankungen, verkürzter Lebenserwartung<sup>2,3</sup></h2>
+                </br>
+                <h3><sup>1</sup>: Beer-Borst, S., et. al. (2009). European Journal of Clinical Nutrition</h3>
+                <h3><sup>2</sup>: Bochud, M., et. al. (2012). Public Health Reviews</h3>
+                <h3><sup>3</sup>: Forouzanfar, M.H. et al. (2015). The Lancet</h3>
+                </br></br></br></br></br></br>
+                <h2>Reduziere Salz auf ein gesundes Mass und lebe gesünder!</h2>
+                <a href="#download" class="btn btn-outline btn-xl page-scroll">Starte Deine gesunde Ernährung!</a>
+                </div>
+            </div>
+        </div>
+        <div class="overlay"></div>
+    </section>
+
+    <section id="partners" class="features">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-12 text-center">
+                    <div class="section-heading">
+                        <h2>FoodCoach ist ein Forschungsprojekt!</h2>
+                        <p class="text-muted">Zusammen mit Partnern aus Wissenschaft und Praxis werden mit Hilfe von FoodCoach wertvolle Erkenntnisse </br> für die Weiterentwicklung von digitalen Lösungen in der Ernährungswissenschaft gewonnen.</p>
+                        <hr>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+              <div class="col-lg-12 text-center">
+                  <p class="text-muted" align="center">Forschungspartner</p>
+                    <div class="container-fluid">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="feature-item">
+                                    <img src="/static/img/Auto-ID_Labs_Logo.png" height="120" width="140" alt="">
+                                    <h3>Auto-ID Labs ETH / HSG</h3>
+                                    <p class="text-muted">Das <a href="http://www.autoidlabs.ch">Auto-ID Labs</a> ist ein Research-Institut an der ETH Zürich und HSG St. Gallen, Forschungsfokus: Internet of Things im Retail</p>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                              <div class="feature-item">
+                                  <img src="/static/img/University Berne.png" height="140" width="150" alt="">
+                                  <h3>Universität Bern</h3>
+                                  <p class="text-muted">Das <a href="http://www.ispm.unibe.ch/">Institute of Social and Preventive Medicine (ISPM)</a> der Universität Bern untersucht den Zusammenhang zwischen Salzaufnahme und Gesundheit.</p>
+                              </div>
+                            </div>
+                            <div class="col-md-4">
+                              <div class="feature-item">
+                                  <img src="/static/img/SGE.png" height="110" width="110" alt="">
+                                  <h3>Schweizer Gesellschaft für Ernährung</h3>
+                                  <p class="text-muted">Die <a href="http://www.sge-ssn.ch/">SGE-SSN</a> setzt sich für die Aufklärung der Bevölkerung über alle Fragen einer gesunden Ernährung mit aktuellen, wissenschaftlich gesicherten und ausgewogenen Massnahmen der Ernährungsinformation, -erziehung und -ausbildung ein.</p>
+                              </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <p class="text-muted"  align="center">Finanzielle Förderer</p>
+                <div class="container-fluid">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="feature-item">
+                                <img src="/static/img/CSS-Versicherung.png" height="140" width="150" alt="">
+                                <h3>CSS Versicherung</h3>
+                                <p class="text-muted">Die <a href="https://www.css.ch/de/home.html">CSS Versicherung</a> ist die grösste Krankenversicherung der Welt und unterstützt digitale Initiativen in der Gesundheitsförderung.</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                          <div class="feature-item">
+                              <img src="/static/img/Emmi_logo.png" height="70" width="190" alt="">
+                              <h3>EMMI AG</h3>
+                              <p class="text-muted">Die <a href="https://ch.emmi.com/de/">EMMI AG</a> ist der grösste milchverarbeitende Betrieb der Schweiz und legt grossen Wert auf eine ausgewogene Ernährung als Grundlage eines aktiven Lebens.</p>
+                          </div>
+                        </div>
+                        <div class="col-md-4">
+                          <div class="feature-item">
+                              <img src="/static/img/GS1.svg.png" height="100" width="110" alt="">
+                              <h3>GS1</h3>
+                              <p class="text-muted">Die <a href="http://www.gs1.org/">GS1</a> ist die grösste und relevanteste Standardisierungsorganisation im Handel und fördert Forschungsprojekte im Bereich der Digitalisierung im Handel.</p>
+                          </div>
+                        </div>
+                    </div>
+                </div>
+                <p class="text-muted"  align="center">Datenpartner</p>
+                <div class="container-fluid">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="feature-item">
+                                <img src="/static/img/Migros.png" height="40" width="200" alt="">
+                                <h3>Migros</h3>
+                                <p class="text-muted">Die <a href="https://www.migros.ch/de.html">Migros</a> ist der grösste Detailhändler der Schweiz und stellt die Daten zu den Nährstoffen seiner Eigenmarkenprodukte im Sinne der Migros Open-Data-Strategie für die Öffentlichkeit bereit. Migros ist damit Vorreiter im Schweizer Detailhandel und setzt sich im Sinne des Konsumenten für Datentransparenz ein.</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                          <div class="feature-item">
+                              <img src="/static/img/trustbox.jpg" height="100" width="120" alt="">
+                              <h3>Trustbox</h3>
+                              <p class="text-muted">Die <a href="http://http://trustbox.stepcom.ch/">GS1 Trustbox</a> ist die Produktdatenbank, die innerhalb von Swiss SaltTracker genutzt wird, um Informationen über die Inhaltsstoffe der Produkte zu beziehen.</p>
+                          </div>
+                        </div>
+                        <div class="col-md-4">
+                          <div class="feature-item">
+                              <img src="/static/img/Reebate-Logo.png" height="60" width="160" alt="">
+                              <h3>Reebate</h3>
+                              <p class="text-muted"><a href="http://reebate.de/">Reebate</a> ist ein Digital-Receipt Service, der es Nutzern von Kundenkarten wie z.B. Migros Cumulus oder Coop Supercard erlaubt, ihre digitalen Kassenzettel bequem abzurufen und zu verwalten.</p>
+                          </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+    </section>
+
+    <section id="download" class="download bg-primary text-center">
+        <h1 class="section-heading">Weitere Apps aus unserem Forschungsbereich:</h1>
+        </br></br>
+        <div class="container">
+            <div class="row">
+                <div class="col-md-8 col-md-offset-2">
+
+                    <ul class="list-inline list-social">
+                      <li class="social-foodquizlogo">
+                          <a href="https://play.google.com/store/apps/details?id=ch.autoidlabs.foodquiz&hl=de" target="_blank"><img src="/static/img/ic_launcher_opaque.png" height="150" width="150" alt=""></img></a>
+                          <p class="text-muted"><b>Swiss FoodQuiz</b> ist ein Serious Game,</br>das Ernährungswissen vermittelt.</p>
+                      </li>
+                      <li class="social-plussign">
+                          <p class="text-muted"><i class="fa fa-plus -4x" aria-hidden="true"></i></p>
+                          </br>
+                          </br>
+                          </br>
+                          </br>
+                      </li>
+                      <li class="social-salttrackerlogo">
+                            <a class="page-scroll" href="#download"><img src="/static/img/icon_512x512.png" height="150" width="150" alt=""></img></a>
+                          <p class="text-muted"><b>Swiss SaltTracker</b> ist Dein digitaler, </br>persönlicher Ernährungscoach.</p>
+                      </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="publications" class="features">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12 text-center">
+                    <div class="section-heading">
+                        <h2>Publikationen</h2>
+                        <p class="text-muted">Im Bereich der digitalen Ernährungsinterventionen wird unser Team fortlaufend Publikationen verfassen, um die gewonnenen Erkenntnisse der Öffentlichkeit bereitzustellen.</p>
+                        <hr>
+                    </div>
+                </div>
+                <div class="container-fluid">
+                  <div class="row">
+                    <div class="col-md-12">
+                        <div class="col-md-2">
+                            <div class="feature-item">
+                                <i class="fa fa-book fa-2x"></i>
+                            </div>
+                        </div>
+                        <div class="col-md-10 text-left">
+                            <div class="feature-item">
+                                <p class="text-left"><a href="https://www.researchgate.net/publication/303999672_SWISS_FOODQUIZ_INDUCING_NUTRITIONAL_KNOWLEDGE_VIA_A_VISUAL_LEARNING_BASED_SERIOUS_GAME" target="_blank">Swiss FoodQuiz: Inducing Nutritional Knowledge via a Visual Learning based Serious Game</a>
+                                </br>Fuchs, K. L., Huonder, V., Vuckovac, D., and Ilic, A. 2016.
+                                </br>in ECIS 2016 Proceedings
+                                </br>DOI: 10.13140/RG.2.2.23332.48001</p>
+                            </div>
+                        </div>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-md-12">
+                        <div class="col-md-2">
+                            <div class="feature-item">
+                                <i class="fa fa-picture-o" aria-hidden="true"></i>
+                            </div>
+                        </div>
+                        <div class="col-md-10 text-left">
+                            <div class="feature-item">
+                                <p class="text-left"><a href="http://www.autoidlabs.ch/wp-content/uploads/2016/10/201606_ECIS2016_Swiss-FoodQuiz-Poster_Klaus-Fuchs_v2.pdf" target="_blank">Swiss FoodQuiz: Poster</a>
+                                </br>Fuchs, K. L., Huonder, V., Vuckovac, D., and Ilic, A. 2016.
+                              </br>in Prototype Poster, ECIS 2016
+                            </div>
+                        </div>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-md-12">
+                        <div class="col-md-2">
+                            <div class="feature-item">
+                                <i class="fa fa-picture-o" aria-hidden="true"></i>
+                            </div>
+                        </div>
+                        <div class="col-md-10 text-left">
+                            <div class="feature-item">
+                                <p class="text-left"><a href="http://www.autoidlabs.ch/wp-content/uploads/2016/10/Poster-Food-Allergies-HQ.pdf" target="_blank">Proposing A New Standard For Food Allergies</a>
+                                </br>Frey, R., Ryder, B., Fuchs, K. L., and Ilic, A. 2016.
+                              </br>in Research Poster, GS1 S+I Conference, Brussels 2016
+                            </div>
+                        </div>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-md-12">
+                        <div class="col-md-2">
+                            <div class="feature-item">
+                                <i class="fa fa-picture-o" aria-hidden="true"></i>
+                            </div>
+                        </div>
+                        <div class="col-md-10 text-left">
+                            <div class="feature-item">
+                                <p class="text-left"><a href="http://www.autoidlabs.ch/wp-content/uploads/2016/10/Poster-Swiss-SaltTracker-HQ.pdf" target="_blank">Leveraging Food Databases for Nutritional Behavior Change</a>
+                                </br>Fuchs, K. L., Vuckovac, D., and Ilic, A. 2016.
+                              </br>in Research Poster, GS1 S+I Conference, Brussels 2016
+                            </div>
+                        </div>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-md-12">
+                      <p class="text-center">Bei Interesse an unserer <b>Forschung</b>, oder an einer <b>Thesis</b> (B.Sc. oder M.Sc.), </br>freuen wir uns auf eine Kontaktaufnahme unter: <a href"mailto:team@autoidlabs.ch">team@autoidlabs.ch</a></p>
+                    </div>
+                  </div>
+                </div>
+            </div>
+    </section>
+
+    <section class="cta">
+        <div class="cta-content">
+            <div class="container">
+                <h2>Stop waiting.<br>Iss gesund!</h2>
+                <a href="#download" class="btn btn-outline btn-xl page-scroll">Starte Deine gesunde Ernährung!</a>
+            </div>
+        </div>
+        <div class="overlay"></div>
+    </section>
+
+    <section id="contact" class="contact bg-primary">
+        <div class="container">
+            <h2>We <i class="fa fa-heart"></i> new friends!</h2>
+            <ul class="list-inline list-social">
+                <li class="social-twitter">
+                    <a href="https://twitter.com/autoidlabs_ch" target="_blank"><i class="fa fa-twitter"></i></a>
+                </li>
+                <li class="social-facebook">
+                    <a href="https://www.facebook.com/autoidlabs/?fref=ts" target="_blank"><i class="fa fa-facebook"></i></a>
+                </li>
+                <li class="social-google-plus">
+                    <a href="http://www.autoidlabs.ch"><i class="fa fa-home" target="_blank"></i></a>
+                </li>
+            </ul>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2016, made with <i class="fa fa-heart"></i> by <a href="www.autoidlabs.ch" target="_blank">Auto-ID Labs ETH / HSG</a>. All Rights Reserved. Contact: <a href"mailto:team@autoidlabs.ch">team@autoidlabs.ch</a></p>
+
+        </div>
+    </footer>
+
+    <!-- jQuery -->
+    <script src="/static/vendor/jquery/jquery.min.js"></script>
+
+    <!-- Bootstrap Core JavaScript -->
+    <script src="/static/vendor/bootstrap/js/bootstrap.min.js"></script>
+
+    <!-- Plugin JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-easing/1.3/jquery.easing.min.js"></script>
+
+    <!-- Theme JavaScript -->
+    <script src="/static/js/new-age.min.js"></script>
+
 </body>
 
 </html>
