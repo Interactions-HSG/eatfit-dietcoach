@@ -119,7 +119,6 @@
     <Content Include="app\static\img\Migros.png" />
     <Content Include="app\static\img\Reebate-Logo.png" />
     <Content Include="app\static\img\SaltTracker_animated_icon.gif" />
-    <Content Include="app\static\img\sge-logo.png" />
     <Content Include="app\static\img\SGE.png" />
     <Content Include="app\static\img\trustbox.jpg" />
     <Content Include="app\static\img\University Berne.png" />
