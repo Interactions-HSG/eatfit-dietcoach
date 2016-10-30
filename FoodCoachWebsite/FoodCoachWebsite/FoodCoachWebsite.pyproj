@@ -6,7 +6,7 @@
     <RootNamespace>FoodCoachWebsite</RootNamespace>
     <InterpreterId>{5dd07bb5-5178-4fc1-98b0-41f420be3aa5}</InterpreterId>
     <InterpreterVersion>2.7</InterpreterVersion>
-    <NameOfLastUsedPublishProfile>foodcoachwebsite - Web Deploy</NameOfLastUsedPublishProfile>
+    <NameOfLastUsedPublishProfile>foodcoachwebsite</NameOfLastUsedPublishProfile>
   </PropertyGroup>
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -274,6 +274,7 @@
     <Content Include="app\static\vendor\simple-line-icons\scss\simple-line-icons.scss" />
     <Content Include="app\templates\base.html" />
     <None Include="foodcoachwebsite - Web Deploy.pubxml" />
+    <None Include="foodcoachwebsite.pubxml" />
     <Content Include="requirements.txt" />
     <Content Include="db.sqlite3" />
   </ItemGroup>
