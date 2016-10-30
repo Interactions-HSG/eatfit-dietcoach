@@ -96,7 +96,7 @@ def export_unmapped_products():
 
         product_names = ProductName.objects.filter(product = product, language_code = "de")
         if product_names.exists():
-            w_sheet.write(row, 3, product_names[0].name)
+            w_sheet.write(row, 2, product_names[0].name)
     
         nutrition_facts = NutritionFact.objects.filter(nutrition_facts_group__nutrition__product = product)
         
@@ -110,26 +110,26 @@ def export_unmapped_products():
         protein = nutrition_facts.filter(canonical_name="protein")
         salt = nutrition_facts.filter(canonical_name="salt")
         natrium = nutrition_facts.filter(canonical_name="sodium")
-        __add_value(w_sheet, row, 7, kcal, "kcal_color", False)
-        __add_value(w_sheet, row, 8, kj, "kcal_color", False)
-        __add_value(w_sheet, row, 9, total_fat, "fat_color", False)
-        __add_value(w_sheet, row, 10, saturated_fat, "fat_color", False)
-        __add_value(w_sheet, row, 11, carbonate, "carbonate_color", False)
-        __add_value(w_sheet, row, 12, sugar, "carbonate_color", False)
-        __add_value(w_sheet, row, 13, fibers, "carbonate_color", False)
-        __add_value(w_sheet, row, 14, protein, "protein_color", False)
-        __add_value(w_sheet, row, 15, salt, "salt_color", True)
-        __add_value(w_sheet, row, 17, natrium, "salt_color", True)
+        __add_value(w_sheet, row, 6, kcal, "kcal_color", False)
+        __add_value(w_sheet, row, 7, kj, "kcal_color", False)
+        __add_value(w_sheet, row, 8, total_fat, "fat_color", False)
+        __add_value(w_sheet, row, 9, saturated_fat, "fat_color", False)
+        __add_value(w_sheet, row, 10, carbonate, "carbonate_color", False)
+        __add_value(w_sheet, row, 11, sugar, "carbonate_color", False)
+        __add_value(w_sheet, row, 12, fibers, "carbonate_color", False)
+        __add_value(w_sheet, row, 13, protein, "protein_color", False)
+        __add_value(w_sheet, row, 14, salt, "salt_color", True)
+        __add_value(w_sheet, row, 16, natrium, "salt_color", True)
 
         nutrition_attributes = NutritionAttribute.objects.filter(nutrition__product = product, language_code = "de", canonical_name="ingredients")
         if nutrition_attributes.exists():
             if hasattr(nutrition_attributes[0], "value"):
-                w_sheet.write(row, 20, nutrition_attributes[0].value)
+                w_sheet.write(row, 19, nutrition_attributes[0].value)
 
         product_attributes = ProductAttribute.objects.filter(product = product, canonical_name="packageSize")
         if product_attributes.exists():
             if hasattr(product_attributes[0], "value"):
-                w_sheet.write(row, 19, product_attributes[0].value)
+                w_sheet.write(row, 18, product_attributes[0].value)
         row = row + 1
     workbook.save(settings.BASE_DIR + "/TrustBoxAPI/static/category/" + UNCATEGORISED_FILE_NAME) 
 

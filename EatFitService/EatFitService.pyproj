@@ -4,7 +4,7 @@
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
     <Name>EatFitService</Name>
     <RootNamespace>EatFitService</RootNamespace>
-    <InterpreterId>{9aa7aa13-bb90-47f7-8207-dbf0b29d8b96}</InterpreterId>
+    <InterpreterId>{9494a6cc-db23-4416-8b91-c0d103f8675a}</InterpreterId>
     <InterpreterVersion>2.7</InterpreterVersion>
   </PropertyGroup>
   <PropertyGroup>
@@ -60,9 +60,6 @@
     <Compile Include="TrustBoxAPI\database.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="TrustBoxAPI\reebate_connector.py">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="TrustBoxAPI\trustbox_connector.py">
       <SubType>Code</SubType>
     </Compile>
@@ -112,6 +109,7 @@
     <Content Include="TrustBoxAPI\static\category\Trustbox_Produkte_blank.xls" />
     <Content Include="TrustBoxAPI\static\category\Trustbox_Produkte_kategorisiert_v1.xlsx" />
     <Content Include="TrustBoxAPI\static\category\Trustbox_Produkte_kategorisiert_v2.xlsx" />
+    <Content Include="TrustBoxAPI\static\category\Trustbox_Produkte_kategorisiert_v3.xlsx" />
   </ItemGroup>
   <ItemGroup>
     <None Include="readme.mht">
@@ -120,7 +118,7 @@
   </ItemGroup>
   <ItemGroup>
     <Interpreter Include="env\">
-      <Id>{9aa7aa13-bb90-47f7-8207-dbf0b29d8b96}</Id>
+      <Id>{9494a6cc-db23-4416-8b91-c0d103f8675a}</Id>
       <BaseInterpreter>{2af0f10d-7135-4994-9156-5d01c9c11b7e}</BaseInterpreter>
       <Version>2.7</Version>
       <Description>env (Python 2.7)</Description>

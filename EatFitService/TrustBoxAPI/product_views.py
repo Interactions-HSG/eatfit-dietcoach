@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from rest_framework.decorators import api_view, permission_classes, parser_classes, renderer_classes
 from TrustBoxAPI.serializer import ProductSerializer, ImportLogSerializer, ProductNameSerializer, ProductWithNameSerializer, ShoppingTipSerializer
-from TrustBoxAPI.models import Product, ProductName, ImportLog, NwdSubcategory
+from TrustBoxAPI.models import Product, ProductName, ImportLog, NwdSubcategory, MissingTrustboxItem
 from sets import Set
 from TrustBoxAPI import tasks, category_handler, trustbox_connector
 from EatFitService import settings
@@ -11,6 +11,7 @@ from rest_framework.parsers import FileUploadParser, FormParser
 from django.db import connection
 from rest_framework.renderers import JSONRenderer
 from SaltTrackerService import result_calculation
+from SaltTrackerService.models import AutoidScraperMigrosItem
 
 @permission_classes((permissions.IsAuthenticated,))
 class ProductViewSet(viewsets.ViewSet):
