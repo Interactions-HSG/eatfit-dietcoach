@@ -13,6 +13,5 @@ BASE_URL = r"^salt-tracker/"
 
 urlpatterns = [
      url(BASE_URL, include(router.urls)),
-     url(BASE_URL + "test", views.test),
      url(BASE_URL + "results/shopping/(?P<user_pk>[0-9]+)/", views.get_shopping_results),
 ]

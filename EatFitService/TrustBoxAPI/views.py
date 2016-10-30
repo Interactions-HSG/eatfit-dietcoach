@@ -10,20 +10,6 @@ from trustbox_connector import *
 from TrustBoxAPI import database, tasks, reebate_connector, trustbox_connector
 from TrustBoxAPI import clean_trustbox
 
-#database.setup_database() 
-
-def home(request):
-    """Renders the home page."""
-    assert isinstance(request, HttpRequest)
-    return render(
-        request,
-        'index.html',
-        {
-            'title':'Home Page',
-            'year':datetime.now().year,
-        }
-    )
-
 def test_celery(request):
     tasks.add.delay(4,5)
     return HttpResponse("ok")

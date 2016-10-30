@@ -7,10 +7,6 @@ import datetime
 from SaltTrackerService.models import SaltTrackerUser
 from TrustBoxAPI import tasks
 
-def test(request):
-    reebate_connector.fill_db()
-    return HttpResponse("ok")
-
 
 def get_shopping_results(request, user_pk):
     user = get_object_or_404(SaltTrackerUser.objects.using("salttracker").all(), pk=user_pk)
