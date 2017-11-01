@@ -20,3 +20,8 @@ FoodCoachWebsite/FoodCoachWebsite/foodcoachwebsite - Web Deploy.pubxml.user
 FoodCoachWebsite/FoodCoachWebsite/foodcoachwebsite - Web Deploy.pubxml
 FoodCoachWebsite/FoodCoachWebsite/db.sqlite3
 FoodCoachWebsite/FoodCoachWebsite/FoodCoachWebsite.pyproj.user
+SaltTrackerService/SaltTrackerService/env/
+SaltTrackerService/SaltTrackerService/static/
+SaltTrackerService/SaltTrackerService/obj/
+SaltTrackerService/SaltTrackerService/cache/
+SaltTrackerService/SaltTrackerService/db.sqlite3

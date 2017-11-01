@@ -1,0 +1,162 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+  <PropertyGroup>
+    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
+    <Name>SaltTrackerService</Name>
+    <RootNamespace>SaltTrackerService</RootNamespace>
+    <InterpreterId>MSBuild|{a7e12f90-99fa-49c1-9584-361ae9ca7cbe}|$(MSBuildProjectFullPath)</InterpreterId>
+    <NameOfLastUsedPublishProfile>swissfoodtracker - Web Deploy</NameOfLastUsedPublishProfile>
+  </PropertyGroup>
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>090ab7a5-1c1d-4ec7-85fa-807d57510464</ProjectGuid>
+    <ProjectHome>.</ProjectHome>
+    <ProjectTypeGuids>{5F0BE9CA-D677-4A4D-8806-6076C0FAAD37};{349c5851-65df-11da-9384-00065b846f21};{888888a0-9f3d-457c-b088-3a5042f75d52}</ProjectTypeGuids>
+    <StartupFile>manage.py</StartupFile>
+    <SearchPath>
+    </SearchPath>
+    <WorkingDirectory>.</WorkingDirectory>
+    <LaunchProvider>Django launcher</LaunchProvider>
+    <OutputPath>.</OutputPath>
+    <WebBrowserUrl>http://localhost</WebBrowserUrl>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DebugSymbols>true</DebugSymbols>
+    <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <DebugSymbols>true</DebugSymbols>
+    <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="api\admin.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="api\avatar_views.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="api\eatfit_models.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="api\export_paper_app_study.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="api\models.py" />
+    <Compile Include="api\regression_model_data.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="api\results.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="api\salt_source.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="api\serializer.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="api\tests.py" />
+    <Compile Include="api\translation.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="api\ui_views.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="api\urls.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="api\views.py" />
+    <Compile Include="api\__init__.py" />
+    <Compile Include="api\migrations\__init__.py" />
+    <Compile Include="manage.py" />
+    <Compile Include="SaltTrackerService\__init__.py" />
+    <Compile Include="SaltTrackerService\settings.py" />
+    <Compile Include="SaltTrackerService\urls.py" />
+    <Compile Include="SaltTrackerService\wsgi.py" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="api\" />
+    <Folder Include="api\migrations\" />
+    <Folder Include="api\static\" />
+    <Folder Include="api\static\adminsortable\" />
+    <Folder Include="api\static\adminsortable\css\" />
+    <Folder Include="api\static\adminsortable\js\" />
+    <Folder Include="api\templates\" />
+    <Folder Include="api\templates\avatar\" />
+    <Folder Include="SaltTrackerService\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="api\static\adminsortable\css\admin.sortable.css" />
+    <Content Include="api\static\adminsortable\css\admin.sortable.inline.css" />
+    <Content Include="api\static\adminsortable\js\admin.sortable.js" />
+    <Content Include="api\static\adminsortable\js\admin.sortable.stacked.inlines.js" />
+    <Content Include="api\static\adminsortable\js\admin.sortable.tabular.inlines.js" />
+    <Content Include="api\static\adminsortable\js\jquery-ui-django-admin.min.js" />
+    <Content Include="api\templates\avatar\avatar.html" />
+    <Content Include="api\templates\export_all.html" />
+    <Content Include="api\templates\sample_avatar.html" />
+    <Content Include="api\templates\user_survey.html" />
+    <Content Include="api\templates\user_demographics.html" />
+    <Content Include="api\templates\export_paper_app_study.html" />
+    <Content Include="requirements.txt" />
+    <None Include="swissfoodtracker - Web Deploy.pubxml" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="readme.mht">
+      <SubType>WebBrowser</SubType>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Interpreter Include="env\">
+      <Id>{a7e12f90-99fa-49c1-9584-361ae9ca7cbe}</Id>
+      <Version>2.7</Version>
+      <Description>env (Python 2.7)</Description>
+      <InterpreterPath>Scripts\python.exe</InterpreterPath>
+      <WindowsInterpreterPath>Scripts\pythonw.exe</WindowsInterpreterPath>
+      <LibraryPath>Lib\</LibraryPath>
+      <PathEnvironmentVariable>PYTHONPATH</PathEnvironmentVariable>
+      <Architecture>X86</Architecture>
+    </Interpreter>
+  </ItemGroup>
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.Django.targets" />
+  <!-- Specify pre- and post-build commands in the BeforeBuild and 
+       AfterBuild targets below. -->
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  <ProjectExtensions>
+    <VisualStudio>
+      <FlavorProperties GUID="{349c5851-65df-11da-9384-00065b846f21}">
+        <WebProjectProperties>
+          <AutoAssignPort>True</AutoAssignPort>
+          <UseCustomServer>True</UseCustomServer>
+          <CustomServerUrl>http://localhost</CustomServerUrl>
+          <SaveServerSettingsInUserFile>False</SaveServerSettingsInUserFile>
+        </WebProjectProperties>
+      </FlavorProperties>
+      <FlavorProperties GUID="{349c5851-65df-11da-9384-00065b846f21}" User="">
+        <WebProjectProperties>
+          <StartPageUrl>
+          </StartPageUrl>
+          <StartAction>CurrentPage</StartAction>
+          <AspNetDebugging>True</AspNetDebugging>
+          <SilverlightDebugging>False</SilverlightDebugging>
+          <NativeDebugging>False</NativeDebugging>
+          <SQLDebugging>False</SQLDebugging>
+          <ExternalProgram>
+          </ExternalProgram>
+          <StartExternalURL>
+          </StartExternalURL>
+          <StartCmdLineArguments>
+          </StartCmdLineArguments>
+          <StartWorkingDirectory>
+          </StartWorkingDirectory>
+          <EnableENC>False</EnableENC>
+          <AlwaysStartWebServerOnDebug>False</AlwaysStartWebServerOnDebug>
+        </WebProjectProperties>
+      </FlavorProperties>
+    </VisualStudio>
+  </ProjectExtensions>
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
+</Project>

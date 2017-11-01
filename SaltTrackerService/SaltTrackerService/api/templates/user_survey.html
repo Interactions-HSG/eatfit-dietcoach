@@ -1,0 +1,21 @@
+﻿<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+</head>
+<body>
+<h1>Export user surveys</h1>
+<h2>Upload the excel file</h2>
+<form action="/user/get/user-survey/" method="POST" enctype="multipart/form-data">
+    <input type="file" name="input_excel" accept="application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"><br>
+<!-- 
+<input type="radio" name="profile_data_type" value="Food_Tracker" checked> FoodTracker<br>
+<input type="radio" name="profile_data_type" value="Salt_Tracker"> SaltTracker<br>
+-->
+    <input type="submit">
+</form>
+    
+</body>
+</html>

@@ -1,0 +1,29 @@
+﻿{% load staticfiles %}
+
+<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+    <script
+        src="https://code.jquery.com/jquery-2.2.4.min.js"
+        integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44="
+        crossorigin="anonymous"></script>
+</head>
+<body>
+    
+<button id="my_button">Click</button>
+
+<script type="text/javascript">
+
+    $("#my_button").click(function () {
+        $.get( "/avatar/state/?key=e6ff76ce406999e8148573340a46401c99fc8f8c", function( data ) {
+            console.log("Test Eyecolor: " + data.general_data.avatar_design.eyecolor_type);
+        });
+    });
+
+
+</script>
+</body>
+</html>
