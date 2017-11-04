@@ -35,6 +35,7 @@ urlpatterns = [
      url(r'fooditem/get/supplements/', api_views.get_food_item_supplements),
      url(r'foodrecord/get/dates/', api_views.get_food_record_dates),
      url(r'foodrecord/by_day/(?P<year>[0-9]{4})/(?P<month>[0-9]{2})/(?P<day>[0-9]{2})/', api_views.get_food_record_per_day),
+     url(r'user/get/initial_data/foodtracker/', api_views.get_initial_user_data_food_tracker),
      url(r'user/get/initial_data/', api_views.get_initial_user_data),
      url(r'foodrecord/results/protocols', api_views.checklist_results_protocols),
      url(r'foodrecord/results/minimal/', api_views.food_tracker_results),

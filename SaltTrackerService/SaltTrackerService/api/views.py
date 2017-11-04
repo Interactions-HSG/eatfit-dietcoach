@@ -219,7 +219,7 @@ def update_profile_data_batch(request):
 def add_food_records(request):
     serializer = FoodRecordCreateSaltSerializer(data=request.data, many=True)
     if serializer.is_valid():
-        study = Study.objects.filter(user=request.user)
+        study = Study.objects.filter(user=request.user).order_by("-start_date")
         if not study.exists():
             return Response(serializer.data, status=status.HTTP_403_FORBIDDEN)
         dates = [r["date"] for r in serializer.validated_data]
@@ -388,6 +388,35 @@ def get_initial_user_data(request):
     data["total_days"] = total_number_of_days
     start_day = date.today() - timedelta(days=6)
     data["total_open_days"] = StudyDay.objects.filter(user=request.user, study__is_active=True, is_locked=False, date__gte=start_day).count()
+    serializer = InitalUserDataSerializer(data)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+@api_view(['GET'])
+@permission_classes((permissions.IsAuthenticated,))
+def get_initial_user_data_food_tracker(request):
+    users = SaltTrackerUser.objects.filter(user=request.user)
+    if not users.exists():
+        return Response(None, status=status.HTTP_404_NOT_FOUND)
+    data = {}
+    study = Study.objects.filter(user=users[0].user, is_active=True).order_by("-start_date")
+    study_data = None
+    total_number_of_days = 0
+    if study.exists():
+        study_data = study[0]
+        total_number_of_days = StudyDay.objects.filter(user=request.user, study=study_data, is_locked=True).order_by("date").count()
+        if not study_data.is_successful:
+            if total_number_of_days >= 4:
+                study_data.is_successful = True
+                study_data.save()
+        else:
+            data["average_salt"] = results.get_average_salt_per_day(request.user, 7)
+        days = StudyDay.objects.filter(user=request.user, study=study_data)
+            
+    data["user_data"] = users[0]
+    data["study_data"] = study_data
+    data["first_week"] = days
+    data["total_days"] = total_number_of_days
+    data["total_open_days"] = StudyDay.objects.filter(user=request.user, study=study_data, is_locked=False).count()
     serializer = InitalUserDataSerializer(data)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
