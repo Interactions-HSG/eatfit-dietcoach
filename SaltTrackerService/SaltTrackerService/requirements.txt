@@ -1,12 +1,13 @@
-Django==1.9.6
+Django==1.11.7
 django-admin-sortable==2.1
 django-modeltranslation==0.12
-django-pyodbc-azure==1.9.6.0
-djangorestframework==3.3.3
+django-pyodbc-azure==1.11.0
+djangorestframework==3.7.3
+drf-fcm==0.4.3
 olefile==0.44
 Pillow==4.1.1
 pip==9.0.1
-pyodbc==3.0.10
+pyodbc==4.0.21
 pytz==2016.4
 requests==2.11.1
 setuptools==15.0

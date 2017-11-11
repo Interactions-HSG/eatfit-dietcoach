@@ -134,6 +134,8 @@ class Study(models.Model):
     end_date = models.DateTimeField(null=True, blank=True)
     is_active = models.BooleanField(default=True)
     is_successful = models.BooleanField(default=False)
+    is_lost = models.BooleanField(default=False)
+    survey_completed = models.BooleanField(default=False)
     weeks = models.IntegerField(default=2)
     min_records_per_week = models.IntegerField(default=4)
     user = models.ForeignKey(User, null=True, blank=True)

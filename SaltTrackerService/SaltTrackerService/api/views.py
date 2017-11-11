@@ -1,8 +1,13 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 """
 Definition of views.
 """
 
 from django.shortcuts import render
+from drf_fcm.models import Device
+from drf_fcm.serializers import DeviceSerializer
 from django.http import HttpRequest
 from django.template import RequestContext
 from django.http.response import HttpResponse
@@ -390,6 +395,52 @@ def get_initial_user_data(request):
     data["total_open_days"] = StudyDay.objects.filter(user=request.user, study__is_active=True, is_locked=False, date__gte=start_day).count()
     serializer = InitalUserDataSerializer(data)
     return Response(serializer.data, status=status.HTTP_200_OK)
+
+def __send_push_notification(user, title, message):
+    devices = Device.objects.filter(user=user)
+    devices.send_message({"notification": {"title": title, "body": message}})
+
+def __mark_study_as_lost(study):
+    study.is_lost = True
+    study.save()
+
+@api_view(['GET'])
+@permission_classes((permissions.IsAuthenticated,))
+def check_push_notifications(request):
+    if request.user.is_superuser:
+        push_notification_title = "Swiss FoodTracker"
+        latest_start_day = date.today() - timedelta(days=4)
+        studies = Study.objects.filter(is_lost = False, survey_completed = False, start_date__gte=latest_start_day).select_related("user")
+        for study in studies:
+            study_days = StudyDay.objects.filter(study = study).order_by("date")
+            if study_days.exists(): #has the user already started?
+                days_since_start = (date.today() - study.start_date).days
+                if study.is_successful and not study.survey_completed:
+                    __send_push_notification(study.user, push_notification_title, "Für die Ernährungsanalyse noch Abschlussbefragung ausfüllen!")
+                elif study_days.count() > days_since_start:
+                    if days_since_start >= 2 and not study_days[days_since_start-2].is_locked:
+                        __send_push_notification(study.user, push_notification_title, "Leider hast Du Tag " + days_since_start-2 + " nicht rechtzeitig abgeschlossen.")
+                        __mark_study_as_lost(study)
+                    elif days_since_start >=1 and not study_days[days_since_start-1].is_locked:
+                        __send_push_notification(study.user, push_notification_title, "Jetzt Tag " + days_since_start-1 + " abschliessen, und Tag " + days_since_start + " beginnen!")
+                    elif days_since_start >=1 and study_days[days_since_start-1].is_locked:
+                        __send_push_notification(study.user, push_notification_title, "Jetzt den " + days_since_start + ". von 4 Tagen erfassen!")
+                else:
+                    __send_push_notification(study.user, push_notification_title, "Leider hast Du Tag " + days_since_start-2 + " nicht rechtzeitig abgeschlossen.")
+                    __mark_study_as_lost(study)
+            elif study.start_date == date.today():
+                __send_push_notification(study.user, push_notification_title, "Jetzt Swiss FoodTracker starten & Ernährung loggen!")
+        return Response(status=status.HTTP_200_OK)
+    return Response(None, status=status.HTTP_403_FORBIDDEN)
+
+@api_view(['POST'])
+@permission_classes((permissions.IsAuthenticated,))
+def post_push_notif_data(request):
+    serializer = DeviceSerializer(data=request.data)
+    if serializer.is_valid():
+        Device.objects.update_or_create(user = request.user, defaults = {"reg_id" : serializer.validated_data["reg_id"]})
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET'])
 @permission_classes((permissions.IsAuthenticated,))

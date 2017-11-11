@@ -1,4 +1,4 @@
-from django.conf.urls import patterns, url, include
+from django.conf.urls import url, include
 from api import avatar_views
 from django.conf.urls.static import static
 from rest_framework import routers
@@ -22,6 +22,7 @@ urlpatterns = [
      url(r'^', include(router.urls)),
      url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
      url(r'^api-token-auth/', auth_views.obtain_auth_token),
+     url(r'^fcm/', include('drf_fcm.urls')),
      url(r'profiledata/by_type/(?P<type>.+)/', api_views.get_profile_data_per_type),
      url(r'profiledata/add/batch/', api_views.add_profile_data_batch),
      url(r'profiledata/update/batch/', api_views.update_profile_data_batch),
@@ -60,6 +61,10 @@ urlpatterns = [
      url(r'avatar/data/update/$', avatar_views.update_avatar_data),
      url(r'avatar/sample-page/$', avatar_views.avatar_sample_page),
      url(r'avatar/missing-info/$', avatar_views.add_missing_nutrition_info),
+
+     #push_notifications
+     url("device/post-push-notif-data/$", api_views.post_push_notif_data, name='post_push_notif_data'),
+     url("user/send/push-notifications/$", api_views.check_push_notifications, name='check_push_notifications'),
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

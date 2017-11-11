@@ -55,12 +55,16 @@ REST_FRAMEWORK = {
     )
 }
 
+DRF_FCM = {
+    'API_KEY': 'AAAAJumxAJE:APA91bGxCHKGbpAH4DICCd21SZjtGHuFhVwm5fSN47Q-uJs_drbB0F8wcweki_xf3kO50EQ9WBXEYnki8Be2MhfJP63V8I-p1lwTBcdPkT-RPcvmzqDtEG7oR6TFnWuBPqSgZnXGQVRI',
+}
 
 # Application definition
 
 INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
+    "drf_fcm",
     'api',
     'adminsortable', 
     'modeltranslation',
