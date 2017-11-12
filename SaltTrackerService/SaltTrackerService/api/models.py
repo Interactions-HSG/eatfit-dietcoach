@@ -43,7 +43,8 @@ class SaltTrackerUser(models.Model):
     operating_system = models.CharField(max_length=20, null=True, blank=True, choices = OS_CHOICES)
     cumulus_email = models.EmailField(null=True, blank=True)
     cumulus_password = models.CharField(max_length=255, null=True, blank=True)
-    
+    food_tracker_user = models.BooleanField(default=False)
+
     def __unicode__(self):
         return self.user.email
 
@@ -139,6 +140,9 @@ class Study(models.Model):
     weeks = models.IntegerField(default=2)
     min_records_per_week = models.IntegerField(default=4)
     user = models.ForeignKey(User, null=True, blank=True)
+
+    def __unicode__(self):
+        return str(self.pk)
 
     class Meta:
         managed = True

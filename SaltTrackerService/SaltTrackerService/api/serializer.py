@@ -101,6 +101,7 @@ class SaltTrackerUserSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField(source="user.first_name")
     password = serializers.CharField(source="user.password", required=False)
     id = serializers.IntegerField(source="user.id")
+    food_tracker_user = serializers.BooleanField(required = False)
 
     def __init__(self, *args, **kwargs):
         remove_fields = kwargs.pop('remove_fields', None)
@@ -114,12 +115,12 @@ class SaltTrackerUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = SaltTrackerUser
         fields = ('id', 'date_of_birth', 'height', 'email', 'first_name', 'last_name', 'password','username',
-                  'weight','country','zip','sex', "nickname", 'notification_id', 'operating_system', 'cumulus_password', 'cumulus_email')
+                  'weight','country','zip','sex', "nickname", 'notification_id', 'operating_system', 'cumulus_password', 'cumulus_email', "food_tracker_user")
 
     def create(self, validated_data):
         user = User.objects.create_user(username=validated_data["user"]["username"], password=validated_data["user"]["password"],email=validated_data["user"]["email"], first_name=validated_data["user"]["first_name"], last_name=validated_data["user"]["last_name"])
         salt_tracker_user = SaltTrackerUser.objects.create(user=user,date_of_birth=validated_data["date_of_birth"],weight = validated_data["weight"], height = validated_data["height"],
-                                                  sex=validated_data["sex"], nickname=validated_data["nickname"], cumulus_email=validated_data.get('cumulus_email', None),cumulus_password=validated_data.get('cumulus_password', None))  
+                                                  sex=validated_data["sex"], nickname=validated_data["nickname"], cumulus_email=validated_data.get('cumulus_email', None),cumulus_password=validated_data.get('cumulus_password', None), food_tracker_user = validated_data.get("food_tracker_user", False))  
         return salt_tracker_user
 
 

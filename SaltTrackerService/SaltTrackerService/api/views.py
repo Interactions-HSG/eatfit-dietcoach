@@ -397,12 +397,13 @@ def get_initial_user_data(request):
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 def __send_push_notification(user, title, message):
+    print("trying to send message: " + message + " to user " + user.username)
     devices = Device.objects.filter(user=user)
     devices.send_message({"notification": {"title": title, "body": message}})
 
 def __mark_study_as_lost(study):
     study.is_lost = True
-    study.save()
+    #study.save()
 
 @api_view(['GET'])
 @permission_classes((permissions.IsAuthenticated,))
@@ -410,26 +411,38 @@ def check_push_notifications(request):
     if request.user.is_superuser:
         push_notification_title = "Swiss FoodTracker"
         latest_start_day = date.today() - timedelta(days=4)
-        studies = Study.objects.filter(is_lost = False, survey_completed = False, start_date__gte=latest_start_day).select_related("user")
+        studies = Study.objects.filter(is_lost = False, survey_completed = False, start_date__gte=latest_start_day, user__salttrackeruser__food_tracker_user = True).select_related("user")
         for study in studies:
             study_days = StudyDay.objects.filter(study = study).order_by("date")
-            if study_days.exists(): #has the user already started?
-                days_since_start = (date.today() - study.start_date).days
-                if study.is_successful and not study.survey_completed:
-                    __send_push_notification(study.user, push_notification_title, "Für die Ernährungsanalyse noch Abschlussbefragung ausfüllen!")
-                elif study_days.count() > days_since_start:
-                    if days_since_start >= 2 and not study_days[days_since_start-2].is_locked:
-                        __send_push_notification(study.user, push_notification_title, "Leider hast Du Tag " + days_since_start-2 + " nicht rechtzeitig abgeschlossen.")
+            study_days_count = study_days.count()
+            if study_days_count > 0: #has the user already started?
+                if study_days_count >=4:
+                    study.is_successful = True
+                    study.save()
+                print(study.start_date.date())
+                print(study.pk)
+                days_since_start = (date.today() - study.start_date.date()).days
+                print(days_since_start)
+                for d in study_days:
+                    print(str(d.date) + " " +  str(d.is_locked))
+                if days_since_start >= 1:
+                    if study.is_successful and not study.survey_completed:
+                        __send_push_notification(study.user, push_notification_title, u"Für die Ernährungsanalyse noch Abschlussbefragung ausfüllen!")
+                    elif study_days_count < days_since_start:
+                        __send_push_notification(study.user, push_notification_title, "Leider hast Du Tag " + str(days_since_start) + " nicht rechtzeitig abgeschlossen.")
+                    elif study_days_count >= days_since_start:
+                        if days_since_start >=1 and not study_days[days_since_start-1].is_locked and study_days[days_since_start-1].date.date() == date.today() - timedelta(days=1):
+                            __send_push_notification(study.user, push_notification_title, "Jetzt Tag " + str(days_since_start) + " abschliessen, und Tag " + str(days_since_start+1) + " beginnen!")
+                        elif days_since_start >=1 and not study_days[days_since_start-1].is_locked and study_days[days_since_start-1].date.date() != date.today() - timedelta(days=1):
+                            __send_push_notification(study.user, push_notification_title, "Leider hast Du Tag " + str(days_since_start) + " nicht rechtzeitig abgeschlossen.")
+                            __mark_study_as_lost(study)
+                        elif days_since_start >=1 and study_days[days_since_start-1].is_locked:
+                            __send_push_notification(study.user, push_notification_title, "Jetzt den " + str(days_since_start+1) + ". von 4 Tagen erfassen!")
+                    else:
+                        __send_push_notification(study.user, push_notification_title, "Leider hast Du Tag " + str(days_since_start-2) + " nicht rechtzeitig abgeschlossen.")
                         __mark_study_as_lost(study)
-                    elif days_since_start >=1 and not study_days[days_since_start-1].is_locked:
-                        __send_push_notification(study.user, push_notification_title, "Jetzt Tag " + days_since_start-1 + " abschliessen, und Tag " + days_since_start + " beginnen!")
-                    elif days_since_start >=1 and study_days[days_since_start-1].is_locked:
-                        __send_push_notification(study.user, push_notification_title, "Jetzt den " + days_since_start + ". von 4 Tagen erfassen!")
-                else:
-                    __send_push_notification(study.user, push_notification_title, "Leider hast Du Tag " + days_since_start-2 + " nicht rechtzeitig abgeschlossen.")
-                    __mark_study_as_lost(study)
-            elif study.start_date == date.today():
-                __send_push_notification(study.user, push_notification_title, "Jetzt Swiss FoodTracker starten & Ernährung loggen!")
+            elif study.start_date.date() == date.today():
+                __send_push_notification(study.user, push_notification_title, u"Jetzt Swiss FoodTracker starten & Ernährung loggen!")
         return Response(status=status.HTTP_200_OK)
     return Response(None, status=status.HTTP_403_FORBIDDEN)
 
@@ -438,7 +451,8 @@ def check_push_notifications(request):
 def post_push_notif_data(request):
     serializer = DeviceSerializer(data=request.data)
     if serializer.is_valid():
-        Device.objects.update_or_create(user = request.user, defaults = {"reg_id" : serializer.validated_data["reg_id"]})
+        Device.objects.update_or_create(user = request.user, defaults = {"reg_id" : serializer.validated_data["reg_id"],
+                                                                        "device_id" : serializer.validated_data["device_id"]})
         return Response(serializer.data, status=status.HTTP_200_OK)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -461,7 +475,7 @@ def get_initial_user_data_food_tracker(request):
                 study_data.save()
         else:
             data["average_salt"] = results.get_average_salt_per_day(request.user, 7)
-        days = StudyDay.objects.filter(user=request.user, study=study_data)
+        days = StudyDay.objects.filter(user=request.user, study=study_data).order_by("date")
             
     data["user_data"] = users[0]
     data["study_data"] = study_data
@@ -471,6 +485,13 @@ def get_initial_user_data_food_tracker(request):
     serializer = InitalUserDataSerializer(data)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
+@api_view(['GET'])
+@permission_classes((permissions.IsAuthenticated,))
+def set_study_survey_completed(request, study_id):
+    study = get_object_or_404(Study.objects.filter(user = request.user), pk = study_id)
+    study.survey_completed = True
+    study.save()
+    return Response(status=status.HTTP_200_OK)
 
 @api_view(['POST'])
 @permission_classes((permissions.AllowAny,))

@@ -55,6 +55,8 @@ urlpatterns = [
      url(r'user/get/user-survey/', ui_views.user_surveys),
      url(r'user/get/export/all/', ui_views.export_all),
 
+     url("study/survey/completed/(?P<study_id>[0-9]+)/$", api_views.set_study_survey_completed, name='set_study_survey_completed'),
+
      #avatar urls
      url(r'avatar/state/$', avatar_views.get_avatar_levels),
      url(r'avatar/data/get/$', avatar_views.get_avatar_data),

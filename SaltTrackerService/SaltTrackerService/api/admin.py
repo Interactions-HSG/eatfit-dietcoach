@@ -2,7 +2,7 @@ from django.contrib import admin
 from api.models import AvatarTip
 from adminsortable.admin import SortableAdmin
 
-from api.models import SaltTrackerUser, Category, FoodItem, FoodRecord, ProfileData, ReebateCredentials, MigrosItem, ShoppingTip, FoodItemSupplement,AutoidScraperMigrosItem, AvatarData, AvatarMessage
+from api.models import SaltTrackerUser, Category, FoodItem, FoodRecord, ProfileData, ReebateCredentials, MigrosItem, ShoppingTip, FoodItemSupplement,AutoidScraperMigrosItem, AvatarData, AvatarMessage, Study
 from modeltranslation.admin import TranslationAdmin
 
 
@@ -38,3 +38,4 @@ admin.site.register(FoodItemSupplement, FoodItemSupplementAdmin)
 admin.site.register(AvatarData)
 admin.site.register(AvatarMessage, AvatarMessageAdmin)
 admin.site.register(AvatarTip)
+admin.site.register(Study)
