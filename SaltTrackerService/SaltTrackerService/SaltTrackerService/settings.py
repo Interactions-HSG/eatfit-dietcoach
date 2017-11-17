@@ -25,7 +25,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = 'bd9c441a-3743-4119-9b9c-6ae744cbdd7a'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 USE_DEBUG_DB = False
 
 ALLOWED_HOSTS = (
@@ -129,7 +129,7 @@ else:
             'HOST': 'eatfitdb.database.windows.net',
             'PORT': '1433',
             'OPTIONS': {
-                'driver': 'SQL Server Native Client 11.0',
+                'driver': 'SQL Server',
                 'MARS_Connection': 'True',
             }
         },
@@ -141,7 +141,7 @@ else:
         'HOST': 'eatfitdb.database.windows.net',
         'PORT': '1433',
         'OPTIONS': {
-            'driver': 'SQL Server Native Client 11.0',
+            'driver': 'SQL Server',
             'host_is_server' : True,
             'unicode_results': True,
             'extra_params': "TDS_VERSION=8.0",

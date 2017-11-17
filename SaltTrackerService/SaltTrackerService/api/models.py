@@ -39,7 +39,7 @@ class SaltTrackerUser(models.Model):
     weight = models.FloatField(null=True, blank=True)
     height = models.FloatField(null=True, blank=True)
     sex = models.CharField(max_length=15, null=True, choices=SEX_CHOICES, blank=True)
-    notification_id = models.CharField(null=True, blank=True, max_length=100)
+    notification_id = models.CharField(null=True, blank=True, max_length=255)
     operating_system = models.CharField(max_length=20, null=True, blank=True, choices = OS_CHOICES)
     cumulus_email = models.EmailField(null=True, blank=True)
     cumulus_password = models.CharField(max_length=255, null=True, blank=True)

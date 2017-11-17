@@ -453,6 +453,9 @@ def post_push_notif_data(request):
     if serializer.is_valid():
         Device.objects.update_or_create(user = request.user, defaults = {"reg_id" : serializer.validated_data["reg_id"],
                                                                         "device_id" : serializer.validated_data["device_id"]})
+        salttrackeruser = request.user.salttrackeruser
+        salttrackeruser.notification_id = serializer.validated_data["reg_id"]
+        salttrackeruser.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
