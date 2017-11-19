@@ -129,7 +129,7 @@ else:
             'HOST': 'eatfitdb.database.windows.net',
             'PORT': '1433',
             'OPTIONS': {
-                'driver': 'SQL Server',
+                'driver': 'SQL Server Native Client 11.0',
                 'MARS_Connection': 'True',
             }
         },
@@ -141,7 +141,7 @@ else:
         'HOST': 'eatfitdb.database.windows.net',
         'PORT': '1433',
         'OPTIONS': {
-            'driver': 'SQL Server',
+            'driver': 'SQL Server Native Client 11.0',
             'host_is_server' : True,
             'unicode_results': True,
             'extra_params': "TDS_VERSION=8.0",
