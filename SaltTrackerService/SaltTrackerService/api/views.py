@@ -477,7 +477,7 @@ def get_initial_user_data_food_tracker(request):
                 study_data.is_successful = True
                 study_data.save()
         else:
-            data["average_salt"] = results.get_average_salt_per_day(request.user, 7)
+            data["average_salt"] = results.get_average_salt_per_day(request.user, 4)
         days = StudyDay.objects.filter(user=request.user, study=study_data).order_by("date")
             
     data["user_data"] = users[0]

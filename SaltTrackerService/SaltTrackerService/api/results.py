@@ -7,7 +7,7 @@ from api.eatfit_models import NwdSubcategory
 
 def get_average_salt_per_day(user, last_n_days=0):
     if last_n_days > 0:
-        records = FoodRecord.objects.filter(user=user, study_day__is_locked=True).values("date").order_by("-date").annotate(Sum("total_salt"))[:7]
+        records = FoodRecord.objects.filter(user=user, study_day__is_locked=True).values("date").order_by("-date").annotate(Sum("total_salt"))[:last_n_days]
     else:
         records = FoodRecord.objects.filter(user=user, study_day__is_locked=True).values("date").order_by("-date").annotate(Sum("total_salt"))
     records_count = records.count()
@@ -22,7 +22,7 @@ def get_average_salt_per_day(user, last_n_days=0):
     return average_salt
 
 def get_average_salt_per_day_for_study(user):
-    records = FoodRecord.objects.filter(user=user, study_day__is_locked=True).values("date").order_by("date").annotate(Sum("total_salt"))[1:4]
+    records = FoodRecord.objects.filter(user=user, food_tracker_user = True, study_day__is_locked=True).values("date").order_by("-date").annotate(Sum("total_salt"))[:4]
     records_count = records.count()
     average_salt = 0
     total_salt = 0
