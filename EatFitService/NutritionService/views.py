@@ -63,7 +63,7 @@ def __update_objects_from_trustbox(last_updated):
     updated_gtins = [article['gtin'] for article in __recursive_translation(response)["article"]]
     import_log = ImportLog.objects.create(import_started = datetime.now())
     count = 0
-    for gtin in updated_gtins[:10]:
+    for gtin in updated_gtins:
         count = count + 1
         result = client.service.getTrustedDataByGTIN(gtin, TRUSTBOX_USERNAME, TRUSTBOX_PASSWORD)
         __soap_response_to_objects(result)
