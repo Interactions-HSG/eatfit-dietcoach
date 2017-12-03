@@ -5,7 +5,6 @@ Definition of urls for EatFitService.
 from django.conf.urls import patterns, url, include
 from rest_framework import routers
 import views
-from rest_framework.authtoken import views as auth_views
 from TrustBoxAPI.product_views import ProductViewSet
 from TrustBoxAPI import product_views
 
@@ -29,6 +28,4 @@ urlpatterns = [
      url(r'^category/icons/', product_views.get_icon_urls),
      url(r'^results/shopping-tips/(?P<user_pk>[0-9]+)', product_views.get_shopping_tips),
      url(r'^trustbox/clean', views.clean_trustbox_items),
-     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
-     url(r'^api-token-auth/', auth_views.obtain_auth_token)
 ]

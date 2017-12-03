@@ -16,6 +16,8 @@ from rest_framework.authtoken.models import Token
 from django.contrib.auth.models import User
 from django.conf import settings
 
+
+
 class ImportLog(models.Model):
     import_timestamp = models.DateTimeField()
     successful = models.BooleanField()
@@ -24,6 +26,7 @@ class ImportLog(models.Model):
 
     class Meta:
         db_table = 'import_log'
+        app_label = 'trustbox_api' 
 
 class LmpCategory(models.Model):
     lmp_id = models.IntegerField(primary_key=True)
@@ -32,6 +35,7 @@ class LmpCategory(models.Model):
 
     class Meta:
         db_table = 'lmp_category'
+        app_label = 'trustbox_api' 
 
 
 class Nutrition(models.Model):
@@ -39,6 +43,7 @@ class Nutrition(models.Model):
 
     class Meta:
         db_table = 'nutrition'
+        app_label = 'trustbox_api' 
 
 
 class NutritionAttribute(models.Model):
@@ -50,6 +55,7 @@ class NutritionAttribute(models.Model):
 
     class Meta:
         db_table = 'nutrition_attribute'
+        app_label = 'trustbox_api' 
 
 
 class NutritionFact(models.Model):
@@ -64,6 +70,7 @@ class NutritionFact(models.Model):
 
     class Meta:
         db_table = 'nutrition_fact'
+        app_label = 'trustbox_api' 
 
 
 class NutritionFactsGroup(models.Model):
@@ -71,6 +78,7 @@ class NutritionFactsGroup(models.Model):
 
     class Meta:
         db_table = 'nutrition_facts_group'
+        app_label = 'trustbox_api' 
 
 
 class NutritionGroupAttribute(models.Model):
@@ -82,6 +90,7 @@ class NutritionGroupAttribute(models.Model):
 
     class Meta:
         db_table = 'nutrition_group_attribute'
+        app_label = 'trustbox_api' 
 
 
 class NutritionLabel(models.Model):
@@ -91,6 +100,7 @@ class NutritionLabel(models.Model):
 
     class Meta:
         db_table = 'nutrition_label'
+        app_label = 'trustbox_api' 
 
 
 class NwdMainCategory(models.Model):
@@ -100,6 +110,7 @@ class NwdMainCategory(models.Model):
 
     class Meta:
         db_table = 'nwd_main_category'
+        app_label = 'trustbox_api' 
 
 
 class NwdMainCategoryMinNutritionFactDifference(models.Model):
@@ -110,6 +121,7 @@ class NwdMainCategoryMinNutritionFactDifference(models.Model):
 
     class Meta:
         db_table = 'nwd_main_category_min_nutrition_fact_difference'
+        app_label = 'trustbox_api' 
 
 
 class NwdSubcategory(models.Model):
@@ -124,6 +136,7 @@ class NwdSubcategory(models.Model):
 
     class Meta:
         db_table = 'nwd_subcategory'
+        app_label = 'trustbox_api' 
 
 
 class NwdSubcategoryMinNutritionFactDifference(models.Model):
@@ -134,6 +147,7 @@ class NwdSubcategoryMinNutritionFactDifference(models.Model):
 
     class Meta:
         db_table = 'nwd_subcategory_min_nutrition_fact_difference'
+        app_label = 'trustbox_api' 
 
 
 class Product(models.Model):
@@ -151,6 +165,7 @@ class Product(models.Model):
 
     class Meta:
         db_table = 'product'
+        app_label = 'trustbox_api' 
 
 
 class ProductAttribute(models.Model):
@@ -162,6 +177,7 @@ class ProductAttribute(models.Model):
 
     class Meta:
         db_table = 'product_attribute'
+        app_label = 'trustbox_api' 
 
 class ProductName(models.Model):
     name = models.TextField(max_length=4000, blank=True, null=True)
@@ -171,6 +187,7 @@ class ProductName(models.Model):
 
     class Meta:
         db_table = 'product_name'
+        app_label = 'trustbox_api' 
 
 class AgreedData(models.Model):
     value = models.TextField(max_length=1024, blank=True, null=True)
@@ -179,6 +196,7 @@ class AgreedData(models.Model):
 
     class Meta:
         db_table = 'agreed_data'
+        app_label = 'trustbox_api' 
 
 class MissingTrustboxItem(models.Model):
     name = models.CharField(max_length=255, verbose_name="Name")
@@ -203,9 +221,4 @@ class MissingTrustboxItem(models.Model):
 
     class Meta:
         db_table = 'missing_trustbox_item'
-
-
-@receiver(post_save, sender=settings.AUTH_USER_MODEL)
-def create_auth_token(sender, instance=None, created=False, **kwargs):
-    if created:
-        Token.objects.create(user=instance)
+        app_label = 'trustbox_api' 

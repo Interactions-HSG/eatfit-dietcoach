@@ -5,7 +5,6 @@ from django.contrib.auth.decorators import login_required
 from SaltTrackerService import result_calculation
 import datetime
 from SaltTrackerService.models import SaltTrackerUser
-from TrustBoxAPI import tasks
 
 
 def get_shopping_results(request, user_pk):

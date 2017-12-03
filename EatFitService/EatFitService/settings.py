@@ -13,14 +13,11 @@ from __future__ import absolute_import
 import os
 import posixpath
 from os import path
-from celery.schedules import crontab
 from EatFitService import local_settings
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-BROKER_URL = 'django://'
-CELERYBEAT_SCHEDULER = 'djcelery.schedulers.DatabaseScheduler'
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.9/howto/deployment/checklist/
@@ -63,12 +60,10 @@ REST_FRAMEWORK = {
 # Application definition
 
 INSTALLED_APPS = [
+    'django_cleanup',
     'rest_framework',
     'rest_framework.authtoken',
-    'djcelery',
-    'kombu.transport.django',
-    'TrustBoxAPI',
-    'SaltTrackerService',
+    'NutritionService',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -155,19 +150,6 @@ USE_I18N = True
 USE_L10N = True
 
 USE_TZ = False
-
-CELERY_ENABLE_UTC = True
-
-CELERYBEAT_SCHEDULE = {
-    "load_trustbox_data" : {
-        "task" : "TrustBoxAPI.tasks.get_trustbox_data_by_call",
-        "schedule" : crontab(minute = "0", hour="2"),   
-        },
-    "update_shopping_data" : {
-        "task" : "TrustBoxAPI.tasks.update_shopping_results",
-        "schedule" : crontab(minute = "0", hour="6"),   
-        },
-}
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.9/howto/static-files/

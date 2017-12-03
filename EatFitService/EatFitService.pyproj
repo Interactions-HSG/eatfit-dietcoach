@@ -4,8 +4,7 @@
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
     <Name>EatFitService</Name>
     <RootNamespace>EatFitService</RootNamespace>
-    <InterpreterId>{9494a6cc-db23-4416-8b91-c0d103f8675a}</InterpreterId>
-    <InterpreterVersion>2.7</InterpreterVersion>
+    <InterpreterId>MSBuild|{9494a6cc-db23-4416-8b91-c0d103f8675a}|$(MSBuildProjectFullPath)</InterpreterId>
   </PropertyGroup>
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -19,6 +18,7 @@
     <WorkingDirectory>.</WorkingDirectory>
     <LaunchProvider>Django launcher</LaunchProvider>
     <OutputPath>.</OutputPath>
+    <WebBrowserUrl>http://localhost</WebBrowserUrl>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -29,12 +29,21 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="EatFitService\celery.py">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="EatFitService\local_settings.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="NutritionService\admin.py" />
+    <Compile Include="NutritionService\apps.py" />
+    <Compile Include="NutritionService\migrations\__init__.py" />
+    <Compile Include="NutritionService\models.py" />
+    <Compile Include="NutritionService\serializers.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="NutritionService\urls.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="NutritionService\views.py" />
+    <Compile Include="NutritionService\__init__.py" />
     <Compile Include="SaltTrackerService\admin.py" />
     <Compile Include="SaltTrackerService\apps.py" />
     <Compile Include="SaltTrackerService\migrations\__init__.py" />
@@ -73,9 +82,6 @@
     <Compile Include="TrustBoxAPI\serializer.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="TrustBoxAPI\tasks.py">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="TrustBoxAPI\tests.py" />
     <Compile Include="TrustBoxAPI\urls.py">
       <SubType>Code</SubType>
@@ -90,6 +96,9 @@
     <Compile Include="EatFitService\wsgi.py" />
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="NutritionService\" />
+    <Folder Include="NutritionService\migrations\" />
+    <Folder Include="NutritionService\templates\" />
     <Folder Include="SaltTrackerService\" />
     <Folder Include="SaltTrackerService\migrations\" />
     <Folder Include="SaltTrackerService\templates\" />
@@ -119,7 +128,6 @@
   <ItemGroup>
     <Interpreter Include="env\">
       <Id>{9494a6cc-db23-4416-8b91-c0d103f8675a}</Id>
-      <BaseInterpreter>{2af0f10d-7135-4994-9156-5d01c9c11b7e}</BaseInterpreter>
       <Version>2.7</Version>
       <Description>env (Python 2.7)</Description>
       <InterpreterPath>Scripts\python.exe</InterpreterPath>
@@ -169,4 +177,5 @@
       </FlavorProperties>
     </VisualStudio>
   </ProjectExtensions>
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
 </Project>

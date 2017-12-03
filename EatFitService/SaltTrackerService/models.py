@@ -28,6 +28,7 @@ class SaltTrackerUser(models.Model):
     class Meta:
         managed = False
         db_table = 'salt_tracker_user'
+        app_label = 'api' 
 
 class ReebateCredentials(models.Model):
     user = models.ForeignKey(SaltTrackerUser, models.DO_NOTHING)
@@ -38,6 +39,7 @@ class ReebateCredentials(models.Model):
     class Meta:
         managed = False
         db_table = 'reebate_credentials'
+        app_label = 'api' 
 
 class MigrosBasket(models.Model):
     user = models.ForeignKey(SaltTrackerUser, models.DO_NOTHING)
@@ -49,6 +51,7 @@ class MigrosBasket(models.Model):
     class Meta:
         managed = False
         db_table = 'migros_basket'
+        app_label = 'api' 
 
 class MigrosItem(models.Model):
     name = models.CharField(max_length=255)
@@ -59,6 +62,7 @@ class MigrosItem(models.Model):
     class Meta:
         managed = False
         db_table = 'migros_item'
+        app_label = 'api' 
 
 class MigrosBasketItem(models.Model):
     migros_basket = models.ForeignKey(MigrosBasket, models.CASCADE)
@@ -69,6 +73,7 @@ class MigrosBasketItem(models.Model):
     class Meta:
         managed = False
         db_table = 'migros_basket_item'
+        app_label = 'api' 
 
 class ShoppingResult(models.Model):
     gtin  = models.BigIntegerField()
@@ -85,6 +90,7 @@ class ShoppingResult(models.Model):
     class Meta:
         managed = False
         db_table = 'shopping_result'
+        app_label = 'api' 
 
 class ShoppingTip(models.Model):
     text = models.TextField(verbose_name="Text")
@@ -118,6 +124,7 @@ class AutoidScraperMigrosBasket(models.Model):
     class Meta:
         managed = False
         db_table = 'autoid_scraper_migros_basket'
+        app_label = 'api' 
 
 
 class AutoidScraperMigrosBasketItem(models.Model):
@@ -129,6 +136,7 @@ class AutoidScraperMigrosBasketItem(models.Model):
     class Meta:
         managed = False
         db_table = 'autoid_scraper_migros_basket_item'
+        app_label = 'api' 
 
 
 class AutoidScraperMigrosItem(models.Model):
@@ -140,4 +148,5 @@ class AutoidScraperMigrosItem(models.Model):
     class Meta:
         managed = False
         db_table = 'autoid_scraper_migros_item'
+        app_label = 'api' 
 

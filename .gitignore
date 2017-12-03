@@ -27,3 +27,5 @@ SaltTrackerService/SaltTrackerService/cache/
 SaltTrackerService/SaltTrackerService/db.sqlite3
 SaltTrackerService/SaltTrackerService/.vs/SaltTrackerService/v15/.suo
 SaltTrackerService/SaltTrackerService/bin/
+EatFitService/media/
+EatFitService/.vs/

@@ -4,7 +4,7 @@
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
     <Name>SaltTrackerService</Name>
     <RootNamespace>SaltTrackerService</RootNamespace>
-    <InterpreterId>MSBuild|{a7e12f90-99fa-49c1-9584-361ae9ca7cbe}|$(MSBuildProjectFullPath)</InterpreterId>
+    <InterpreterId>MSBuild|env|$(MSBuildProjectFullPath)</InterpreterId>
     <NameOfLastUsedPublishProfile>swissfoodtracker - Web Deploy</NameOfLastUsedPublishProfile>
   </PropertyGroup>
   <PropertyGroup>
@@ -108,12 +108,11 @@
   </ItemGroup>
   <ItemGroup>
     <Interpreter Include="env\">
-      <Id>{a7e12f90-99fa-49c1-9584-361ae9ca7cbe}</Id>
+      <Id>env</Id>
       <Version>2.7</Version>
-      <Description>env (Python 2.7)</Description>
+      <Description>env (Python 2.7 (32-bit))</Description>
       <InterpreterPath>Scripts\python.exe</InterpreterPath>
       <WindowsInterpreterPath>Scripts\pythonw.exe</WindowsInterpreterPath>
-      <LibraryPath>Lib\</LibraryPath>
       <PathEnvironmentVariable>PYTHONPATH</PathEnvironmentVariable>
       <Architecture>X86</Architecture>
     </Interpreter>

@@ -2,7 +2,7 @@
 Definition of urls for EatFitService.
 """
 
-from django.conf.urls import patterns, url, include
+from django.conf.urls import url, include
 from rest_framework import routers
 import views
 from SaltTrackerService import views
