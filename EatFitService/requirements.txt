@@ -4,10 +4,10 @@ billiard==3.3.0.23
 celery==4.1.0
 certifi==2017.11.5
 chardet==3.0.4
-Django==1.11.4
+Django==1.11.8
 django-celery==3.1.17
 django-cleanup==1.0.1
-django-pyodbc-azure==1.9.3.0
+django-pyodbc-azure==1.11
 djangorestframework==3.6.3
 fuzzywuzzy==0.10.0
 idna==2.6
@@ -15,7 +15,7 @@ kombu==3.0.35
 olefile==0.44
 Pillow==4.2.1
 pip==8.1.2
-pyodbc==3.0.10
+pyodbc==4.0.21
 pytz==2016.4
 requests==2.18.4
 setuptools==15.0
