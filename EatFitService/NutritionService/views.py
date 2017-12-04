@@ -57,6 +57,7 @@ def update_database(request):
     import_log_queryset = ImportLog.objects.filter(import_finished__isnull=False).order_by("-import_finished")[:1]
     if import_log_queryset.exists():
         last_updated = import_log_queryset[0].import_finished.strftime("%Y-%m-%dT%H:%M:%SZ")
+    last_updated='2000-01-01T00:00:00Z'
     __update_objects_from_trustbox(last_updated)
     return HttpResponse(status = 200)
 
@@ -131,6 +132,7 @@ def __soap_response_to_objects(response):
                             default_arguments["unit_of_measure"] = attr['unitOfMeasure'] 
                             NutritionFact.objects.update_or_create(product = product, name  = attr["_canonicalName"], defaults = default_arguments)
                     except Exception as e: #ignore shitty data quality
+                        print("here1")
                         print(e)
         
             # create allergens and ingridients for products
@@ -140,6 +142,7 @@ def __soap_response_to_objects(response):
                 if attr['_canonicalName'] == 'ingredients':
                     Ingredient.objects.update_or_create(product = product, lang = attr["_languageCode"], defaults = {"text" : attr['value']})
         except Exception as e:
+            print("here2")
             print(e)
 
 def __recursive_translation(d):
@@ -188,6 +191,7 @@ def __store_image(image_url, product):
             # This saves the model so be sure that is it valid
             product.image.save(file_name, files.File(lf))
         except Exception as ex:
+            print("here3")
             print(ex)
 
 
