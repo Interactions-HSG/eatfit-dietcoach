@@ -76,7 +76,7 @@ def __update_objects_from_trustbox(last_updated):
         count = count + 1
         result = client.service.getTrustedDataByGTIN(gtin, TRUSTBOX_USERNAME, TRUSTBOX_PASSWORD)
         __soap_response_to_objects(result)
-        print("imported model: " + str(count))
+        #print("imported model: " + str(count))
     import_log.import_finished = datetime.now()
     import_log.save()
 
