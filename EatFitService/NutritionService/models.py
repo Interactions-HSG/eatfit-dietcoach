@@ -78,7 +78,7 @@ class NutritionFact(models.Model):
         db_table = 'nutrition_fact'
 
 
-class Ingridient(models.Model):
+class Ingredient(models.Model):
     id = models.BigAutoField(primary_key=True)
     product = models.ForeignKey(Product, related_name='ingridients')
     lang = models.CharField(max_length=2)
@@ -87,7 +87,7 @@ class Ingridient(models.Model):
     class Meta:
         verbose_name = "ingridient"
         verbose_name_plural = "ingridients"
-        db_table = 'ingridient'
+        db_table = 'ingredient'
 
 
 class NotFoundLog(models.Model):

@@ -3,12 +3,15 @@ Definition of views.
 """
 
 from EatFitService.settings import TRUSTBOX_USERNAME, TRUSTBOX_PASSWORD, TRUSTBOX_URL
+from django.http.response import HttpResponseForbidden
+from rest_framework import permissions
+from rest_framework.decorators import permission_classes
 from datetime import datetime
 from NutritionService.models import ImportLog
 from suds.client import Client
 from suds.sudsobject import asdict
 from django.http import HttpResponse
-from NutritionService.models import Product, Allergen, Ingridient, NutritionFact, NotFoundLog
+from NutritionService.models import Product, Allergen, NutritionFact, Ingredient, NotFoundLog
 from NutritionService.serializers import ProductSerializer
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -20,7 +23,8 @@ import string
 
 
 @api_view(['GET'])
-def get_product(req, gtin):
+@permission_classes((permissions.IsAuthenticated,))
+def get_product(request, gtin):
     """
     Get product information given gtin
     returns sucess and object
@@ -43,13 +47,17 @@ def get_product(req, gtin):
         result["products"] = serializer.data
     return Response(result)
 
-
-def update_database(req):
+@api_view(['GET'])
+@permission_classes((permissions.IsAuthenticated,))
+def update_database(request):
+    if not request.user.is_superuser:
+        return HttpResponseForbidden()
     """ checks for changes since last update and adds new objects"""
     last_updated='2000-01-01T00:00:00Z'
     import_log_queryset = ImportLog.objects.filter(import_finished__isnull=False).order_by("-import_finished")[:1]
     if import_log_queryset.exists():
         last_updated = import_log_queryset[0].import_finished.strftime("%Y-%m-%dT%H:%M:%SZ")
+    last_updated='2000-01-01T00:00:00Z'
     __update_objects_from_trustbox(last_updated)
     return HttpResponse(status = 200)
 
@@ -81,38 +89,37 @@ def __soap_response_to_objects(response):
     products = result_as_dict['productList'][0]['products']
     for p in products:
         try:
-            temp_image_url = None
-            filter_arguments = {}
+            default_arguments = {}
             for n in p['productNames']:
                 if n['_languageCode'] == "de":
-                    filter_arguments["product_name_de"] = n['name']
+                    default_arguments["product_name_de"] = n['name']
                 if n['_languageCode'] == "fr":
-                    filter_arguments["product_name_fr"] = n['name']
+                    default_arguments["product_name_fr"] = n['name']
                 if n['_languageCode'] == "en":
-                    filter_arguments["product_name_en"] = n['name']
+                    default_arguments["product_name_en"] = n['name']
                 if n['_languageCode'] == "it":
-                    filter_arguments["product_name_it"] = n['name']
+                    default_arguments["product_name_it"] = n['name']
             for attr in p['productAttributes']:
                 try:
                     if attr['_canonicalName'] == 'manufacturer':
-                        filter_arguments["producer"] = attr['value']
+                        default_arguments["producer"] = attr['value']
                     if attr['_canonicalName'] == 'packageSize':
-                        filter_arguments["product_size"] = attr['value']
+                        default_arguments["product_size"] = attr['value']
                     if attr['_canonicalName'] == 'packageSize_uom':
-                        filter_arguments["product_size_unit_of_measure"] = attr['value']
+                        default_arguments["product_size_unit_of_measure"] = attr['value']
                     if attr['_canonicalName'] == 'productImageURL':
-                        temp_image_url = attr['value']
+                        default_arguments["original_image_url"] = attr['value']
                 except:
                     continue
             if 'nutritionGroupAttributes' in p['nutrition']['nutritionFactsGroups']:
                 for attr in p['nutrition']['nutritionFactsGroups']['nutritionGroupAttributes']:
                     if attr['_canonicalName'] == 'servingSize' and attr['value'] != "0.0": 
                         #check against 0 due to multiple entries with different values
-                        filter_arguments["serving_size"] = attr['value']
+                        default_arguments["serving_size"] = attr['value']
 
-            product, created = Product.objects.update_or_create(defaults={'gtin': p['_gtin']},**filter_arguments)
-            if temp_image_url:
-                __store_image(temp_image_url, product)
+            product, created = Product.objects.update_or_create(gtin = p['_gtin'], defaults = default_arguments)
+            if "original_image_url" in  default_arguments:
+                __store_image(default_arguments["original_image_url"], product)
 
             # create nutrition facts for products
             if 'nutritionFacts' in p['nutrition']['nutritionFactsGroups']:
@@ -120,21 +127,21 @@ def __soap_response_to_objects(response):
                     try:
                         is_a_number, number = is_number(attr['amount'])
                         if is_a_number:
-                            filter_arguments = {}
-                            filter_arguments["amount"] = number 
-                            filter_arguments["unit_of_measure"] = attr['unitOfMeasure'] 
-                            NutritionFact.objects.update_or_create(defaults= {"product" : product, "name" : attr["_canonicalName"]}, **filter_arguments)
-                    except: #ignore shitty data quality
-                        continue
+                            default_arguments = {}
+                            default_arguments["amount"] = number 
+                            default_arguments["unit_of_measure"] = attr['unitOfMeasure'] 
+                            NutritionFact.objects.update_or_create(product = product, name  = attr["_canonicalName"], defaults = default_arguments)
+                    except Exception as e: #ignore shitty data quality
+                        print(e)
         
             # create allergens and ingridients for products
             for attr in p['nutrition']['nutritionAttributes']:
                 if attr['_canonicalName'].startswith('allergen') and attr['value'] != "false":
-                    Allergen.objects.update_or_create(defaults= {"product" : product, "name" : attr["_canonicalName"]}, **{"certainity" : attr['value']})
+                    Allergen.objects.update_or_create(product = product, name = attr["_canonicalName"], defaults = {"certainity" : attr['value']})
                 if attr['_canonicalName'] == 'ingredients':
-                    Ingridient.objects.update_or_create(defaults= {"product" : product, "lang" : attr["_languageCode"]}, **{"text" : attr['value']})
-        except:
-            continue
+                    Ingredient.objects.update_or_create(product = product, lang = attr["_languageCode"], defaults = {"text" : attr['value']})
+        except Exception as e:
+            print(e)
 
 def __recursive_translation(d):
     ### helper method to translate SOAP response to dictionary ###

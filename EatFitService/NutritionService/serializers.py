@@ -1,6 +1,6 @@
 
 from rest_framework import serializers
-from NutritionService.models import Product, Allergen, Ingridient, NutritionFact
+from NutritionService.models import Product, Allergen, Ingredient, NutritionFact
 
 class AllergenSerializer(serializers.ModelSerializer):
     class Meta:
@@ -8,9 +8,9 @@ class AllergenSerializer(serializers.ModelSerializer):
         fields = ['name']
 
 
-class IngridientSerializer(serializers.ModelSerializer):
+class IngredientSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Ingridient
+        model = Ingredient
         fields = ['lang', 'text']
 
 
@@ -21,7 +21,7 @@ class NutritionFactSerializer(serializers.ModelSerializer):
 
 
 class ProductSerializer(serializers.ModelSerializer):
-    ingridients = IngridientSerializer(many=True, read_only=True)
+    ingridients = IngredientSerializer(many=True, read_only=True)
     allergens = AllergenSerializer(many = True, read_only=True)
 
     class Meta:
