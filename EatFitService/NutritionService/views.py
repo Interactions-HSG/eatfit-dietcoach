@@ -57,7 +57,6 @@ def update_database(request):
     import_log_queryset = ImportLog.objects.filter(import_finished__isnull=False).order_by("-import_finished")[:1]
     if import_log_queryset.exists():
         last_updated = import_log_queryset[0].import_finished.strftime("%Y-%m-%dT%H:%M:%SZ")
-    last_updated='2000-01-01T00:00:00Z'
     __update_objects_from_trustbox(last_updated)
     return HttpResponse(status = 200)
 
