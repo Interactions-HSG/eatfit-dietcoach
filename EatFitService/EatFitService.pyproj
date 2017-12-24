@@ -29,14 +29,26 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="EatFitService\celeryapp.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="EatFitService\local_settings.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="NutritionService\admin.py" />
     <Compile Include="NutritionService\apps.py" />
+    <Compile Include="NutritionService\helpers.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="NutritionService\legacy_views.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="NutritionService\migrations\__init__.py" />
     <Compile Include="NutritionService\models.py" />
     <Compile Include="NutritionService\serializers.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="NutritionService\tasks.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="NutritionService\urls.py">

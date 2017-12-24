@@ -17,12 +17,13 @@ class IngredientSerializer(serializers.ModelSerializer):
 class NutritionFactSerializer(serializers.ModelSerializer):
     class Meta:
         model = NutritionFact
-        fields = '__all__'
+        fields = ["name", "amount", "unit_of_measure"]
 
 
 class ProductSerializer(serializers.ModelSerializer):
-    ingridients = IngredientSerializer(many=True, read_only=True)
+    ingredients = IngredientSerializer(many=True, read_only=True)
     allergens = AllergenSerializer(many = True, read_only=True)
+    nutrients = NutritionFactSerializer(many = True, read_only=True)
 
     class Meta:
         model = Product
@@ -41,5 +42,6 @@ class ProductSerializer(serializers.ModelSerializer):
             'major_category',
             'minor_category',
             'allergens',
-            'ingridients'
+            'ingredients',
+            'nutrients'
             ]

@@ -163,3 +163,6 @@ STATIC_ROOT = path.join(BASE_DIR, 'static').replace('\\', '/')
 MEDIA_URL = '/media/'
 
 MEDIA_ROOT = path.join(BASE_DIR, 'media').replace('\\', '/')
+
+
+CELERY_BROKER_URL = 'amqp://localhost'

@@ -19,6 +19,8 @@ class MinorCategory(models.Model):
     id = models.AutoField(primary_key=True)
     description = models.TextField(max_length=1024, blank=True, null=True)
     category_major = models.ForeignKey(MajorCategory, on_delete=models.DO_NOTHING, null=True)
+    nwd_subcategory_id = models.CharField(max_length=255, blank=True, null=True)
+    icon = models.ImageField(upload_to ="minor_category_icons", null=True, blank=True, verbose_name="Icon")
 
     def __unicode__(self):
         return self.description
@@ -52,7 +54,6 @@ class Product(models.Model):
         verbose_name_plural = "Products"
         db_table = 'product'
 
-
 class Allergen(models.Model):
     id = models.BigAutoField(primary_key=True)
     product = models.ForeignKey(Product, related_name='allergens')
@@ -67,7 +68,7 @@ class Allergen(models.Model):
 
 class NutritionFact(models.Model):
     id = models.BigAutoField(primary_key=True)
-    product = models.ForeignKey(Product, related_name='nutrition_facts')
+    product = models.ForeignKey(Product, related_name='nutrients')
     name = models.CharField(max_length=64, null=True, blank=True)
     amount = models.FloatField(null=True, blank=True)
     unit_of_measure = models.CharField(max_length=8, null=True, blank=True)
@@ -80,7 +81,7 @@ class NutritionFact(models.Model):
 
 class Ingredient(models.Model):
     id = models.BigAutoField(primary_key=True)
-    product = models.ForeignKey(Product, related_name='ingridients')
+    product = models.ForeignKey(Product, related_name='ingredients')
     lang = models.CharField(max_length=2)
     text = models.TextField()
 

@@ -5,6 +5,7 @@ Definition of views.
 """
 
 from EatFitService.settings import TRUSTBOX_USERNAME, TRUSTBOX_PASSWORD, TRUSTBOX_URL
+from NutritionService.helpers import store_image
 from django.http.response import HttpResponseForbidden
 from rest_framework import permissions
 from rest_framework.decorators import permission_classes
@@ -15,6 +16,7 @@ from suds.sudsobject import asdict
 from django.http import HttpResponse
 from NutritionService.models import Product, Allergen, NutritionFact, Ingredient, NotFoundLog
 from NutritionService.serializers import ProductSerializer
+from NutritionService.tasks import import_from_openfood
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 import requests
@@ -63,6 +65,16 @@ def update_database(request):
     return HttpResponse(status = 200)
 
 
+@api_view(['GET'])
+@permission_classes((permissions.IsAuthenticated,))
+def get_products_from_openfood(request):
+    if not request.user.is_superuser:
+        return HttpResponseForbidden()
+    import_from_openfood()
+    return HttpResponse(status = 200)
+
+
+
 def __update_objects_from_trustbox(last_updated):
     """
     Takes date of last updated and creates new and changed objects
@@ -89,61 +101,7 @@ def __soap_response_to_objects(response):
     result_as_dict = __recursive_translation(response)
     products = result_as_dict['productList'][0]['products']
     for p in products:
-        try:
-            default_arguments = {}
-            temp_image_url = None
-            for n in p['productNames']:
-                if n['_languageCode'] == "de":
-                    default_arguments["product_name_de"] = unicode(n['name'])
-                if n['_languageCode'] == "fr":
-                    default_arguments["product_name_fr"] = unicode(n['name'])
-                if n['_languageCode'] == "en":
-                    default_arguments["product_name_en"] = unicode(n['name'])
-                if n['_languageCode'] == "it":
-                    default_arguments["product_name_it"] = unicode(n['name'])
-            for attr in p['productAttributes']:
-                try:
-                    if attr['_canonicalName'] == 'manufacturer':
-                        default_arguments["producer"] = unicode(attr['value'])
-                    if attr['_canonicalName'] == 'packageSize':
-                        default_arguments["product_size"] = attr['value']
-                    if attr['_canonicalName'] == 'packageSize_uom':
-                        default_arguments["product_size_unit_of_measure"] = attr['value']
-                    if attr['_canonicalName'] == 'productImageURL':
-                        temp_image_url = attr['value']
-                except:
-                    continue
-            if 'nutritionGroupAttributes' in p['nutrition']['nutritionFactsGroups']:
-                for attr in p['nutrition']['nutritionFactsGroups']['nutritionGroupAttributes']:
-                    if attr['_canonicalName'] == 'servingSize' and attr['value'] != "0.0": 
-                        #check against 0 due to multiple entries with different values
-                        default_arguments["serving_size"] = attr['value']
-
-            product, created = Product.objects.update_or_create(gtin = p['_gtin'], defaults = default_arguments)
-            if temp_image_url:
-                __store_image(temp_image_url, product)
-
-            # create nutrition facts for products
-            if 'nutritionFacts' in p['nutrition']['nutritionFactsGroups']:
-                for attr in p['nutrition']['nutritionFactsGroups']['nutritionFacts']:
-                    try:
-                        is_a_number, number = is_number(attr['amount'])
-                        if is_a_number:
-                            default_arguments = {}
-                            default_arguments["amount"] = number 
-                            default_arguments["unit_of_measure"] = attr['unitOfMeasure'] 
-                            NutritionFact.objects.update_or_create(product = product, name  = attr["_canonicalName"], defaults = default_arguments)
-                    except: #ignore shitty data quality
-                        continue
-        
-            # create allergens and ingridients for products
-            for attr in p['nutrition']['nutritionAttributes']:
-                if attr['_canonicalName'].startswith('allergen') and attr['value'] != "false":
-                    Allergen.objects.update_or_create(product = product, name = attr["_canonicalName"], defaults = {"certainity" : attr['value']})
-                if attr['_canonicalName'] == 'ingredients':
-                    Ingredient.objects.update_or_create(product = product, lang = attr["_languageCode"], defaults = {"text" : unicode(attr['value'])})
-        except Exception as e:
-            print(e)
+        create_product(p)
 
 def __recursive_translation(d):
     ### helper method to translate SOAP response to dictionary ###
@@ -163,37 +121,63 @@ def __recursive_translation(d):
     return result
 
 
-def __store_image(image_url, product):
-    if product.original_image_url == None or product.original_image_url != image_url:
-        try:
-            request = requests.get(image_url, stream=True)
-            # Was the request OK?
-            if request.status_code != requests.codes.ok:
-                return
 
-            # Get the filename from the url, used for saving later
-            file_name = ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(20)) + ".jpg"
+def create_product(p):
+    try:
+        default_arguments = {}
+        temp_image_url = None
+        for n in p['productNames']:
+            if n['_languageCode'] == "de":
+                default_arguments["product_name_de"] = unicode(n['name'])
+            if n['_languageCode'] == "fr":
+                default_arguments["product_name_fr"] = unicode(n['name'])
+            if n['_languageCode'] == "en":
+                default_arguments["product_name_en"] = unicode(n['name'])
+            if n['_languageCode'] == "it":
+                default_arguments["product_name_it"] = unicode(n['name'])
+        for attr in p['productAttributes']:
+            try:
+                if attr['_canonicalName'] == 'manufacturer':
+                    default_arguments["producer"] = unicode(attr['value'])
+                if attr['_canonicalName'] == 'packageSize':
+                    default_arguments["product_size"] = attr['value']
+                if attr['_canonicalName'] == 'packageSize_uom':
+                    default_arguments["product_size_unit_of_measure"] = attr['value']
+                if attr['_canonicalName'] == 'productImageURL':
+                    temp_image_url = attr['value']
+            except:
+                continue
+        if 'nutritionGroupAttributes' in p['nutrition']['nutritionFactsGroups']:
+            for attr in p['nutrition']['nutritionFactsGroups']['nutritionGroupAttributes']:
+                if attr['_canonicalName'] == 'servingSize' and attr['value'] != "0.0": 
+                    #check against 0 due to multiple entries with different values
+                    default_arguments["serving_size"] = attr['value']
 
-            # Create a temporary file
-            lf = tempfile.NamedTemporaryFile()
+        product, created = Product.objects.update_or_create(gtin = p['_gtin'], defaults = default_arguments)
+        if temp_image_url:
+            store_image(temp_image_url, product)
 
-            # Read the streamed image in sections
-            for block in request.iter_content(1024 * 8):
-
-                # If no more file then stop
-                if not block:
-                    break
-
-                # Write image block to temporary file
-                lf.write(block)
-
-            # Save the temporary image to the model#
-            # This saves the model so be sure that is it valid
-            product.image.save(file_name, files.File(lf))
-            product.original_image_url = image_url
-            product.save()
-        except Exception as ex:
-            print(ex)
+        # create nutrition facts for products
+        if 'nutritionFacts' in p['nutrition']['nutritionFactsGroups']:
+            for attr in p['nutrition']['nutritionFactsGroups']['nutritionFacts']:
+                try:
+                    is_a_number, number = is_number(attr['amount'])
+                    if is_a_number:
+                        default_arguments = {}
+                        default_arguments["amount"] = number 
+                        default_arguments["unit_of_measure"] = attr['unitOfMeasure'] 
+                        NutritionFact.objects.update_or_create(product = product, name  = attr["_canonicalName"], defaults = default_arguments)
+                except: #ignore shitty data quality
+                    continue
+        
+        # create allergens and ingridients for products
+        for attr in p['nutrition']['nutritionAttributes']:
+            if attr['_canonicalName'].startswith('allergen') and attr['value'] != "false":
+                Allergen.objects.update_or_create(product = product, name = attr["_canonicalName"], defaults = {"certainity" : attr['value']})
+            if attr['_canonicalName'] == 'ingredients':
+                Ingredient.objects.update_or_create(product = product, lang = attr["_languageCode"], defaults = {"text" : unicode(attr['value'])})
+    except Exception as e:
+        print(e)
 
 
 def is_number(s):
