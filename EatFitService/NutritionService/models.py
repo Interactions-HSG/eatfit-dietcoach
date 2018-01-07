@@ -11,6 +11,9 @@ class MajorCategory(models.Model):
     description = models.TextField(max_length=1024, blank=True, null=True)
     canonical_name = models.TextField(max_length=1024, blank=True, null=True)
 
+    def __unicode__(self):
+        return self.description
+
     class Meta:
         db_table = 'major_category'
 
