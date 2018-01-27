@@ -43,5 +43,6 @@ class ProductSerializer(serializers.ModelSerializer):
             'minor_category',
             'allergens',
             'ingredients',
-            'nutrients'
+            'nutrients',
+            'ofcom_value'
             ]

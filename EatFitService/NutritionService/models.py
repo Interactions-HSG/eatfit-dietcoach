@@ -48,6 +48,7 @@ class Product(models.Model):
     comment = models.TextField(null=True, blank=True)
     image = models.ImageField(upload_to ="product_images", null=True, blank=True)
     original_image_url = models.TextField(null=True, blank=True)
+    ofcom_value = models.IntegerField(null=True, blank=True)
 
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)

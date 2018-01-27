@@ -5,6 +5,8 @@ Definition of views.
 """
 
 from EatFitService.settings import TRUSTBOX_USERNAME, TRUSTBOX_PASSWORD, TRUSTBOX_URL
+from django.shortcuts import get_object_or_404
+from NutritionService.helpers import calculate_ofcom_value
 from NutritionService.helpers import store_image
 from django.http.response import HttpResponseForbidden
 from rest_framework import permissions
@@ -25,7 +27,6 @@ from django.core import files
 import random
 import string
 
-
 @api_view(['GET'])
 @permission_classes((permissions.IsAuthenticated,))
 def get_product(request, gtin):
@@ -33,7 +34,9 @@ def get_product(request, gtin):
     Get product information given gtin
     returns sucess and object
 
+    query param: resultType, values: 'array', 'dictionary'
     """
+    result_type = request.GET.get("resultType", "array")
     products = Product.objects.filter(gtin=gtin)
     if not products.exists():
         l, created = NotFoundLog.objects.get_or_create(gtin=gtin)
@@ -48,8 +51,96 @@ def get_product(request, gtin):
         serializer = ProductSerializer(products, many=True)
         result = {}
         result["success"] = True
-        result["products"] = serializer.data
+        if result_type == "array":
+            result["products"] = serializer.data
+        else:
+            result["products"] = []
+            for p in serializer.data:
+                result["products"].append(__change_product_objects(p))
     return Response(result)
+
+def __change_product_objects(product):
+    result_product = {}
+    result_product["gtin"] = product["gtin"]
+    result_product["producer"] = product["producer"]
+    result_product["product_size"] = product["product_size"]
+    result_product["product_size_unit_of_measure"] = product["product_size_unit_of_measure"]
+    result_product["serving_size"] = product["serving_size"]
+    result_product["comment"] = product["comment"]
+    result_product["image"] = product["image"]
+    result_product["major_category"] = product["major_category"]
+    result_product["ofcom_value"] = product["ofcom_value"]
+    result_product["product_names"] = {}
+    result_product["product_names"]["en"] = product["product_name_en"]
+    result_product["product_names"]["de"] = product["product_name_de"]
+    result_product["product_names"]["fr"] = product["product_name_fr"]
+    result_product["product_names"]["it"] = product["product_name_it"]
+    result_product["allergens"] = []
+    result_product["nutrients"] = {}
+    result_product["ingredients"] = {}
+    for a in product["allergens"]:
+        result_product["allergens"].append(a)
+    for n in product["nutrients"]:
+        result_product["nutrients"][n["name"]] = {}
+        result_product["nutrients"][n["name"]]["amount"] = n["amount"]
+        result_product["nutrients"][n["name"]]["unit_of_measure"]  = n["unit_of_measure"]
+    for i in product["ingredients"]:
+        result_product["ingredients"][i["lang"]] = i["text"]
+    return result_product
+
+
+
+@api_view(['GET'])
+@permission_classes((permissions.IsAuthenticated,))
+def get_better_products(request, gtin):
+    """
+    query param: sortBy, values: 'ofcomValue', 'energyKJ', 'totalFat', 'saturatedFat', 'salt', 'sugars'
+    query param: resultType, values: 'array', 'dictionary'
+    """
+
+    product = get_object_or_404(Product.objects.all(), gtin = gtin)
+    sort_by = request.GET.get("sortBy", "ofcomValue")
+    result_type = request.GET.get("resultType", "array")
+    number_of_results = 20
+    results_found = 0
+    products = []
+    better_products_minor = []
+    better_products_major = []
+    if product.minor_category:
+        if sort_by == "ofcomValue":
+            better_products_minor = Product.objects.filter(minor_category = product.minor_category).order_by("ofcom_value")[:number_of_results]
+            results_found = better_products_minor.count()
+        else:
+            better_products_minor = Product.objects.raw("Select p.* from product as p, nutrition_fact as n where n.product_id = p.id and p.minor_category_id = %s and n.name = %s order by n.amount", [product.minor_category.pk, sort_by])[:number_of_results]
+            results_found = len(better_products_minor)
+       
+    if results_found < number_of_results and product.major_category:
+        if sort_by == "ofcomValue":
+            better_products_major = Product.objects.filter(major_category = product.major_category).order_by("ofcom_value")[:(number_of_results-results_found)]
+            results_found = better_products_major.count()
+        else:
+            better_products_major = Product.objects.raw("Select p.* from product as p, nutrition_fact as n where n.product_id = p.id and p.major_category_id = %s and n.name = %s order by n.amount", [product.major_category.pk, sort_by])[:(number_of_results-results_found)]
+            results_found = len(better_products_major)
+    for p in better_products_minor:
+        products.append(p)
+    for p in better_products_major:
+        products.append(p)
+    if results_found > 0:
+        serializer = ProductSerializer(products, many=True)
+        result = {}
+        result["success"] = True
+        if result_type == "array":
+            result["products"] = serializer.data
+        else:
+            result["products"] = []
+            for p in serializer.data:
+                result["products"].append(__change_product_objects(p))
+    else:
+        result = {}
+        result["success"] = False
+        result["products"] = None
+    return Response(result)
+
 
 @api_view(['GET'])
 @permission_classes((permissions.IsAuthenticated,))
@@ -73,6 +164,17 @@ def get_products_from_openfood(request):
     import_from_openfood()
     return HttpResponse(status = 200)
 
+@api_view(['GET'])
+@permission_classes((permissions.IsAuthenticated,))
+def calculate_ofcom_values(request):
+    if not request.user.is_superuser:
+        return HttpResponseForbidden()
+    count = 0
+    for product in Product.objects.filter(ofcom_value__isnull=True):
+        calculate_ofcom_value(product)
+        count = count + 1
+        print("calculated for product: " + str(count))
+    return Response(status = 200)
 
 
 def __update_objects_from_trustbox(last_updated):
@@ -176,9 +278,9 @@ def create_product(p):
                 Allergen.objects.update_or_create(product = product, name = attr["_canonicalName"], defaults = {"certainity" : attr['value']})
             if attr['_canonicalName'] == 'ingredients':
                 Ingredient.objects.update_or_create(product = product, lang = attr["_languageCode"], defaults = {"text" : unicode(attr['value'])})
+        calculate_ofcom_value(product)
     except Exception as e:
         print(e)
-
 
 def is_number(s):
     try:

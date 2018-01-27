@@ -1,4 +1,5 @@
 import requests
+from NutritionService.helpers import calculate_ofcom_value
 from NutritionService.helpers import store_image
 from NutritionService.models import Ingredient
 from NutritionService.models import NutritionFact
@@ -93,4 +94,5 @@ def import_from_openfood():
                     nutrition_facts_to_create.append(nutrition_fact9)
 
                 NutritionFact.objects.bulk_create(nutrition_facts_to_create)
+                calculate_ofcom_value(product)
     not_found_items.delete()
