@@ -1,8 +1,11 @@
 from django.contrib import admin
-from NutritionService.models import MajorCategory, Product, MinorCategory, Allergen
+from NutritionService.models import MajorCategory, Product, MinorCategory, Allergen, NutritionFact
 
 class AllergenInline(admin.TabularInline):
     model = Allergen
+
+class NutrientInline(admin.TabularInline):
+    model = NutritionFact
 
 class ProductAdmin(admin.ModelAdmin):
     list_display = ("product_name_de", "gtin")
@@ -10,6 +13,7 @@ class ProductAdmin(admin.ModelAdmin):
     save_as = True
     inlines = [
         AllergenInline,
+        NutrientInline
     ]
 
 
