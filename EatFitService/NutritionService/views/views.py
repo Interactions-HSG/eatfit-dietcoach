@@ -129,6 +129,7 @@ def get_product(request, gtin):
                 result["products"].append(__change_product_objects(p))
     return Response(result)
 
+
 def __change_product_objects(product):
     result_product = {}
     result_product["gtin"] = product["gtin"]
@@ -157,7 +158,6 @@ def __change_product_objects(product):
     for i in product["ingredients"]:
         result_product["ingredients"][i["lang"]] = i["text"]
     return result_product
-
 
 
 @api_view(['GET'])

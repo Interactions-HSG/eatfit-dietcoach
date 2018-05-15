@@ -1,10 +1,9 @@
 from rest_framework.decorators import api_view, permission_classes
 from NutritionService.helpers import store_image
-from NutritionService.views import create_product
+from NutritionService.views.views import create_product
 from TrustBoxAPI.serializer import ProductImportSerializer
 from TrustBoxAPI.models import NwdSubcategory
 from NutritionService.models import NutritionFact
-import requests
 from NutritionService.models import MajorCategory
 from NutritionService.models import MinorCategory
 from TrustBoxAPI.models import NwdMainCategory
@@ -13,13 +12,6 @@ from NutritionService.models import Product
 from rest_framework.response import Response
 from TrustBoxAPI.models import MissingTrustboxItem
 from rest_framework import permissions
-from django.db import connection
-from django.core.files.base import ContentFile
-import tempfile
-from django.core import files
-import random
-import string
-import json
 
 
 @api_view(['GET'])

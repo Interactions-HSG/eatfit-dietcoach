@@ -1,6 +1,6 @@
 
 from rest_framework import serializers
-from NutritionService.models import Product, Allergen, Ingredient, NutritionFact
+from NutritionService.models import Product, Allergen, Ingredient, NutritionFact, CrowdsourceProduct
 
 class AllergenSerializer(serializers.ModelSerializer):
     class Meta:
@@ -46,3 +46,9 @@ class ProductSerializer(serializers.ModelSerializer):
             'nutrients',
             'ofcom_value'
             ]
+
+
+class CrowdsourceProductSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CrowdsourceProduct
+        fields = '__all__'
