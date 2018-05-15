@@ -164,7 +164,9 @@ def __change_product_objects(product):
 @permission_classes((permissions.IsAuthenticated,))
 def get_better_products(request, gtin):
     """
-    query param: sortBy, values: 'ofcomValue', 'energyKJ', 'totalFat', 'saturatedFat', 'salt', 'sugars'
+    query param: sortBy, values: 'ofcomValue', 'energyKJ', 'totalFat', 'saturatedFat', 'salt', 'sugars', 'protein',
+                                 'totalCarbohydrate', 'dietaryFiber', 'healthPercentage' - this is the fruit and veg %,
+                                 'sodium'
     query param: resultType, values: 'array', 'dictionary'
     """
 
@@ -178,7 +180,10 @@ def get_better_products(request, gtin):
     better_products_major = []
     if product.minor_category:
         if sort_by == "ofcomValue":
-            better_products_minor = Product.objects.filter(minor_category = product.minor_category).order_by("ofcom_value")[:number_of_results]
+            better_products_minor = Product.objects.filter(minor_category=product.minor_category).order_by("ofcom_value")[:number_of_results]
+            results_found = better_products_minor.count()
+        elif sort_by == 'healthPercentage':
+            better_products_minor = Product.objects.filter(minor_category=product.minor_category).order_by("health_percentage")[:number_of_results]
             results_found = better_products_minor.count()
         else:
             better_products_minor = Product.objects.raw("Select p.* from product as p, nutrition_fact as n where n.product_id = p.id and p.minor_category_id = %s and n.name = %s order by n.amount", [product.minor_category.pk, sort_by])[:number_of_results]
