@@ -1,8 +1,10 @@
+# -*- coding: utf-8 -*-
+
 from django.db import models
 from django.dispatch.dispatcher import receiver
 from django.db.models.signals import post_save
 from rest_framework.authtoken.models import Token
-from django.contrib.auth.models import User
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.conf import settings
 
 # categories requested. Careful: Changed IDs changed to autifields and integerers, charfield for minor in snipped
@@ -23,7 +25,7 @@ class MinorCategory(models.Model):
     description = models.TextField(max_length=1024, blank=True, null=True)
     category_major = models.ForeignKey(MajorCategory, on_delete=models.DO_NOTHING, null=True)
     nwd_subcategory_id = models.CharField(max_length=255, blank=True, null=True)
-    icon = models.ImageField(upload_to ="minor_category_icons", null=True, blank=True, verbose_name="Icon")
+    icon = models.ImageField(upload_to="minor_category_icons", null=True, blank=True, verbose_name="Icon")
 
     def __unicode__(self):
         return self.description
@@ -33,6 +35,18 @@ class MinorCategory(models.Model):
 
 
 class Product(models.Model):
+    TRUSTBOX = 'Trustbox'
+    OPENFOOD = 'Openfood'
+    CROWDSOURCING = 'Crowdsourcing'
+    CODECHECK = 'Codecheck'
+    AUTO_ID_LABS = 'Auto-ID Labs'
+    PRODUCT_SOURCES = (
+        (TRUSTBOX, TRUSTBOX),
+        (CROWDSOURCING, CROWDSOURCING),
+        (OPENFOOD, OPENFOOD),
+        (CODECHECK, CODECHECK),
+        (AUTO_ID_LABS, AUTO_ID_LABS),
+    )
     id = models.BigAutoField(primary_key=True)
     gtin = models.BigIntegerField()
     product_name_en = models.TextField(null=True, blank=True)
@@ -46,17 +60,34 @@ class Product(models.Model):
     product_size_unit_of_measure = models.CharField(max_length=255, null=True, blank=True)
     serving_size = models.CharField(max_length=255, null=True, blank=True)
     comment = models.TextField(null=True, blank=True)
-    image = models.ImageField(upload_to ="product_images", null=True, blank=True)
+    image = models.ImageField(upload_to="product_images", null=True, blank=True)
     original_image_url = models.TextField(null=True, blank=True)
     ofcom_value = models.IntegerField(null=True, blank=True)
-
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
+    source_checked = models.BooleanField(default=False)  # Flag if the product source is trusted
+    source = models.CharField(max_length=256, null=True, blank=True, choices=PRODUCT_SOURCES)
+    health_percentage = models.FloatField(null=True, blank=True,
+                                          validators=[MinValueValidator(0.0), MaxValueValidator(100.0)],
+                                          verbose_name='Fruit, Vegetable, Nuts Share')
 
     class Meta:
         verbose_name = "Product"
         verbose_name_plural = "Products"
         db_table = 'product'
+
+
+class ErrorLog(models.Model):
+    gtin = models.BigIntegerField()
+    timestamp = models.DateTimeField(auto_now_add=True)
+    reporting_app = models.CharField(max_length=256, null=True, blank=True)
+    error_description = models.TextField(null=True, blank=True)
+
+    class Meta:
+        verbose_name = "Error Log"
+        verbose_name_plural = "Error Logs"
+        db_table = 'error_log'
+
 
 class Allergen(models.Model):
     id = models.BigAutoField(primary_key=True)
@@ -111,6 +142,33 @@ class ImportLog(models.Model):
 
     class Meta:
         db_table = 'import_log'
+
+"""
+class MissingTrustboxItem(models.Model):
+    name = models.CharField(max_length=255, verbose_name="Name")
+    total_weight = models.FloatField(verbose_name="Gesamtgewicht in Gramm")
+    gtin = models.BigIntegerField(verbose_name="GTIN")
+    nwd_subcategory = models.ForeignKey(NwdSubcategory, models.DO_NOTHING, blank=True, null=True, verbose_name="Kategorie")
+    serving_size = models.FloatField(verbose_name="Serving Size")
+    image_url = models.URLField(blank=True, null=True)
+    salt = models.FloatField(verbose_name="Salz pro 100g/ml in Gramm")
+    sodium = models.FloatField(verbose_name="Natrium pro 100g/ml in Gramm")
+    energy = models.FloatField(verbose_name="Energie pro 100g/ml in KJ")
+    fat = models.FloatField(verbose_name="Fett pro 100g/ml in Gramm")
+    saturated_fat = models.FloatField(verbose_name="Gesättigtes Fett pro 100g/ml in Gramm")
+    carbohydrate = models.FloatField(verbose_name="Kohlenhydrate pro 100g/ml in Gramm")
+    sugar = models.FloatField(verbose_name="davon Zucker pro 100g/ml in Gramm")
+    fibers = models.FloatField(verbose_name="Ballaststoffe pro 100g/ml in Gramm")
+    protein = models.FloatField(verbose_name="Protein pro 100g/ml in Gramm")
+    price = models.FloatField(verbose_name="Preis in CHF", blank=True, null=True)
+
+    def __unicode__(self):
+        return self.name
+
+    class Meta:
+        db_table = 'missing_trustbox_item'
+        app_label = 'trustbox_api' 
+"""
 
 
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
