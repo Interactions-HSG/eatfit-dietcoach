@@ -1,4 +1,4 @@
-"# -- coding: utf-8 --"
+# -*- coding: utf-8 -*-
 
 """
 Definition of views.
@@ -16,7 +16,7 @@ from NutritionService.models import ImportLog
 from suds.client import Client
 from suds.sudsobject import asdict
 from django.http import HttpResponse
-from NutritionService.models import Product, Allergen, NutritionFact, Ingredient, NotFoundLog
+from NutritionService.models import Product, Allergen, NutritionFact, Ingredient, NotFoundLog, ErrorLog
 from NutritionService.serializers import ProductSerializer
 from NutritionService.tasks import import_from_openfood
 from rest_framework.decorators import api_view
@@ -26,6 +26,64 @@ import tempfile
 from django.core import files
 import random
 import string
+
+
+@api_view(['POST'])
+@permission_classes((permissions.IsAuthenticated,))
+def report_product(request):
+    """
+    Manually reports a product.
+    :param request: Request made by the user. Must include in the body 'gtin' field, 'app' field (the name of the
+                    app making the request) and 'error_description' field.
+    :return: Http response including status of true or false.
+    """
+    try:
+        app = request.data['app']
+    except KeyError:
+        return_data = {'success': False,
+                       'error': 'Name of the app is missing from the request body. Field name should be called "app"'}
+        return Response(return_data, status=200)  # Should return 400 :(
+    try:
+        gtin = request.data['gtin']
+    except KeyError:
+        return_data = {'success': False,
+                       'error': 'GTIN of product is missing from the request body. Field name should be called "gtin"'}
+        return Response(return_data, status=200)  # Should return 400 :(
+    try:
+        error_description = request.data['error_description']
+    except KeyError:
+        return_data = {'success': False,
+                       'error': 'Error description is missing from the request body. '
+                                'Field name should be called "error_description"'}
+        return Response(return_data, status=200)  # Should return 400 :(
+
+    # Create a new entry in the database.
+    ErrorLog.objects.create(reporting_app=app, gtin=gtin, error_description=error_description)
+
+    # TODO: Should we return the error log db entry created as part of the response?
+    return Response({'success': True}, status=200)
+
+
+@api_view(['POST'])
+@permission_classes((permissions.IsAuthenticated,))
+def report_missing_gtin(request):
+    try:
+        gtin = request.data['gtin']
+    except KeyError:
+        return_data = {'success': False,
+                       'error': 'GTIN of product is missing from the request body. Field name should be called "gtin"'}
+        return Response(return_data, status=200)  # Should return 400. Django is sad :(
+
+    not_found_log, created = NotFoundLog.objects.get_or_create(gtin=gtin)
+    if not created:
+        # An entry with this gtin already exists so we only increment and the count value
+        not_found_log.count = not_found_log.count + 1
+        not_found_log.save()
+    # Else if a new one is created, the count is set to 1 by default (check model definition in models.py).
+
+    # TODO: Should we return the not found db entry as part of the response?
+    return Response({'success': True}, status=200)
+
 
 @api_view(['GET'])
 @permission_classes((permissions.IsAuthenticated,))
