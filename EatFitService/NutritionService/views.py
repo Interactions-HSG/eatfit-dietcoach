@@ -32,10 +32,13 @@ import string
 @permission_classes((permissions.IsAuthenticated,))
 def report_product(request):
     """
-    Manually reports a product.
-    :param request: Request made by the user. Must include in the body 'gtin' field, 'app' field (the name of the
-                    app making the request) and 'error_description' field.
-    :return: Http response including status of true or false.
+    Reports a given product. A new entry in the DB is created for every request so duplication is allowed.
+    Example request: POST /product/report/
+                     body data: {"gtin":"123123",
+                                 "app": "TestApp",
+                                 "error_description": "I am just here for the testing"}
+    :param request: Request made by the user. Must include in the body 'gtin', 'app' and 'error_description'.
+    :return: Status 200 and 'success' (bool) if everything was okay.
     """
     try:
         app = request.data['app']
@@ -67,6 +70,15 @@ def report_product(request):
 @api_view(['POST'])
 @permission_classes((permissions.IsAuthenticated,))
 def report_missing_gtin(request):
+    """
+    Reports a given gtin is missing. The view first checks if an entry already exists for this gtin and if there is
+    such one, the count is incremented by one and saved. If such gtin is not found, a new entry is created with the
+    gtin and the count is set to 1.
+    Example request: POST /product/missing/
+                     body data: {"gtin":"1234567891"}
+    :param request: Request made by the user. Must include in the body 'gtin'.
+    :return: Status 200 and 'success' (bool) if everything was okay.
+    """
     try:
         gtin = request.data['gtin']
     except KeyError:
