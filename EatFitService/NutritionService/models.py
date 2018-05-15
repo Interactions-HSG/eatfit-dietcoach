@@ -135,6 +135,7 @@ class NotFoundLog(models.Model):
     class Meta:
         db_table = 'not_found_log'
 
+
 class ImportLog(models.Model):
     id = models.AutoField(primary_key=True)
     import_started = models.DateTimeField()
@@ -143,32 +144,49 @@ class ImportLog(models.Model):
     class Meta:
         db_table = 'import_log'
 
-"""
-class MissingTrustboxItem(models.Model):
-    name = models.CharField(max_length=255, verbose_name="Name")
-    total_weight = models.FloatField(verbose_name="Gesamtgewicht in Gramm")
-    gtin = models.BigIntegerField(verbose_name="GTIN")
-    nwd_subcategory = models.ForeignKey(NwdSubcategory, models.DO_NOTHING, blank=True, null=True, verbose_name="Kategorie")
-    serving_size = models.FloatField(verbose_name="Serving Size")
-    image_url = models.URLField(blank=True, null=True)
-    salt = models.FloatField(verbose_name="Salz pro 100g/ml in Gramm")
-    sodium = models.FloatField(verbose_name="Natrium pro 100g/ml in Gramm")
-    energy = models.FloatField(verbose_name="Energie pro 100g/ml in KJ")
-    fat = models.FloatField(verbose_name="Fett pro 100g/ml in Gramm")
-    saturated_fat = models.FloatField(verbose_name="Gesättigtes Fett pro 100g/ml in Gramm")
-    carbohydrate = models.FloatField(verbose_name="Kohlenhydrate pro 100g/ml in Gramm")
-    sugar = models.FloatField(verbose_name="davon Zucker pro 100g/ml in Gramm")
-    fibers = models.FloatField(verbose_name="Ballaststoffe pro 100g/ml in Gramm")
-    protein = models.FloatField(verbose_name="Protein pro 100g/ml in Gramm")
-    price = models.FloatField(verbose_name="Preis in CHF", blank=True, null=True)
+
+class CrowdsourceProduct(models.Model):
+    name = models.CharField(max_length=255, verbose_name="Name")  # Required when creating
+    gtin = models.BigIntegerField(verbose_name="GTIN", unique=True)  # Required when creating - can never change!
+    product_name_en = models.TextField(null=True, blank=True)
+    product_name_de = models.TextField(null=True, blank=True)
+    product_name_fr = models.TextField(null=True, blank=True)
+    product_name_it = models.TextField(null=True, blank=True)
+    producer = models.TextField(null=True, blank=True)
+    major_category = models.ForeignKey(MajorCategory, on_delete=models.DO_NOTHING, null=True)
+    minor_category = models.ForeignKey(MinorCategory, on_delete=models.DO_NOTHING, null=True)
+    product_size = models.CharField(max_length=255, null=True, blank=True)
+    product_size_unit_of_measure = models.CharField(max_length=255, null=True, blank=True)
+    serving_size = models.CharField(max_length=255, null=True, blank=True, verbose_name="Serving Size")
+    comment = models.TextField(null=True, blank=True)
+    front_image = models.ImageField(upload_to="crowdsoure_images", null=True, blank=True)
+    back_image = models.ImageField(upload_to="crowdsoure_images", null=True, blank=True)
+    # ofcom_value = models.IntegerField(null=True, blank=True)  # Calcuate when creating the model
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
+    # source = models.CharField() - this by default will be crowdsource and will be set when adding it to the Product.
+    health_percentage = models.FloatField(null=True, blank=True,
+                                          validators=[MinValueValidator(0.0), MaxValueValidator(100.0)],
+                                          verbose_name='Fruit, Vegetable, Nuts Share')
+
+    # Will create new nutrition entries when creating the Product model entry.
+    salt = models.FloatField(verbose_name="Salz pro 100g/ml in Gramm", blank=True, null=True)
+    sodium = models.FloatField(verbose_name="Natrium pro 100g/ml in Gramm", blank=True, null=True)
+    energy = models.FloatField(verbose_name="Energie pro 100g/ml in KJ", blank=True, null=True)
+    fat = models.FloatField(verbose_name="Fett pro 100g/ml in Gramm", blank=True, null=True)
+    saturated_fat = models.FloatField(verbose_name="Gesättigtes Fett pro 100g/ml in Gramm", blank=True, null=True)
+    carbohydrate = models.FloatField(verbose_name="Kohlenhydrate pro 100g/ml in Gramm", blank=True, null=True)
+    sugar = models.FloatField(verbose_name="davon Zucker pro 100g/ml in Gramm", blank=True, null=True)
+    fibers = models.FloatField(verbose_name="Ballaststoffe pro 100g/ml in Gramm", blank=True, null=True)
+    protein = models.FloatField(verbose_name="Protein pro 100g/ml in Gramm", blank=True, null=True)
 
     def __unicode__(self):
         return self.name
 
     class Meta:
-        db_table = 'missing_trustbox_item'
-        app_label = 'trustbox_api' 
-"""
+        verbose_name = "Crowdsource Product"
+        verbose_name_plural = "Crowdsource Products"
+        db_table = 'crowdsource_product'
 
 
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
