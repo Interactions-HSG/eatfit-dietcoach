@@ -274,7 +274,7 @@ def create_product(p):
         
         # create allergens and ingridients for products
         for attr in p['nutrition']['nutritionAttributes']:
-            if attr['_canonicalName'].startswith('allergen') and attr['value'] != "false":
+            if attr['_canonicalName'].startswith('allergen') and attr['value'] != "false" and attr['value'] != 'unknown':
                 Allergen.objects.update_or_create(product = product, name = attr["_canonicalName"], defaults = {"certainity" : attr['value']})
             if attr['_canonicalName'] == 'ingredients':
                 Ingredient.objects.update_or_create(product = product, lang = attr["_languageCode"], defaults = {"text" : unicode(attr['value'])})
