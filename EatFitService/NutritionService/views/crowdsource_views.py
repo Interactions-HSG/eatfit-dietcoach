@@ -75,27 +75,18 @@ def handle_crowdsouce_product(request, gtin):
 @api_view(['PUT'])
 @permission_classes((permissions.IsAuthenticated,))
 def __update_crowdsouce_product(request, gtin):
-    crowdsource_serializer = CrowdsourceProductSerializer(data=request.data)
-    if crowdsource_serializer.is_valid():
-        try:
-            crowdsource_product = CrowdsourceProduct.objects.get(gtin=gtin)
-            # Make sure the GTIN is the same in the request data as in the one specified in the URL.
-            if crowdsource_serializer.data.gtin:
-                if crowdsource_product.gtin != crowdsource_serializer.data.gtin:
-                    return Response('Specified GTIN in the request data was different from the one in the URL!',
-                                    status=400)
+    request.data['gtin'] = gtin
+    try:
+        crowdsource_product = CrowdsourceProduct.objects.get(gtin=gtin)
+    except:
+        # gtin was not found
+        return Response(status=404)
 
-            updated_crowdsource_product = CrowdsourceProductSerializer(crowdsource_product,
-                                                                       data=crowdsource_serializer.data)
-            if updated_crowdsource_product.is_valid():
-                # Save the new changes to the crowdsource product.
-                return_data = updated_crowdsource_product.save()
-                return Response(return_data, status=200)
-            else:
-                return Response(status=400)
-        except:
-            # gtin was not found
-            return Response(status=404)
+    crowdsource_serializer = CrowdsourceProductSerializer(crowdsource_product, data=request.data, partial=True)
+    if crowdsource_serializer.is_valid():
+        # Save the new changes to the crowdsource product.
+        crowdsource_serializer.save()
+        return Response(crowdsource_serializer.data, status=200)
     else:
         # Serializer was not valid.
         return Response(crowdsource_serializer.errors, status=400)
@@ -116,11 +107,10 @@ def __get_crowdsouce_product(request, gtin):
 @permission_classes((permissions.IsAuthenticated,))
 def approve_crowdsouce_products(request):
     """
-    TODO: Write description.
+    Approves given crowdsource products to move them to the product table. They are specified by a list of
+    gtins of crowdsource products passed in the request data.
     Example request: POST /crowdsource/approve/
                      request data: {"gtins":["7610046004356", "48746874521687"]}
-    :param request: TODO: Write this.
-    :return: TODO: Explain the possible return results.
     """
     # Only superusers are allowed to approve crowdsouce products.
     if not request.user.is_superuser:
@@ -242,6 +232,8 @@ def __create_products_from_crowdsource(crowdsource_products):
     if len(created_products) != 0:
         # At least one product was created so we return the result. Note that if some of the specified
         # gtins were not created, they are also returned to the user.
+        created_products_gtins = [product.gtin for product in created_products]
+        __delete_crowdsource_products(created_products_gtins)
         return True, created_products, invalid_gtins
     elif len(invalid_gtins) != 0:
         # No products were created, but all the gtins are invalid so we return them.
@@ -283,3 +275,7 @@ def __validate_crowdsource_product(crowdsource_product):
         return False, errors
     # Else there are no errors so the crowdsource product is valid.
     return True, None
+
+
+def __delete_crowdsource_products(created_products_gtins):
+    CrowdsourceProduct.objects.filter(gtin__in=created_products_gtins).delete()
