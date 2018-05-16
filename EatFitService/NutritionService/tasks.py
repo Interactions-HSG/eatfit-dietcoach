@@ -1,10 +1,8 @@
 import requests
 from NutritionService.helpers import calculate_ofcom_value
 from NutritionService.helpers import store_image
-from NutritionService.models import Ingredient
-from NutritionService.models import NutritionFact
-from NutritionService.models import Product
-from NutritionService.models import NotFoundLog
+from NutritionService.models import Ingredient, NutritionFact, Product, NotFoundLog
+from NutritionService.codecheck_integration import codecheck
 from celery.decorators import periodic_task
 from celery.task.schedules import crontab
 
