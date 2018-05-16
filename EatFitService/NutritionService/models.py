@@ -61,6 +61,7 @@ class Product(models.Model):
     serving_size = models.CharField(max_length=255, null=True, blank=True)
     comment = models.TextField(null=True, blank=True)
     image = models.ImageField(upload_to="product_images", null=True, blank=True)
+    back_image = models.ImageField(upload_to="product_images", null=True, blank=True)
     original_image_url = models.TextField(null=True, blank=True)
     ofcom_value = models.IntegerField(null=True, blank=True)
     created = models.DateTimeField(auto_now_add=True)
@@ -161,10 +162,8 @@ class CrowdsourceProduct(models.Model):
     comment = models.TextField(null=True, blank=True)
     front_image = models.ImageField(upload_to="crowdsoure_images", null=True, blank=True)
     back_image = models.ImageField(upload_to="crowdsoure_images", null=True, blank=True)
-    # ofcom_value = models.IntegerField(null=True, blank=True)  # Calcuate when creating the model
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
-    # source = models.CharField() - this by default will be crowdsource and will be set when adding it to the Product.
     health_percentage = models.FloatField(null=True, blank=True,
                                           validators=[MinValueValidator(0.0), MaxValueValidator(100.0)],
                                           verbose_name='Fruit, Vegetable, Nuts Share')
@@ -180,8 +179,16 @@ class CrowdsourceProduct(models.Model):
     fibers = models.FloatField(verbose_name="Ballaststoffe pro 100g/ml in Gramm", blank=True, null=True)
     protein = models.FloatField(verbose_name="Protein pro 100g/ml in Gramm", blank=True, null=True)
 
+    ingredient_en = models.TextField(blank=True, null=True)
+    ingredient_de = models.TextField(blank=True, null=True)
+    ingredient_fr = models.TextField(blank=True, null=True)
+    ingredient_it = models.TextField(blank=True, null=True)
+
     def __unicode__(self):
         return self.name
+
+    def __getitem__(self, key):
+        return getattr(self, key)
 
     class Meta:
         verbose_name = "Crowdsource Product"

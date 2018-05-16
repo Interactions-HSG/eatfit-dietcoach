@@ -39,12 +39,16 @@ class ProductSerializer(serializers.ModelSerializer):
             'serving_size',
             'comment',
             'image',
+            'back_image',
             'major_category',
             'minor_category',
             'allergens',
             'ingredients',
             'nutrients',
-            'ofcom_value'
+            'ofcom_value',
+            'source',
+            'source_checked',
+            'health_percentage'
             ]
 
 
