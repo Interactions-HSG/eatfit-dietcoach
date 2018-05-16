@@ -15,6 +15,7 @@ urlpatterns = [
      url(r'^product/missing/$', views.report_missing_gtin),
 
      url(r'^crowdsource/product/$', crowdsource_views.create_crowdsouce_product),
+     url(r'^crowdsource/products/$', crowdsource_views.get_all_crowdsource_products),
      url(r'^crowdsource/product/(?P<gtin>\d{0,50})/$', crowdsource_views.handle_crowdsouce_product),  # GET or PUT
      url(r'^crowdsource/approve/$', crowdsource_views.approve_crowdsouce_products),
 

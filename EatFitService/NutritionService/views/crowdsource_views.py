@@ -103,6 +103,16 @@ def __get_crowdsouce_product(request, gtin):
     return Response(data=CrowdsourceProductSerializer(crowdsouce_product).data, status=200)
 
 
+@api_view(['GET'])
+@permission_classes((permissions.IsAuthenticated,))
+def get_all_crowdsource_products(request):
+    crowdsource_products = CrowdsourceProduct.objects.all()
+    if crowdsource_products.exists():
+        return Response(data=CrowdsourceProductSerializer(crowdsource_products, many=True).data, status=200)
+    else:
+        return Response(status=404)
+
+
 @api_view(['POST'])
 @permission_classes((permissions.IsAuthenticated,))
 def approve_crowdsouce_products(request):
