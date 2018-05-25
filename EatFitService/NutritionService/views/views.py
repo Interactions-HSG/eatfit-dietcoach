@@ -5,6 +5,7 @@ Definition of views.
 """
 
 from EatFitService.settings import TRUSTBOX_USERNAME, TRUSTBOX_PASSWORD, TRUSTBOX_URL
+from NutritionService.codecheck_integration.codecheck import import_from_codecheck
 from django.shortcuts import get_object_or_404
 from NutritionService.helpers import calculate_ofcom_value
 from NutritionService.helpers import store_image
@@ -237,6 +238,14 @@ def get_products_from_openfood(request):
     if not request.user.is_superuser:
         return HttpResponseForbidden()
     import_from_openfood()
+    return HttpResponse(status = 200)
+
+@api_view(['GET'])
+@permission_classes((permissions.IsAuthenticated,))
+def get_products_from_codecheck(request):
+    if not request.user.is_superuser:
+        return HttpResponseForbidden()
+    import_from_codecheck()
     return HttpResponse(status = 200)
 
 @api_view(['GET'])

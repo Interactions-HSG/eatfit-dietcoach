@@ -4,7 +4,7 @@
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
     <Name>EatFitService</Name>
     <RootNamespace>EatFitService</RootNamespace>
-    <InterpreterId>MSBuild|{9494a6cc-db23-4416-8b91-c0d103f8675a}|$(MSBuildProjectFullPath)</InterpreterId>
+    <InterpreterId>MSBuild|env|$(MSBuildProjectFullPath)</InterpreterId>
   </PropertyGroup>
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -32,11 +32,11 @@
     <Compile Include="EatFitService\celeryapp.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="EatFitService\local_settings.py">
-      <SubType>Code</SubType>
-    </Compile>
+    <Compile Include="EatFitService\local_settings.py" />
     <Compile Include="NutritionService\admin.py" />
     <Compile Include="NutritionService\apps.py" />
+    <Compile Include="NutritionService\codecheck_integration\codecheck.py" />
+    <Compile Include="NutritionService\codecheck_integration\__init__.py" />
     <Compile Include="NutritionService\helpers.py">
       <SubType>Code</SubType>
     </Compile>
@@ -54,7 +54,11 @@
     <Compile Include="NutritionService\urls.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="NutritionService\views.py" />
+    <Compile Include="NutritionService\views\crowdsource_views.py" />
+    <Compile Include="NutritionService\views\crowdsource_views.py" />
+    <Compile Include="NutritionService\views\views.py" />
+    <Compile Include="NutritionService\views\views.py" />
+    <Compile Include="NutritionService\views\__init__.py" />
     <Compile Include="NutritionService\__init__.py" />
     <Compile Include="SaltTrackerService\admin.py" />
     <Compile Include="SaltTrackerService\apps.py" />
@@ -109,8 +113,11 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="NutritionService\" />
+    <Folder Include="NutritionService\codecheck_integration\" />
     <Folder Include="NutritionService\migrations\" />
     <Folder Include="NutritionService\templates\" />
+    <Folder Include="NutritionService\views\" />
+    <Folder Include="NutritionService\views\" />
     <Folder Include="SaltTrackerService\" />
     <Folder Include="SaltTrackerService\migrations\" />
     <Folder Include="SaltTrackerService\templates\" />
@@ -139,12 +146,11 @@
   </ItemGroup>
   <ItemGroup>
     <Interpreter Include="env\">
-      <Id>{9494a6cc-db23-4416-8b91-c0d103f8675a}</Id>
+      <Id>env</Id>
       <Version>2.7</Version>
-      <Description>env (Python 2.7)</Description>
+      <Description>env (Python 2.7 (32-bit))</Description>
       <InterpreterPath>Scripts\python.exe</InterpreterPath>
       <WindowsInterpreterPath>Scripts\pythonw.exe</WindowsInterpreterPath>
-      <LibraryPath>Lib\</LibraryPath>
       <PathEnvironmentVariable>PYTHONPATH</PathEnvironmentVariable>
       <Architecture>X86</Architecture>
     </Interpreter>

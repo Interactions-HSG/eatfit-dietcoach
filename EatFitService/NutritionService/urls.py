@@ -21,6 +21,7 @@ urlpatterns = [
 
      url(r'^update', NutritionService.views.views.update_database),
      url(r'^products/from-openfood/', NutritionService.views.views.get_products_from_openfood),
+     url(r'^products/from-codecheck/', NutritionService.views.views.get_products_from_codecheck),
      url(r'^products/calculate-ofocm/', NutritionService.views.views.calculate_ofcom_values),
      url(r'^legacy/import-missing-trustbox/$', legacy_views.import_missing_products),
      url(r'^legacy/import-trustbox/$', legacy_views.import_trustbox_products),
