@@ -9,7 +9,11 @@ SECRET = '752DAB062D3E82189918234DF10D175E77DA07DF051FA324BBC8ADD543919DEC'  # N
 BASE_URL = "http://www.codecheck.info/WebService/rest/"
 
 def import_from_codecheck():
-    __authenticate()
+    mac, nonce = __authenticate()
+    if mac and nonce:
+        __get_product(123, mac, nonce)
+    else:
+        print("auth failed")
 
 def __authenticate():
     data = {}
@@ -20,15 +24,21 @@ def __authenticate():
 
     if r.status_code == requests.codes.ok:
         json_response = r.json()["result"]
-        mac = hashlib.sha256(USER.encode() + base64.b64decode(json_response["nonce"]) + base64.b64decode(SECRET)).hexdigest()
+        mac = hashlib.sha256(USER.encode("utf-8") + base64.b64decode(json_response["nonce"]) + base64.b64decode(SECRET)).digest()
         print(mac)
+        print(base64.b64encode(mac))
+        return mac, json_response["nonce"]
+    return None, None
 
 
-def search_for_gtins(gtins):
-    created_products, not_found_gtins = __import_products(gtins)
-    return {'products': ProductSerializer(created_products, many=True).data,
-            'not_found_gtins': not_found_gtins}
+def __get_product(gtin, mac, nonce):
+    print("getting product")
+    r = requests.get(BASE_URL + "prod/ean2/1/1/4006939082489", headers=__add_auth_header(mac, nonce))
+    print(r.status_code)
+    print(r.text)
 
 
-def __import_products(gtins):
-    return [], []
+def __add_auth_header(mac, nonce):
+    auth_string = 'DigestQuick nonce="%s",mac="%s"' % (nonce, mac)
+    return {'Authorization': auth_string}
+

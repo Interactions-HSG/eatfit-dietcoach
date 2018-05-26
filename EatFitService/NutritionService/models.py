@@ -84,6 +84,9 @@ class ErrorLog(models.Model):
     reporting_app = models.CharField(max_length=256, null=True, blank=True)
     error_description = models.TextField(null=True, blank=True)
 
+    def __unicode__(self):
+        return str(self.gtin)
+
     class Meta:
         verbose_name = "Error Log"
         verbose_name_plural = "Error Logs"

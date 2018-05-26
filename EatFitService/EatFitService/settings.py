@@ -137,6 +137,22 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+        'LOCATION': path.join(BASE_DIR, 'cache').replace('\\', '/'),
+    }
+}
+
+EMAIL_USE_SSL = True
+SERVER_EMAIL = 'contact@holo-one.com'
+EMAIL_HOST = 'asmtp.mail.hostpoint.ch'
+EMAIL_PORT = 465
+EMAIL_HOST_USER = 'contact@holo-one.com'
+EMAIL_HOST_PASSWORD = 'martyMcFly1985'
+DEFAULT_FROM_EMAIL = SERVER_EMAIL
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.9/topics/i18n/

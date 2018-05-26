@@ -270,6 +270,9 @@ def __validate_crowdsource_product(crowdsource_product):
         errors.append('Missing product it name')
     if not crowdsource_product.product_name_fr:
         errors.append('Missing product fr name')
+    existing_products = Product.objects.filter(gtin = crowdsource_product.gtin)
+    if existing_products.exist():
+        errors.append('Product with this GTIN already exists')
     """
     if not crowdsource_product.ingredient_en:
         errors.append('Missing product en ingredients')

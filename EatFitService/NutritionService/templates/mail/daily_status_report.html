@@ -1,0 +1,136 @@
+﻿
+{% autoescape off %}
+<div>
+    <h1>Daily Status Report of the Eatfit System (covers the last 24h)</h1>
+    <h2>Date: {{date_from}} - {{date_to}}</h2>
+    <h2><strong>Status:</strong></h2>
+
+    <h3>Error Reports</h3>
+    <ul>
+        <li>
+            <p><strong>New errors reported:</strong> {{errors_added}}
+            </p>
+        </li>
+        <li>
+            <p><strong>Total errors reported::</strong> {{total_errors_added}}
+            </p>
+        </li>
+    </ul>
+
+    <hr />
+
+    <h3>Crowdsourcing</h3>
+    <ul>
+        <li>
+            <p><strong>New crowdsource products added:</strong> {{crowdsourced_products_added}}
+            </p>
+        </li>
+        <li>
+            <p><strong>Updated crowdsource products:</strong> {{crowdsourced_products_updated}}
+            </p>
+        </li>
+    </ul>
+
+    <hr />
+
+    <h3>Not found</h3>
+    <ul>
+        <li>
+            <p><strong>New products that were not found in our database:</strong> {{new_not_found_products}}
+            </p>
+        </li>
+        <li>
+            <p><strong>Total products not found in our database:</strong> {{total_not_found_products}}
+            </p>
+        </li>
+    </ul>
+
+    <hr />
+
+    <h3>Trustbox</h3>
+    <ul>
+        <li>
+            <p><strong>New products imported from Trustbox:</strong> {{new_products_from_trustbox}}
+            </p>
+        </li>
+        <li>
+            <p><strong>Updated products from Trustbox:</strong> {{total_not_found_products}}
+            </p>
+        </li>
+    </ul>
+
+    <hr />
+
+    
+    <h3>Codecheck</h3>
+    <ul>
+        <li>
+            <p><strong>New products imported from Codecheck:</strong> {{new_products_from_codecheck}}
+            </p>
+        </li>
+    </ul>
+
+    <hr />
+
+    
+    <h3>Openfood</h3>
+    <ul>
+        <li>
+            <p><strong>New products imported from Openfood:</strong> {{new_products_from_openfood}}
+            </p>
+        </li>
+    </ul>
+
+    <hr />
+
+    
+    <h3>Manually Added</h3>
+    <ul>
+        <li>
+            <p><strong>New products added manually:</strong> {{new_products_from_auto_id_labs}}
+            </p>
+        </li>
+        <li>
+            <p><strong>Manually updated products:</strong> {{updated_products_from_auto_id_labs}}
+            </p>
+        </li>
+    </ul>
+
+
+</div>
+
+<style type="text/css">
+h1 {
+     font-family: 'Open Sans', Arial, Helvetica, sans-serif;
+     font-size: 22px;
+    font-weight: 300;
+    color:#333
+
+     
+ }
+h2 {
+     font-family: 'Open Sans', Arial, Helvetica, sans-serif;
+     font-size: 20px;
+    font-weight: 300;
+    color:#333
+}
+p {
+     font-family: 'Open Sans', Arial, Helvetica, sans-serif;
+     font-size: 14px;
+    font-weight: 300;
+        color:#555
+        }
+li {
+     font-family:'Open Sans', Arial, Helvetica, sans-serif;
+     font-size: 14px;
+    font-weight: 300;
+            color:#555
+
+
+     
+ }
+    
+
+</style>
+
+{% endautoescape %}

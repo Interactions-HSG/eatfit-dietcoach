@@ -19,6 +19,10 @@ urlpatterns = [
      url(r'^crowdsource/product/(?P<gtin>\d{0,50})/$', crowdsource_views.handle_crowdsouce_product),  # GET or PUT
      url(r'^crowdsource/approve/$', crowdsource_views.approve_crowdsouce_products),
 
+     url(r'^report/daily-report/$', views.generate_status_report),
+
+     url(r'^data/data-cleaning/$', views.data_clean_task),
+
      url(r'^update', NutritionService.views.views.update_database),
      url(r'^products/from-openfood/', NutritionService.views.views.get_products_from_openfood),
      url(r'^products/from-codecheck/', NutritionService.views.views.get_products_from_codecheck),

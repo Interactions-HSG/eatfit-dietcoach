@@ -5,6 +5,8 @@ Definition of views.
 """
 
 from EatFitService.settings import TRUSTBOX_USERNAME, TRUSTBOX_PASSWORD, TRUSTBOX_URL
+from NutritionService import data_cleaning
+from NutritionService import reports
 from NutritionService.codecheck_integration.codecheck import import_from_codecheck
 from django.shortcuts import get_object_or_404
 from NutritionService.helpers import calculate_ofcom_value
@@ -194,6 +196,9 @@ def get_better_products(request, gtin):
         if sort_by == "ofcomValue":
             better_products_major = Product.objects.filter(major_category = product.major_category).order_by("ofcom_value")[:(number_of_results-results_found)]
             results_found = better_products_major.count()
+        elif sort_by == 'healthPercentage':
+            better_products_major = Product.objects.filter(major_category = product.major_category).order_by("health_percentage")[:(number_of_results-results_found)]
+            results_found = better_products_major.count()
         else:
             better_products_major = Product.objects.raw("Select p.* from product as p, nutrition_fact as n where n.product_id = p.id and p.major_category_id = %s and n.name = %s order by n.amount", [product.major_category.pk, sort_by])[:(number_of_results-results_found)]
             results_found = len(better_products_major)
@@ -258,6 +263,22 @@ def calculate_ofcom_values(request):
         calculate_ofcom_value(product)
         count = count + 1
         print("calculated for product: " + str(count))
+    return Response(status = 200)
+
+@api_view(['GET'])
+@permission_classes((permissions.IsAuthenticated,))
+def generate_status_report(request):
+    if not request.user.is_superuser:
+        return HttpResponseForbidden()
+    reports.generate_daily_report()
+    return Response(status = 200)
+
+@api_view(['GET'])
+@permission_classes((permissions.IsAuthenticated,))
+def data_clean_task(request):
+    if not request.user.is_superuser:
+        return HttpResponseForbidden()
+    data_cleaning.clean_salt_sodium()
     return Response(status = 200)
 
 
@@ -338,7 +359,8 @@ def create_product(p):
                 if attr['_canonicalName'] == 'servingSize' and attr['value'] != "0.0": 
                     #check against 0 due to multiple entries with different values
                     default_arguments["serving_size"] = attr['value']
-
+        default_arguments["source"] = Product.TRUSTBOX
+        default_arguments["source_checked"] = True
         product, created = Product.objects.update_or_create(gtin = p['_gtin'], defaults = default_arguments)
         if temp_image_url:
             store_image(temp_image_url, product)

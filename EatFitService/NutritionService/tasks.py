@@ -22,6 +22,7 @@ def import_from_openfood():
 
         for p in products["data"]:
             product = Product()
+            product.source = Product.OPENFOOD
             product.gtin = p["barcode"]
             product.product_size = str(p["quantity"])
             product.product_size_unit_of_measure = p["unit"]
@@ -93,4 +94,3 @@ def import_from_openfood():
 
                 NutritionFact.objects.bulk_create(nutrition_facts_to_create)
                 calculate_ofcom_value(product)
-    not_found_items.delete()
