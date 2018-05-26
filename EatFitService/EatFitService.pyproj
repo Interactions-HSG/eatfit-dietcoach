@@ -37,6 +37,9 @@
     <Compile Include="NutritionService\apps.py" />
     <Compile Include="NutritionService\codecheck_integration\codecheck.py" />
     <Compile Include="NutritionService\codecheck_integration\__init__.py" />
+    <Compile Include="NutritionService\data_cleaning.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="NutritionService\helpers.py">
       <SubType>Code</SubType>
     </Compile>
@@ -45,6 +48,9 @@
     </Compile>
     <Compile Include="NutritionService\migrations\__init__.py" />
     <Compile Include="NutritionService\models.py" />
+    <Compile Include="NutritionService\reports.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="NutritionService\serializers.py">
       <SubType>Code</SubType>
     </Compile>
@@ -116,6 +122,7 @@
     <Folder Include="NutritionService\codecheck_integration\" />
     <Folder Include="NutritionService\migrations\" />
     <Folder Include="NutritionService\templates\" />
+    <Folder Include="NutritionService\templates\mail\" />
     <Folder Include="NutritionService\views\" />
     <Folder Include="NutritionService\views\" />
     <Folder Include="SaltTrackerService\" />
@@ -131,6 +138,7 @@
     <Folder Include="EatFitService\" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="NutritionService\templates\mail\daily_status_report.html" />
     <Content Include="requirements.txt" />
     <Content Include="SaltTrackerService\templates\index.html" />
     <Content Include="TrustBoxAPI\static\category\Categories_NWD.xlsx" />
