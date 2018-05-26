@@ -2,6 +2,7 @@ from NutritionService.serializers import ProductSerializer
 import hashlib
 import requests
 import base64
+import hmac
 
 
 USER = 'autoidlabs2'
@@ -24,9 +25,9 @@ def __authenticate():
 
     if r.status_code == requests.codes.ok:
         json_response = r.json()["result"]
-        mac = hashlib.sha256(USER.encode("utf-8") + base64.b64decode(json_response["nonce"]) + base64.b64decode(SECRET)).digest()
+        dig = hmac.new(USER, msg=USER.encode("utf-8") + base64.b64decode(json_response["nonce"]) + base64.b64decode(SECRET), digestmod=hashlib.sha256).digest()
+        mac = base64.b64encode(dig).decode()  
         print(mac)
-        print(base64.b64encode(mac))
         return mac, json_response["nonce"]
     return None, None
 
