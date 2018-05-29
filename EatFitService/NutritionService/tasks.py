@@ -13,14 +13,15 @@ from celery.task.schedules import crontab
     ignore_result=True
 )
 def import_from_openfood():
-    not_found_items = NotFoundLog.objects.all()
-
+    not_found_items = NotFoundLog.objects.filter(processed = False)
+    items_found = []
     for not_found_item in not_found_items:
         gtin = str(not_found_item.gtin)
         response = requests.get('https://www.openfood.ch/api/v3/products?barcodes=' + gtin, headers={'Authorization': 'Token 8aba669f7dfc4fcc2ebf30d610bfa84f'})
         products = response.json()
-
+        not_found_item.processed = True
         for p in products["data"]:
+            items_found.append(p["barcode"])
             product = Product()
             product.source = Product.OPENFOOD
             product.gtin = p["barcode"]
@@ -94,3 +95,5 @@ def import_from_openfood():
 
                 NutritionFact.objects.bulk_create(nutrition_facts_to_create)
                 calculate_ofcom_value(product)
+    if len(items_found) > 0:
+        NotFoundLog.objects.filter(gtin__in=items_found).delete()

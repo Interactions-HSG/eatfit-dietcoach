@@ -135,6 +135,7 @@ class NotFoundLog(models.Model):
     gtin = models.BigIntegerField()
     count = models.BigIntegerField(default=1)
     first_searched_for = models.DateTimeField(auto_now_add=True)
+    processed = models.BooleanField(default = False)
 
     class Meta:
         db_table = 'not_found_log'

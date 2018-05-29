@@ -1,6 +1,6 @@
 from django.contrib import admin
 from NutritionService.models import MajorCategory, Product, MinorCategory, Allergen, NutritionFact, ErrorLog, \
-                                    CrowdsourceProduct
+                                    CrowdsourceProduct, NotFoundLog
 
 
 class AllergenInline(admin.TabularInline):
@@ -20,9 +20,14 @@ class ProductAdmin(admin.ModelAdmin):
         NutrientInline
     ]
 
+class NotFoundLogAdmin(admin.ModelAdmin):
+    list_display = ("gtin", "count", "first_searched_for")
+    search_fields = ("gtin", "count", "first_searched_for")
+
 
 admin.site.register(Product, ProductAdmin)
 admin.site.register(MajorCategory)
 admin.site.register(MinorCategory)
 admin.site.register(ErrorLog)
 admin.site.register(CrowdsourceProduct)
+admin.site.register(NotFoundLogAdmin)
