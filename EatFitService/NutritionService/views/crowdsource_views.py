@@ -5,7 +5,8 @@ Definition of crowdsouce views.
 """
 
 from rest_framework import permissions
-from rest_framework.decorators import permission_classes
+from rest_framework.decorators import permission_classes, parser_classes
+from rest_framework.parsers import FormParser, MultiPartParser, FileUploadParser, JSONParser
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from NutritionService.models import CrowdsourceProduct, Product, NutritionFact, Ingredient
@@ -42,6 +43,7 @@ ERROR_CREATING = 'There was an error when creating the products!'
 
 @api_view(['POST'])
 @permission_classes((permissions.IsAuthenticated,))
+@parser_classes((MultiPartParser,))
 def create_crowdsouce_product(request):
     """
     Creates a new crowdsouce product. The 'name' field and the 'gtin' field are required to be in the request data.
@@ -62,6 +64,7 @@ def create_crowdsouce_product(request):
 
 @api_view(['GET', 'PUT'])
 @permission_classes((permissions.IsAuthenticated,))
+@parser_classes((MultiPartParser,))
 def handle_crowdsouce_product(request, gtin):
     if request.method == 'PUT':
         return __update_crowdsouce_product(request, gtin)
@@ -71,9 +74,9 @@ def handle_crowdsouce_product(request, gtin):
         # Method is not allowed
         return Response(status=405)
 
-
 @api_view(['PUT'])
 @permission_classes((permissions.IsAuthenticated,))
+@parser_classes((MultiPartParser,))
 def __update_crowdsouce_product(request, gtin):
     request.data['gtin'] = gtin
     try:
