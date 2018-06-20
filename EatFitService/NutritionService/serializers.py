@@ -1,11 +1,26 @@
 
 from rest_framework import serializers
-from NutritionService.models import Product, Allergen, Ingredient, NutritionFact, CrowdsourceProduct
+from NutritionService.models import Product, Allergen, Ingredient, NutritionFact, CrowdsourceProduct, HealthTipp, MajorCategory, MinorCategory
 
 class AllergenSerializer(serializers.ModelSerializer):
     class Meta:
         model = Allergen
         fields = ['name']
+
+class MajorCategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MajorCategory
+        fields = '__all__'
+
+class MinorCategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MinorCategory
+        fields = '__all__'
+
+class HealthTippSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = HealthTipp
+        fields = ['text_de', 'text_en', 'text_fr', 'text_it', 'image']
 
 
 class IngredientSerializer(serializers.ModelSerializer):

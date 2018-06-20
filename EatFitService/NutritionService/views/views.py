@@ -5,6 +5,12 @@ Definition of views.
 """
 
 from EatFitService.settings import TRUSTBOX_USERNAME, TRUSTBOX_PASSWORD, TRUSTBOX_URL
+from NutritionService.serializers import MinorCategorySerializer
+from NutritionService.models import MinorCategory
+from NutritionService.serializers import MajorCategorySerializer
+from NutritionService.models import MajorCategory
+from NutritionService.serializers import HealthTippSerializer
+from NutritionService.models import HealthTipp
 from NutritionService import data_cleaning
 from NutritionService import reports
 from NutritionService.codecheck_integration.codecheck import import_from_codecheck
@@ -281,6 +287,36 @@ def data_clean_task(request):
     data_cleaning.clean_salt_sodium()
     return Response(status = 200)
 
+@api_view(['GET'])
+@permission_classes((permissions.IsAuthenticated,))
+def get_major_categories(request):
+    categories = MajorCategory.objects.all()
+    serilaizer = MajorCategorySerializer(categories, many=True)
+    return Response(serilaizer.data, status = 200)
+
+@api_view(['GET'])
+@permission_classes((permissions.IsAuthenticated,))
+def get_minor_categories(request):
+    categories = MinorCategory.objects.all()
+    serilaizer = MinorCategorySerializer(categories, many=True)
+    return Response(serilaizer.data, status = 200)
+
+@api_view(['GET'])
+@permission_classes((permissions.IsAuthenticated,))
+def get_health_tipps(request):
+    request_category = request.GET.get("category", None)
+    request_nutrient = request.GET.get("nutrient", None)
+
+    if request_category and request_nutrient:
+        health_tipps = HealthTipp.objects.filter(minor_categories = request_category, nutrients = request_nutrient)
+    elif request_category:
+        health_tipps = HealthTipp.objects.filter(minor_categories = request_category)
+    elif request_nutrient:
+        health_tipps = HealthTipp.objects.filter(nutrients = request_nutrient)
+    else:
+        return Response(status = 400)
+    serializer = HealthTippSerializer(health_tipps, many=True)
+    return Response(serializer.data, status = 200)
 
 def __update_objects_from_trustbox(last_updated):
     """
@@ -380,7 +416,7 @@ def create_product(p):
         
         # create allergens and ingridients for products
         for attr in p['nutrition']['nutritionAttributes']:
-            if attr['_canonicalName'].startswith('allergen') and attr['value'] != "false" and attr['value'] != 'unknown':
+            if attr['_canonicalName'].startswith('allergen') and attr['value'] == "true" and attr['value'] != 'mayContain':
                 Allergen.objects.update_or_create(product = product, name = attr["_canonicalName"], defaults = {"certainity" : attr['value']})
             if attr['_canonicalName'] == 'ingredients':
                 Ingredient.objects.update_or_create(product = product, lang = attr["_languageCode"], defaults = {"text" : unicode(attr['value'])})

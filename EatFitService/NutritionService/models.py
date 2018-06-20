@@ -10,8 +10,10 @@ from django.conf import settings
 # categories requested. Careful: Changed IDs changed to autifields and integerers, charfield for minor in snipped
 class MajorCategory(models.Model):
     id = models.AutoField(primary_key=True)
-    description = models.TextField(max_length=1024, blank=True, null=True)
-    canonical_name = models.TextField(max_length=1024, blank=True, null=True)
+    name_de = models.TextField(max_length=1024, blank=True, null=True)
+    name_en = models.TextField(max_length=1024, blank=True, null=True)
+    name_it = models.TextField(max_length=1024, blank=True, null=True)
+    name_fr = models.TextField(max_length=1024, blank=True, null=True)
 
     def __unicode__(self):
         return self.description
@@ -22,7 +24,10 @@ class MajorCategory(models.Model):
 
 class MinorCategory(models.Model):
     id = models.AutoField(primary_key=True)
-    description = models.TextField(max_length=1024, blank=True, null=True)
+    name_de = models.TextField(max_length=1024, blank=True, null=True)
+    name_en = models.TextField(max_length=1024, blank=True, null=True)
+    name_it = models.TextField(max_length=1024, blank=True, null=True)
+    name_fr = models.TextField(max_length=1024, blank=True, null=True)
     category_major = models.ForeignKey(MajorCategory, on_delete=models.DO_NOTHING, null=True)
     nwd_subcategory_id = models.CharField(max_length=255, blank=True, null=True)
     icon = models.ImageField(upload_to="minor_category_icons", null=True, blank=True, verbose_name="Icon")
@@ -198,6 +203,35 @@ class CrowdsourceProduct(models.Model):
         verbose_name = "Crowdsource Product"
         verbose_name_plural = "Crowdsource Products"
         db_table = 'crowdsource_product'
+
+class NutrientName(models.Model):
+    name = models.CharField(max_length=255, verbose_name="Name", primary_key=True)
+    
+    def __unicode__(self):
+        return self.name
+
+    class Meta:
+        verbose_name = "Nutrient Name"
+        verbose_name_plural = "Nutrient Names"
+        db_table = 'nutrient_name'
+
+class HealthTipp(models.Model):
+    text_de = models.TextField(null=True, blank=True)
+    text_en = models.TextField(null=True, blank=True)
+    text_fr = models.TextField(null=True, blank=True)
+    text_it = models.TextField(null=True, blank=True)
+    minor_categories = models.ManyToManyField(MinorCategory, related_name='minor_category', blank=True)
+    nutrients = models.ManyToManyField(NutrientName, related_name='nutrients', blank=True)
+    image = models.ImageField(upload_to="health_tipp_images", null=True, blank=True)
+
+    def __unicode__(self):
+        return self.text_de
+
+
+    class Meta:
+        verbose_name = "Health Tipp"
+        verbose_name_plural = "Health Tipps"
+        db_table = 'health_tipp'
 
 
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)

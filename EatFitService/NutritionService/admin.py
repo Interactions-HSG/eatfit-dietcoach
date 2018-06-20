@@ -1,6 +1,6 @@
 from django.contrib import admin
 from NutritionService.models import MajorCategory, Product, MinorCategory, Allergen, NutritionFact, ErrorLog, \
-                                    CrowdsourceProduct, NotFoundLog
+                                    CrowdsourceProduct, NotFoundLog, HealthTipp, NutrientName
 
 
 class AllergenInline(admin.TabularInline):
@@ -29,5 +29,7 @@ admin.site.register(Product, ProductAdmin)
 admin.site.register(MajorCategory)
 admin.site.register(MinorCategory)
 admin.site.register(ErrorLog)
+admin.site.register(HealthTipp)
+admin.site.register(NutrientName)
 admin.site.register(CrowdsourceProduct)
 admin.site.register(NotFoundLog, NotFoundLogAdmin)
