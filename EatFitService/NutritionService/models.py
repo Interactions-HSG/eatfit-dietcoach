@@ -16,7 +16,7 @@ class MajorCategory(models.Model):
     name_fr = models.TextField(max_length=1024, blank=True, null=True)
 
     def __unicode__(self):
-        return self.description
+        return self.name_de
 
     class Meta:
         db_table = 'major_category'
@@ -33,7 +33,7 @@ class MinorCategory(models.Model):
     icon = models.ImageField(upload_to="minor_category_icons", null=True, blank=True, verbose_name="Icon")
 
     def __unicode__(self):
-        return self.description
+        return self.name_de
 
     class Meta:
         db_table = 'minor_category'
