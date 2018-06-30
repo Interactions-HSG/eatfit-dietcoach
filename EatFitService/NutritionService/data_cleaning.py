@@ -1,6 +1,15 @@
 from django.db import connection
-from NutritionService.models import NutritionFact
+from NutritionService.tasks import update_from_openfood
+from NutritionService.models import NutritionFact, Product
 from django.db.models import Q
+from datetime import datetime, timedelta
+
+
+def fill_product_names_and_images():
+    one_month_before = datetime.now() - timedelta(days = 30)
+    products = Product.objects.filter(Q(quality_checked__isnull = True) | Q(quality_checked__lt = one_month_before), product_name_de__isnull = True, automatic_update = True).order_by("quality_checked")[:50]
+    for product in products:
+        update_from_openfood(product, {"product_name_de" : 1, "product_name_en" : 1, "product_name_fr" : 1, "product_name_it" : 1, "image" : 1})
 
 
 def clean_salt_sodium():

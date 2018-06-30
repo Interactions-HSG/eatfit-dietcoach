@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from django.db import models
+from NutritionService.helpers import is_number
 from django.dispatch.dispatcher import receiver
 from django.db.models.signals import post_save
 from rest_framework.authtoken.models import Token
@@ -53,7 +54,7 @@ class Product(models.Model):
         (AUTO_ID_LABS, AUTO_ID_LABS),
     )
     id = models.BigAutoField(primary_key=True)
-    gtin = models.BigIntegerField()
+    gtin = models.BigIntegerField(unique=True)
     product_name_en = models.TextField(null=True, blank=True)
     product_name_de = models.TextField(null=True, blank=True)
     product_name_fr = models.TextField(null=True, blank=True)
@@ -68,7 +69,7 @@ class Product(models.Model):
     image = models.ImageField(upload_to="product_images", null=True, blank=True)
     back_image = models.ImageField(upload_to="product_images", null=True, blank=True)
     original_image_url = models.TextField(null=True, blank=True)
-    ofcom_value = models.IntegerField(null=True, blank=True)
+    ofcom_value = models.IntegerField(null=True, blank=True, editable=False)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
     source_checked = models.BooleanField(default=False)  # Flag if the product source is trusted
@@ -76,6 +77,13 @@ class Product(models.Model):
     health_percentage = models.FloatField(null=True, blank=True,
                                           validators=[MinValueValidator(0.0), MaxValueValidator(100.0)],
                                           verbose_name='Fruit, Vegetable, Nuts Share')
+    quality_checked = models.DateTimeField(null=True, blank=True)
+    automatic_update = models.BooleanField(default=True)
+
+    def save(self, *args, **kwargs):
+        calculate_ofcom_value(self)
+        super(Product, self).save(*args, **kwargs)
+
 
     class Meta:
         verbose_name = "Product"
@@ -238,3 +246,46 @@ class HealthTipp(models.Model):
 def create_auth_token(sender, instance=None, created=False, **kwargs):
     if created:
         Token.objects.create(user=instance)
+
+
+
+
+def calculate_ofcom_value(product):
+    nutrition_facts = NutritionFact.objects.filter(product = product)
+    data_quality_sufficient = True
+    ofcom_value = 0
+    for fact in nutrition_facts:
+        if not is_number(fact.amount):
+            data_quality_sufficient = False
+            break
+        amount = float(fact.amount)
+        if fact.name == ENERGY_KJ:
+            ofcom_value = ofcom_value + __calcluate_ofcom_point(amount, [3350, 3015, 2680, 2345, 2010, 1675, 1340, 1005, 670, 335])
+        elif fact.name == SATURATED_FAT:
+            ofcom_value = ofcom_value + __calcluate_ofcom_point(amount, [10, 9, 8, 7, 6, 5, 4, 3, 2, 1])
+        elif fact.name == SUGARS:
+            ofcom_value = ofcom_value + __calcluate_ofcom_point(amount, [45, 40, 36, 31, 27, 22.5, 18, 13.5, 9, 4.5])
+        elif fact.name == SODIUM:
+            if fact.unit_of_measure == "mg":
+                ofcom_value = ofcom_value + __calcluate_ofcom_point(amount, [900, 810, 720, 630, 540, 450, 360, 270, 180, 90])
+            elif fact.unit_of_measure == "g":
+                ofcom_value = ofcom_value + __calcluate_ofcom_point(amount, [0.9, 0.81, 0.72, 0.63, 0.54, 0.45, 0.36, 0.27, 0.18, 0.09])
+            else:
+                data_quality_sufficient = False
+                break
+        elif fact.name == DIETARY_FIBER:
+            ofcom_value = ofcom_value - __calcluate_ofcom_point(amount, [3.5, 2.8, 2.1, 1.4, 0.7])
+        elif fact.name == PROTEIN:
+            ofcom_value = ofcom_value - __calcluate_ofcom_point(amount, [8, 6.4, 4.8, 3.2, 1.6])
+    if data_quality_sufficient:
+        product.ofcom_value = ofcom_value
+        product.save()
+
+
+def __calcluate_ofcom_point(amount, values):
+    points = len(values)
+    for value in values:
+        if amount > value:
+            return points
+        points = points - 1
+    return 0

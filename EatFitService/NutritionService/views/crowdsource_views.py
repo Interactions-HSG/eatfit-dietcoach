@@ -5,13 +5,13 @@ Definition of crowdsouce views.
 """
 
 from rest_framework import permissions
+from NutritionService.models import calculate_ofcom_value
 from rest_framework.decorators import permission_classes, parser_classes
 from rest_framework.parsers import FormParser, MultiPartParser, FileUploadParser, JSONParser
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from NutritionService.models import CrowdsourceProduct, Product, NutritionFact, Ingredient
 from NutritionService.serializers import CrowdsourceProductSerializer, ProductSerializer
-from NutritionService import helpers
 
 
 GRAM = 'g'
@@ -237,7 +237,7 @@ def __create_products_from_crowdsource(crowdsource_products):
 
         # Based on the inserted nutrition facts calculate the product's ofcom value and save it to the entry.
         # Note that in the function the product is saved.
-        helpers.calculate_ofcom_value(product)
+        calculate_ofcom_value(product)
 
         # Add the product to the list of created products which will be returned as data from this function.
         created_products.append(product)
@@ -274,7 +274,7 @@ def __validate_crowdsource_product(crowdsource_product):
     if not crowdsource_product.product_name_fr:
         errors.append('Missing product fr name')
     existing_products = Product.objects.filter(gtin = crowdsource_product.gtin)
-    if existing_products.exist():
+    if existing_products.exists():
         errors.append('Product with this GTIN already exists')
     """
     if not crowdsource_product.ingredient_en:

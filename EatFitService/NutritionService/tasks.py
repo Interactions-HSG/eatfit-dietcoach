@@ -1,8 +1,8 @@
 import requests
-from NutritionService.helpers import calculate_ofcom_value
 from NutritionService.helpers import store_image
-from NutritionService.models import Ingredient, NutritionFact, Product, NotFoundLog
+from NutritionService.models import Ingredient, NutritionFact, Product, NotFoundLog, calculate_ofcom_value
 from NutritionService.codecheck_integration import codecheck
+from datetime import datetime
 from celery.decorators import periodic_task
 from celery.task.schedules import crontab
 
@@ -20,7 +20,7 @@ def import_from_openfood():
         response = requests.get('https://www.openfood.ch/api/v3/products?barcodes=' + gtin, headers={'Authorization': 'Token 8aba669f7dfc4fcc2ebf30d610bfa84f'})
         products = response.json()
         not_found_item.processed = True
-        for p in products["data"]:
+        for p in products["data"][:1]:
             items_found.append(p["barcode"])
             product = Product()
             product.source = Product.OPENFOOD
@@ -97,3 +97,40 @@ def import_from_openfood():
                 calculate_ofcom_value(product)
     if len(items_found) > 0:
         NotFoundLog.objects.filter(gtin__in=items_found).delete()
+
+
+def update_from_openfood(product, fields_to_update):
+    response = requests.get('https://www.openfood.ch/api/v3/products?barcodes=' + product.gtin, headers={'Authorization': 'Token 8aba669f7dfc4fcc2ebf30d610bfa84f'})
+    products = response.json()
+    for p in products["data"][:1]:
+        if "product_size" in fields_to_update:
+            product.product_size = str(p["quantity"])
+        if "product_size_unit_of_measure" in fields_to_update:
+            product.product_size_unit_of_measure = p["unit"]
+        if "portion_quantity" in p and "serving_size" in fields_to_update:
+            product.serving_size = str(p["portion_quantity"])
+
+        if "name_translations" in p:
+            if "product_name_de" in fields_to_update and "de" in p["name_translations"]:
+                product.product_name_de = unicode(p["name_translations"]["de"])
+            if "product_name_fr" in fields_to_update and "fr" in p["name_translations"]:
+                product.product_name_fr = unicode(p["name_translations"]["fr"])
+            if "product_name_it" in fields_to_update and "it" in p["name_translations"]:
+                product.product_name_it = unicode(p["name_translations"]["it"])
+            if "product_name_en" in fields_to_update and "en" in p["name_translations"]:
+                product.product_name_en = unicode(p["name_translations"]["en"])
+
+        if "image" in fields_to_update:
+            image_url = None
+            front_image_found = False
+            for image in p["images"]:
+                if front_image_found:
+                    break
+                image_url = image["large"]
+                for cat in image["categories"]:
+                    if cat == "Front":
+                        front_image_found = True
+            if image_url:
+                store_image(image_url, product)
+        product.quality_checked = datetime.now()
+        product.save()

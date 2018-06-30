@@ -15,7 +15,6 @@ from NutritionService import data_cleaning
 from NutritionService import reports
 from NutritionService.codecheck_integration.codecheck import import_from_codecheck
 from django.shortcuts import get_object_or_404
-from NutritionService.helpers import calculate_ofcom_value
 from NutritionService.helpers import store_image
 from django.http.response import HttpResponseForbidden
 from rest_framework import permissions
@@ -25,7 +24,7 @@ from NutritionService.models import ImportLog
 from suds.client import Client
 from suds.sudsobject import asdict
 from django.http import HttpResponse
-from NutritionService.models import Product, Allergen, NutritionFact, Ingredient, NotFoundLog, ErrorLog
+from NutritionService.models import Product, Allergen, NutritionFact, Ingredient, NotFoundLog, ErrorLog, calculate_ofcom_value
 from NutritionService.serializers import ProductSerializer
 from NutritionService.tasks import import_from_openfood
 from rest_framework.decorators import api_view
@@ -256,8 +255,8 @@ def get_products_from_openfood(request):
 def get_products_from_codecheck(request):
     if not request.user.is_superuser:
         return HttpResponseForbidden()
-    import_from_codecheck()
-    return HttpResponse(status = 200)
+    response = import_from_codecheck()
+    return Response(response, status = 200)
 
 @api_view(['GET'])
 @permission_classes((permissions.IsAuthenticated,))
@@ -285,6 +284,7 @@ def data_clean_task(request):
     if not request.user.is_superuser:
         return HttpResponseForbidden()
     data_cleaning.clean_salt_sodium()
+    data_cleaning.fill_product_names_and_images()
     return Response(status = 200)
 
 @api_view(['GET'])
