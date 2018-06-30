@@ -5,17 +5,6 @@ import random
 import string
 
 
-ENERGY_KJ = "energyKJ"
-ENERGY_KCAL = "energyKcal"
-TOTAL_FAT = "totalFat"
-SATURATED_FAT = "saturatedFat"
-TOTAL_CARBOHYDRATE = "totalCarbohydrate"
-SUGARS = "sugars"
-DIETARY_FIBER = "dietaryFiber"
-PROTEIN = "protein"
-SALT = "salt"
-SODIUM = "sodium"
-
 
 def store_image(image_url, product):
     if product.original_image_url == None or product.original_image_url != image_url:

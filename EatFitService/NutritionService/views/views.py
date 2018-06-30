@@ -255,8 +255,8 @@ def get_products_from_openfood(request):
 def get_products_from_codecheck(request):
     if not request.user.is_superuser:
         return HttpResponseForbidden()
-    response = import_from_codecheck()
-    return Response(response, status = 200)
+    import_from_codecheck()
+    return Response(status = 200)
 
 @api_view(['GET'])
 @permission_classes((permissions.IsAuthenticated,))

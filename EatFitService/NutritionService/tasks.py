@@ -100,7 +100,7 @@ def import_from_openfood():
 
 
 def update_from_openfood(product, fields_to_update):
-    response = requests.get('https://www.openfood.ch/api/v3/products?barcodes=' + product.gtin, headers={'Authorization': 'Token 8aba669f7dfc4fcc2ebf30d610bfa84f'})
+    response = requests.get('https://www.openfood.ch/api/v3/products?barcodes=' + str(product.gtin), headers={'Authorization': 'Token 8aba669f7dfc4fcc2ebf30d610bfa84f'})
     products = response.json()
     for p in products["data"][:1]:
         if "product_size" in fields_to_update:
@@ -132,5 +132,5 @@ def update_from_openfood(product, fields_to_update):
                         front_image_found = True
             if image_url:
                 store_image(image_url, product)
-        product.quality_checked = datetime.now()
-        product.save()
+    product.quality_checked = datetime.now()
+    product.save()

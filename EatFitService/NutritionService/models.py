@@ -8,6 +8,18 @@ from rest_framework.authtoken.models import Token
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.conf import settings
 
+ENERGY_KJ = "energyKJ"
+ENERGY_KCAL = "energyKcal"
+TOTAL_FAT = "totalFat"
+SATURATED_FAT = "saturatedFat"
+TOTAL_CARBOHYDRATE = "totalCarbohydrate"
+SUGARS = "sugars"
+DIETARY_FIBER = "dietaryFiber"
+PROTEIN = "protein"
+SALT = "salt"
+SODIUM = "sodium"
+
+
 # categories requested. Careful: Changed IDs changed to autifields and integerers, charfield for minor in snipped
 class MajorCategory(models.Model):
     id = models.AutoField(primary_key=True)
@@ -279,7 +291,6 @@ def calculate_ofcom_value(product):
             ofcom_value = ofcom_value - __calcluate_ofcom_point(amount, [8, 6.4, 4.8, 3.2, 1.6])
     if data_quality_sufficient:
         product.ofcom_value = ofcom_value
-        product.save()
 
 
 def __calcluate_ofcom_point(amount, values):
