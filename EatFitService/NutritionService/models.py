@@ -285,6 +285,7 @@ def calculate_data_score(product):
             data_score = data_score + 1
         else:
             data_score = data_score - 0.5
+    product.data_score = data_score
 
 def calculate_ofcom_value(product):
     nutrition_facts = NutritionFact.objects.filter(product = product)
