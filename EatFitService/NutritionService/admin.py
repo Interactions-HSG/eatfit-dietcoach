@@ -5,11 +5,34 @@ from NutritionService.models import MajorCategory, Product, MinorCategory, Aller
                                     CrowdsourceProduct, NotFoundLog, HealthTipp, NutrientName
 
 nutrients_to_prefill  = ["energyKcal", "energyKJ", "protein", "salt", "saturatedFat", "sugars", "totalCarbohydrate", "totalFat"]
+allergens_to_fill = ["allergenEggs",
+"allergenGluten",
+"allergenMilk",
+"allergenSoy",
+"allergenTreeNuts",
+"allergenPeanuts",
+"allergenSulphites",
+"allergenMustard",
+"allergenSesameSeeds",
+"allergenCellery",
+"allergenFish",
+"allergenLupin",
+"allergenCrustacean",
+"allergenMolluscs"]
 
 
 class AllergenInline(admin.TabularInline):
     model = Allergen
+    extra = 14
 
+    def get_formset(self, request, obj=None, **kwargs):
+        initial = []
+        if not obj and request.method == "GET":
+            for allergen in allergens_to_fill:
+                initial.append({'name': allergen })
+        formset = super(AllergenInline, self).get_formset(request, obj, **kwargs)
+        formset.__init__ = curry(formset.__init__, initial=initial)
+        return formset
 
 class NutrientInline(admin.TabularInline):
     model = NutritionFact
