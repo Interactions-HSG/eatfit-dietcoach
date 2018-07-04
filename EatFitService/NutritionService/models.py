@@ -266,7 +266,7 @@ def calculate_data_score(product):
     data_score = 0
     if product.product_name_de and product.product_name_de != "":
         data_score = data_score + 10
-    if product.front_image:
+    if product.image:
         data_score = data_score + 10
     if product.major_category:
         data_score = data_score + 5
