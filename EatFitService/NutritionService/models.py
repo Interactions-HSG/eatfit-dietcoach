@@ -91,9 +91,11 @@ class Product(models.Model):
                                           verbose_name='Fruit, Vegetable, Nuts Share')
     quality_checked = models.DateTimeField(null=True, blank=True)
     automatic_update = models.BooleanField(default=True)
+    data_score = models.FloatField(null=True, blank=True)
 
     def save(self, *args, **kwargs):
         calculate_ofcom_value(self)
+        calculate_data_score(self)
         super(Product, self).save(*args, **kwargs)
 
 
@@ -260,7 +262,29 @@ def create_auth_token(sender, instance=None, created=False, **kwargs):
         Token.objects.create(user=instance)
 
 
+def calculate_data_score(product):
+    data_score = 0
+    if product.product_name_de and product.product_name_de != "":
+        data_score = data_score + 10
+    if product.front_image:
+        data_score = data_score + 10
+    if product.major_category:
+        data_score = data_score + 5
+    if product.minor_category:
+        data_score = data_score + 5
+    if product.health_percentage and product.health_percentage != 0:
+        data_score = data_score + 5
 
+    nutrition_facts = NutritionFact.objects.filter(product = product)[:10]
+    for fact in nutrition_facts:
+        if fact.amount and fact.amount != 0:
+            data_score = data_score + 1
+    allergens = Allergen.objects.filter(product = product)
+    for allergen in allergens:
+        if allergen.certainity == "true" or allergen.certainity == "false":
+            data_score = data_score + 1
+        else:
+            data_score = data_score - 0.5
 
 def calculate_ofcom_value(product):
     nutrition_facts = NutritionFact.objects.filter(product = product)
