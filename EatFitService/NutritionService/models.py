@@ -72,7 +72,7 @@ class Product(models.Model):
     product_name_fr = models.TextField(null=True, blank=True)
     product_name_it = models.TextField(null=True, blank=True)
     producer = models.TextField(null=True, blank=True)
-    major_category = models.ForeignKey(MajorCategory, on_delete=models.DO_NOTHING, null=True)
+    major_category = models.ForeignKey(MajorCategory, on_delete=models.DO_NOTHING, null=True, editable=False)
     minor_category = models.ForeignKey(MinorCategory, on_delete=models.DO_NOTHING, null=True)
     product_size = models.CharField(max_length=255, null=True, blank=True)
     product_size_unit_of_measure = models.CharField(max_length=255, null=True, blank=True)
@@ -96,6 +96,8 @@ class Product(models.Model):
     def save(self, *args, **kwargs):
         calculate_ofcom_value(self)
         calculate_data_score(self)
+        if self.minor_category:
+            self.major_category = self.minor_category.category_major
         super(Product, self).save(*args, **kwargs)
 
 
