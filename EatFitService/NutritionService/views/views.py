@@ -126,6 +126,9 @@ def get_product(request, gtin):
         result["products"] = None
         return Response(result)
     else:
+        for product in products:
+            product.found_count = product.found_count + 1
+            product.save()
         serializer = ProductSerializer(products, many=True)
         result = {}
         result["success"] = True
@@ -212,6 +215,9 @@ def get_better_products(request, gtin):
     for p in better_products_major:
         products.append(p)
     if results_found > 0:
+        for product in products:
+            product.found_count = product.found_count + 1
+            product.save()
         serializer = ProductSerializer(products, many=True)
         result = {}
         result["success"] = True

@@ -92,6 +92,7 @@ class Product(models.Model):
     quality_checked = models.DateTimeField(null=True, blank=True)
     automatic_update = models.BooleanField(default=True)
     data_score = models.FloatField(null=True, blank=True)
+    found_count = models.IntegerField(default=0, editable=False)
 
     def save(self, *args, **kwargs):
         calculate_ofcom_value(self)

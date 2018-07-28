@@ -55,6 +55,7 @@ def __get_products(mac, nonce):
             gtin = str(not_found_item.gtin)
             r = requests.get(BASE_URL + "prod/ean2/1/513/" + str(gtin), headers=__add_auth_header(mac, nonce))
             if r.status_code == 200:
+                print("gtin found in codecheck: " + gtin + " . starting import.")
                 response_data = r.json()["result"]
                 items_found.append(response_data["ean"])
                 product = Product()
