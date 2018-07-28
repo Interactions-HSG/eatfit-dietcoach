@@ -57,12 +57,14 @@ class Product(models.Model):
     OPENFOOD = 'Openfood'
     CROWDSOURCING = 'Crowdsourcing'
     CODECHECK = 'Codecheck'
+    OPEN_WORLD = 'open_world'
     AUTO_ID_LABS = 'Auto-ID Labs'
     PRODUCT_SOURCES = (
         (TRUSTBOX, TRUSTBOX),
         (CROWDSOURCING, CROWDSOURCING),
         (OPENFOOD, OPENFOOD),
         (CODECHECK, CODECHECK),
+        (OPEN_WORLD, OPEN_WORLD),
         (AUTO_ID_LABS, AUTO_ID_LABS),
     )
     id = models.BigAutoField(primary_key=True)

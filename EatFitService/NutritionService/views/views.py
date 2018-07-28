@@ -173,15 +173,30 @@ def __change_product_objects(product):
 
 @api_view(['GET'])
 @permission_classes((permissions.IsAuthenticated,))
-def get_better_products(request, gtin):
+def get_better_products_minor_category(request, minor_category_pk):
     """
     query param: sortBy, values: 'ofcomValue', 'energyKJ', 'totalFat', 'saturatedFat', 'salt', 'sugars', 'protein',
                                  'totalCarbohydrate', 'dietaryFiber', 'healthPercentage' - this is the fruit and veg %,
                                  'sodium'
     query param: resultType, values: 'array', 'dictionary'
     """
+    minor_category = get_object_or_404(MinorCategory.objects.all(), pk = minor_category_pk)
+    return __get_better_products(request, minor_category, None)
 
+@api_view(['GET'])
+@permission_classes((permissions.IsAuthenticated,))
+def get_better_products_gtin(request, gtin):
+    """
+    query param: sortBy, values: 'ofcomValue', 'energyKJ', 'totalFat', 'saturatedFat', 'salt', 'sugars', 'protein',
+                                 'totalCarbohydrate', 'dietaryFiber', 'healthPercentage' - this is the fruit and veg %,
+                                 'sodium'
+    query param: resultType, values: 'array', 'dictionary'
+    """
     product = get_object_or_404(Product.objects.all(), gtin = gtin)
+    return __get_better_products(request, product.minor_category, product.major_category)
+
+
+def __get_better_products(request, minor_category, major_category):
     sort_by = request.GET.get("sortBy", "ofcomValue")
     result_type = request.GET.get("resultType", "array")
     number_of_results = 20
@@ -189,35 +204,32 @@ def get_better_products(request, gtin):
     products = []
     better_products_minor = []
     better_products_major = []
-    if product.minor_category:
+    if minor_category:
         if sort_by == "ofcomValue":
-            better_products_minor = Product.objects.filter(minor_category=product.minor_category).order_by("ofcom_value")[:number_of_results]
+            better_products_minor = Product.objects.filter(minor_category=minor_category).order_by("ofcom_value")[:number_of_results]
             results_found = better_products_minor.count()
         elif sort_by == 'healthPercentage':
-            better_products_minor = Product.objects.filter(minor_category=product.minor_category).order_by("health_percentage")[:number_of_results]
+            better_products_minor = Product.objects.filter(minor_category=minor_category).order_by("health_percentage")[:number_of_results]
             results_found = better_products_minor.count()
         else:
-            better_products_minor = Product.objects.raw("Select p.* from product as p, nutrition_fact as n where n.product_id = p.id and p.minor_category_id = %s and n.name = %s order by n.amount", [product.minor_category.pk, sort_by])[:number_of_results]
+            better_products_minor = Product.objects.raw("Select p.* from product as p, nutrition_fact as n where n.product_id = p.id and p.minor_category_id = %s and n.name = %s order by n.amount", [minor_category.pk, sort_by])[:number_of_results]
             results_found = len(better_products_minor)
        
-    if results_found < number_of_results and product.major_category:
+    if results_found < number_of_results and major_category:
         if sort_by == "ofcomValue":
-            better_products_major = Product.objects.filter(major_category = product.major_category).order_by("ofcom_value")[:(number_of_results-results_found)]
+            better_products_major = Product.objects.filter(major_category = major_category).order_by("ofcom_value")[:(number_of_results-results_found)]
             results_found = better_products_major.count()
         elif sort_by == 'healthPercentage':
-            better_products_major = Product.objects.filter(major_category = product.major_category).order_by("health_percentage")[:(number_of_results-results_found)]
+            better_products_major = Product.objects.filter(major_category = major_category).order_by("health_percentage")[:(number_of_results-results_found)]
             results_found = better_products_major.count()
         else:
-            better_products_major = Product.objects.raw("Select p.* from product as p, nutrition_fact as n where n.product_id = p.id and p.major_category_id = %s and n.name = %s order by n.amount", [product.major_category.pk, sort_by])[:(number_of_results-results_found)]
+            better_products_major = Product.objects.raw("Select p.* from product as p, nutrition_fact as n where n.product_id = p.id and p.major_category_id = %s and n.name = %s order by n.amount", [major_category.pk, sort_by])[:(number_of_results-results_found)]
             results_found = len(better_products_major)
     for p in better_products_minor:
         products.append(p)
     for p in better_products_major:
         products.append(p)
     if results_found > 0:
-        for product in products:
-            product.found_count = product.found_count + 1
-            product.save()
         serializer = ProductSerializer(products, many=True)
         result = {}
         result["success"] = True
