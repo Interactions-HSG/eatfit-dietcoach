@@ -70,11 +70,9 @@ def __get_products(mac, nonce):
                 if "imgUrl" in response_data:
                     store_image(response_data["imgUrl"], product)
                 elif "imgId" in response_data:
-                    store_image(BASE_URL + "img/id/" + response_data["imgId"] + "/1", product)
-
+                    store_image(BASE_URL + "img/id/" + str(response_data["imgId"]) + "/1", product)
                 if "ingr" in response_data:
                     Ingredient.objects.update_or_create(product = product, lang = "de", defaults = {"text" : unicode(response_data["ingr"])})
-        
                 if "nutriTable" in response_data:
                     nutrient_table = response_data["nutriTable"]
                     nutrition_facts_to_create = []
@@ -107,15 +105,15 @@ def __get_products(mac, nonce):
                         nutrition_facts_to_create.append(nutrition_fact7)
 
                     if "fibers" in nutrient_table:
-                        nutrition_fact8 = NutritionFact(product = product, name = "dietaryFiber", amount = nutrient_table["fibers"], unit_of_measure = nutrients["fiber"]["unit"])
+                        nutrition_fact8 = NutritionFact(product = product, name = "dietaryFiber", amount = nutrient_table["fibers"], unit_of_measure = GRAM)
                         nutrition_facts_to_create.append(nutrition_fact8)
 
                     if "protein" in nutrient_table:
-                        nutrition_fact9 = NutritionFact(product = product, name = "protein", amount = nutrient_table["protein"], unit_of_measure = nutrients["protein"]["unit"])
+                        nutrition_fact9 = NutritionFact(product = product, name = "protein", amount = nutrient_table["protein"], unit_of_measure = GRAM)
                         nutrition_facts_to_create.append(nutrition_fact9)
 
                     if "sodium" in nutrient_table:
-                        nutrition_fact9 = NutritionFact(product = product, name = "sodium", amount = nutrient_table["sodium"], unit_of_measure = nutrients["protein"]["unit"])
+                        nutrition_fact9 = NutritionFact(product = product, name = "sodium", amount = nutrient_table["sodium"], unit_of_measure = GRAM)
                         nutrition_facts_to_create.append(nutrition_fact9)
 
                     NutritionFact.objects.bulk_create(nutrition_facts_to_create)
