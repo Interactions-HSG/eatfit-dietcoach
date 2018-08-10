@@ -36,7 +36,7 @@ class AllergenInline(admin.TabularInline):
 
 class NutrientInline(admin.TabularInline):
     model = NutritionFact
-    extra = 8
+    extra = 10
     
     def get_formset(self, request, obj=None, **kwargs):
             initial = []
