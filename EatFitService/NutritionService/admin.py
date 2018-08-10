@@ -4,7 +4,7 @@ from django.contrib import messages
 from NutritionService.models import MajorCategory, Product, MinorCategory, Allergen, NutritionFact, ErrorLog, \
                                     CrowdsourceProduct, NotFoundLog, HealthTipp, NutrientName
 
-nutrients_to_prefill  = ["energyKcal", "energyKJ", "protein", "salt", "saturatedFat", "sugars", "totalCarbohydrate", "totalFat"]
+nutrients_to_prefill  = ["energyKcal", "energyKJ", "protein", "salt", "sodium", "dietaryFiber", "saturatedFat", "sugars", "totalCarbohydrate", "totalFat"]
 allergens_to_fill = ["allergenEggs",
 "allergenGluten",
 "allergenMilk",
@@ -42,7 +42,12 @@ class NutrientInline(admin.TabularInline):
             initial = []
             if not obj and request.method == "GET":
                 for nutrient in nutrients_to_prefill:
-                    initial.append({'name': nutrient, 'unit_of_measure': 'g' })
+                    unit_of_measure = 'g'
+                    if "Kcal" in nutrient:
+                        unit_of_measure = "Kcal"
+                    elif "KJ" in nutrient:
+                        unit_of_measure = "KJ"
+                    initial.append({'name': nutrient, 'unit_of_measure': unit_of_measure })
             formset = super(NutrientInline, self).get_formset(request, obj, **kwargs)
             formset.__init__ = curry(formset.__init__, initial=initial)
             return formset
