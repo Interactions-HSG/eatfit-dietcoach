@@ -37,8 +37,13 @@ class NutritionFactSerializer(serializers.ModelSerializer):
 
 class ProductSerializer(serializers.ModelSerializer):
     ingredients = IngredientSerializer(many=True, read_only=True)
-    allergens = AllergenSerializer(many = True, read_only=True)
+    allergens = serializers.SerializerMethodField()
     nutrients = NutritionFactSerializer(many = True, read_only=True)
+
+    def get_allergens(self, product):
+        qs = Allergen.objects.filter(certainity = "true", product = product)
+        serializer = AllergenSerializer(instance=qs, many = True)
+        return serializer.data
 
     class Meta:
         model = Product
