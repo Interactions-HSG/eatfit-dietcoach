@@ -7,6 +7,9 @@ from celery.decorators import periodic_task
 from celery.task.schedules import crontab
 
 
+NUTRIENTS = ["energyKcal", "energyKJ", "protein", "salt", "sodium", "dietaryFiber", "saturatedFat", "sugars", "totalCarbohydrate", "totalFat"]
+NUTRIENTS_MAPPING_OPENFOOD = {"energyKJ" : "energy", "protein" : "protein", "salt" : "salt", "dietaryFiber" : "fiber", "saturatedFat" : "saturated_fat", "sugars" : "sugars", "totalCarbohydrate" : "carbohydrates", "totalFat" : "fat"}
+
 @periodic_task(
     run_every=(crontab(hour=0, minute=10)),
     name="import_from_openfood",
@@ -103,11 +106,11 @@ def update_from_openfood(product, fields_to_update):
     response = requests.get('https://www.openfood.ch/api/v3/products?barcodes=' + str(product.gtin), headers={'Authorization': 'Token 8aba669f7dfc4fcc2ebf30d610bfa84f'})
     products = response.json()
     for p in products["data"][:1]:
-        if "product_size" in fields_to_update:
+        if "product_size" in fields_to_update and not product.product_size:
             product.product_size = str(p["quantity"])
-        if "product_size_unit_of_measure" in fields_to_update:
+        if "product_size_unit_of_measure" in fields_to_update and not product.product_size_unit_of_measure:
             product.product_size_unit_of_measure = p["unit"]
-        if "portion_quantity" in p and "serving_size" in fields_to_update:
+        if "portion_quantity" in p and "serving_size" in fields_to_update and not product.serving_size:
             product.serving_size = str(p["portion_quantity"])
 
         if "name_translations" in p:
@@ -132,6 +135,20 @@ def update_from_openfood(product, fields_to_update):
                         front_image_found = True
             if image_url:
                 store_image(image_url, product)
+
+            if "nutrients" in fields_to_update and "nutrients" in p:
+                try:
+                    nutrients_openfood = p["nutrients"]
+                    nutrition_facts_to_create = []
+                    existing_nutrients = set(NutritionFact.objects.filter(product = product).values_list("name"))
+                    for n in NUTRIENTS:
+                        if n not in existing_nutrients and n in NUTRIENTS_MAPPING_OPENFOOD and NUTRIENTS_MAPPING_OPENFOOD[n] in nutrients_openfood:
+                            nutrient_to_create = NutritionFact(product = product, name = n, amount = nutrients_openfood[NUTRIENTS_MAPPING_OPENFOOD[n]]["per_hundred"], unit_of_measure = nutrients_openfood[NUTRIENTS_MAPPING_OPENFOOD[n]]["unit"])
+                            nutrition_facts_to_create.append(nutrient_to_create)
+                    if len(nutrition_facts_to_create) > 0:
+                        NutritionFact.objects.bulk_create(nutrition_facts_to_create)
+                except Exception as e:
+                    print(e)
     product.quality_checked = datetime.now()
     product.save()
 

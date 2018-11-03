@@ -96,8 +96,8 @@ def __get_products(mac, nonce):
                         nutrition_fact5 = NutritionFact(product = product, name = "saturatedFat", amount = nutrient_table["saturatedFat"], unit_of_measure = GRAM)
                         nutrition_facts_to_create.append(nutrition_fact5)
 
-                    if "carbonhydrates" in nutrient_table:
-                        nutrition_fact6 = NutritionFact(product = product, name = "totalCarbohydrate", amount = nutrient_table["carbonhydrates"], unit_of_measure = GRAM)
+                    if "carbonhydrate" in nutrient_table:
+                        nutrition_fact6 = NutritionFact(product = product, name = "totalCarbohydrate", amount = nutrient_table["carbonhydrate"], unit_of_measure = GRAM)
                         nutrition_facts_to_create.append(nutrition_fact6)
 
                     if "sugar" in nutrient_table:

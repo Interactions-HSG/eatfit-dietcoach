@@ -388,13 +388,14 @@ def create_product(p):
         default_arguments = {}
         temp_image_url = None
         for n in p['productNames']:
-            if n['_languageCode'] == "de":
+            language_code = n['_languageCode'].lower()
+            if language_code == "de":
                 default_arguments["product_name_de"] = unicode(n['name'])
-            if n['_languageCode'] == "fr":
+            if language_code == "fr":
                 default_arguments["product_name_fr"] = unicode(n['name'])
-            if n['_languageCode'] == "en":
+            if language_code == "en":
                 default_arguments["product_name_en"] = unicode(n['name'])
-            if n['_languageCode'] == "it":
+            if language_code == "it":
                 default_arguments["product_name_it"] = unicode(n['name'])
         for attr in p['productAttributes']:
             try:
