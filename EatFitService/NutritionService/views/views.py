@@ -114,32 +114,53 @@ def get_product(request, gtin):
 
     query param: resultType, values: 'array', 'dictionary'
     """
-    result_type = request.GET.get("resultType", "array")
     products = Product.objects.filter(gtin=gtin)
-    if not products.exists():
-        l, created = NotFoundLog.objects.get_or_create(gtin=gtin)
-        if not created:
-            l.count = l.count + 1
-            l.save()
-        result = {}
-        result["success"] = False
-        result["products"] = None
-        return Response(result)
+    if products.exists():
+        result = __prepare_product_data(request, products, False)
     else:
-        for product in products:
-            product.found_count = product.found_count + 1
-            product.save()
-        serializer = ProductSerializer(products, many=True)
-        result = {}
-        result["success"] = True
-        if result_type == "array":
-            result["products"] = serializer.data
+        products, price = __check_if_weighted_product(gtin)
+        if products:
+            result = __prepare_product_data(request, products, True, price)
         else:
-            result["products"] = []
-            for p in serializer.data:
-                result["products"].append(__change_product_objects(p))
+            l, created = NotFoundLog.objects.get_or_create(gtin=gtin)
+            if not created:
+                l.count = l.count + 1
+                l.save()
+            result = {}
+            result["success"] = False
+            result["products"] = None
     return Response(result)
 
+def __prepare_product_data(request, products, weighted_product, price = None):
+    result_type = request.GET.get("resultType", "array")
+    for product in products:
+        product.found_count = product.found_count + 1
+        product.save()
+    serializer = ProductSerializer(products, many=True, context={'weighted_article': weighted_product, "price" : price})
+    result = {}
+    result["success"] = True
+    if result_type == "array":
+        result["products"] = serializer.data
+    else:
+        result["products"] = []
+        for p in serializer.data:
+            result["products"].append(__change_product_objects(p))
+    return result
+
+
+def __check_if_weighted_product(gtin):
+    try:
+        price_string = gtin[-5:-1]
+        gtin_without_price = gtin[:-5]
+        gtin_without_price = gtin_without_price + "00000"
+        price_string = price_string[:2] + "." + price_string[-2:]
+        price = float(price_string)
+        products = Product.objects.filter(gtin=gtin_without_price)
+        if products.exists():
+            return products, price
+    except Exception as e:
+        pass
+    return None, -1
 
 def __change_product_objects(product):
     result_product = {}
@@ -152,6 +173,7 @@ def __change_product_objects(product):
     result_product["image"] = product["image"]
     result_product["major_category"] = product["major_category"]
     result_product["ofcom_value"] = product["ofcom_value"]
+    result_product["weighted_article"] = product["weighted_article"]
     result_product["product_names"] = {}
     result_product["product_names"]["en"] = product["product_name_en"]
     result_product["product_names"]["de"] = product["product_name_de"]

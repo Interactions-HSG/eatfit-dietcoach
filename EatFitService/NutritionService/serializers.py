@@ -39,11 +39,25 @@ class ProductSerializer(serializers.ModelSerializer):
     ingredients = IngredientSerializer(many=True, read_only=True)
     allergens = serializers.SerializerMethodField()
     nutrients = NutritionFactSerializer(many = True, read_only=True)
+    weighted_article = serializers.SerializerMethodField('is_weighted_article')
+    price = serializers.SerializerMethodField('get_price_value')
 
     def get_allergens(self, product):
         qs = Allergen.objects.filter(certainity = "true", product = product)
         serializer = AllergenSerializer(instance=qs, many = True)
         return serializer.data
+    
+    def is_weighted_article(self, obj):
+        weighted_article = self.context.get("weighted_article")
+        if weighted_article:
+            return weighted_article
+        return False
+
+    def get_price_value(self, obj):
+        price = self.context.get("price")
+        if price:
+            return price
+        return -1
 
     class Meta:
         model = Product
@@ -68,7 +82,9 @@ class ProductSerializer(serializers.ModelSerializer):
             'ofcom_value',
             'source',
             'source_checked',
-            'health_percentage'
+            'health_percentage',
+            'weighted_article',
+            'price'
             ]
 
 
