@@ -7,6 +7,7 @@ from django.db.models.signals import post_save
 from rest_framework.authtoken.models import Token
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.conf import settings
+from django.contrib.auth.models import User
 
 ENERGY_KJ = "energyKJ"
 ENERGY_KCAL = "energyKcal"
@@ -259,6 +260,66 @@ class HealthTipp(models.Model):
         verbose_name = "Health Tipp"
         verbose_name_plural = "Health Tipps"
         db_table = 'health_tipp'
+
+class ReceiptToNutritionPartner(models.Model):
+    user = models.OneToOneField(User, primary_key=True, related_name = "partner")
+    name = models.CharField(max_length=255)
+    
+    def __unicode__(self):
+        return self.name
+
+    class Meta:
+        verbose_name = "ReceiptToNutritionPartner"
+        verbose_name_plural = "ReceiptToNutritionPartners"
+        db_table = 'receipt_to_nutrition_partner'
+
+class ReceiptToNutritionUser(models.Model):
+    r2n_partner = models.ForeignKey(ReceiptToNutritionPartner)
+    r2n_username = models.CharField(max_length=255)
+    r2n_user_active = models.BooleanField(default = True)
+
+    def __unicode__(self):
+        return self.r2n_username
+
+    class Meta:
+        unique_together = ('r2n_partner', 'r2n_username',)
+        verbose_name = "ReceiptToNutritionUser"
+        verbose_name_plural = "ReceiptToNutritionUsers"
+        db_table = 'receipt_to_nutrition_user'
+
+class DigitalReceipt(models.Model):
+    r2n_user = models.ForeignKey(ReceiptToNutritionUser)
+    business_unit = models.CharField(max_length=255)
+    receipt_id = models.CharField(max_length=255)
+    article_id = models.CharField(max_length=255)
+    article_type = models.CharField(max_length=255)
+    quantity = models.FloatField()
+    quantity_unit = models.CharField(max_length=255)
+    price = models.FloatField()
+    price_currency = models.CharField(max_length=255)
+    receipt_datetime = models.DateTimeField()
+
+    def __unicode__(self):
+        return self.article_id
+
+    class Meta:
+        #unique_together = ('r2n_user', 'business_unit', 'receipt_id')
+        verbose_name = "DigitalReceipt"
+        verbose_name_plural = "DigitalReceipts"
+        db_table = 'digital_receipt'
+
+class Matching(models.Model):
+    article_id = models.CharField(max_length=255)
+    article_type = models.CharField(max_length=255)
+    gtin = models.BigIntegerField(unique=True)
+
+    def __unicode__(self):
+        return self.article_id
+
+    class Meta:
+        verbose_name = "Matching"
+        verbose_name_plural = "Matchings"
+        db_table = 'matching'
 
 
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)

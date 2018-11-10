@@ -5,6 +5,7 @@ Definition of views.
 """
 
 from EatFitService.settings import TRUSTBOX_USERNAME, TRUSTBOX_PASSWORD, TRUSTBOX_URL
+from NutritionService.models import DigitalReceipt
 from NutritionService.serializers import MinorCategorySerializer
 from NutritionService.models import MinorCategory
 from NutritionService.serializers import MajorCategorySerializer
@@ -24,8 +25,8 @@ from NutritionService.models import ImportLog
 from suds.client import Client
 from suds.sudsobject import asdict
 from django.http import HttpResponse
-from NutritionService.models import Product, Allergen, NutritionFact, Ingredient, NotFoundLog, ErrorLog, calculate_ofcom_value
-from NutritionService.serializers import ProductSerializer
+from NutritionService.models import Product, Allergen, NutritionFact, Ingredient, NotFoundLog, ErrorLog, ReceiptToNutritionUser, calculate_ofcom_value
+from NutritionService.serializers import ProductSerializer, DigitalReceiptSerializer
 from NutritionService.tasks import import_from_openfood
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -35,6 +36,30 @@ from django.core import files
 import random
 import string
 
+
+@api_view(['POST'])
+@permission_classes((permissions.IsAuthenticated,))
+def send_receipts(request):
+    partner = request.user.partner
+    if not partner:
+        return Response({"error" : "You must be a partner to use this API"}, status = 403)
+    serializer = DigitalReceiptSerializer(data = request.data)
+    if serializer.is_valid():
+        r2n_username = serializer.validated_data["r2n_username"]
+        r2n_partner = serializer.validated_data["r2n_partner"]
+        if r2n_partner != partner.name:
+            return Response({"error" : "Partner name and user mismatch"}, status = 403)
+        r2n_user = get_object_or_404(ReceiptToNutritionUser.objects.filter(r2n_partner__name = r2n_partner), r2n_username = r2n_username)
+        if not r2n_user.r2n_user_active:
+            return Response({"error" : "User not active. Please check if user fulfills all relevant criteria."}, status = 403)
+        for receipt in serializer.validated_data["receipts"]:
+            for article in receipt["items"]:
+                digital_receipt = DigitalReceipt(r2n_user = r2n_user, business_unit = receipt["business_unit"], receipt_id = receipt["receipt_id"], receipt_datetime = receipt["receipt_datetime"],
+                                                 article_id = article["article_id"], article_type = article["article_type"], quantity = article["quantity"], quantity_unit = article["quantity_unit"],
+                                                 price = article["price"], price_currency = article["price_currency"])
+                digital_receipt.save()
+        return Response(status = 200)
+    return Response(serializer.errors, status = 400)
 
 @api_view(['POST'])
 @permission_classes((permissions.IsAuthenticated,))

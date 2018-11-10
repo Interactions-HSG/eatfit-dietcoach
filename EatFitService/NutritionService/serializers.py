@@ -1,6 +1,5 @@
-
 from rest_framework import serializers
-from NutritionService.models import Product, Allergen, Ingredient, NutritionFact, CrowdsourceProduct, HealthTipp, MajorCategory, MinorCategory
+from NutritionService.models import Product, Allergen, Ingredient, NutritionFact, CrowdsourceProduct, HealthTipp, MajorCategory, MinorCategory, DigitalReceipt
 
 class AllergenSerializer(serializers.ModelSerializer):
     class Meta:
@@ -92,3 +91,23 @@ class CrowdsourceProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = CrowdsourceProduct
         fields = '__all__'
+
+class ArticleSerializer(serializers.Serializer):
+    article_id = serializers.CharField()
+    article_type = serializers.CharField()
+    quantity = serializers.FloatField()
+    quantity_unit = serializers.CharField()
+    price = serializers.FloatField()
+    price_currency = serializers.CharField()
+
+class ReceiptSerializer(serializers.Serializer):
+    receipt_id = serializers.CharField()
+    business_unit = serializers.CharField()
+    receipt_datetime = serializers.DateTimeField()
+    items = ArticleSerializer(many=True)
+
+class DigitalReceiptSerializer(serializers.Serializer):
+    r2n_partner = serializers.CharField()
+    r2n_username = serializers.CharField()
+    receipts = ReceiptSerializer(many=True)
+

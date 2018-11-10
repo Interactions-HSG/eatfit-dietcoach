@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.utils.functional import curry
 from django.contrib import messages
 from NutritionService.models import MajorCategory, Product, MinorCategory, Allergen, NutritionFact, ErrorLog, \
-                                    CrowdsourceProduct, NotFoundLog, HealthTipp, NutrientName
+                                    CrowdsourceProduct, NotFoundLog, HealthTipp, NutrientName, ReceiptToNutritionPartner, ReceiptToNutritionUser, Matching
 
 nutrients_to_prefill  = ["energyKcal", "energyKJ", "protein", "salt", "sodium", "dietaryFiber", "saturatedFat", "sugars", "totalCarbohydrate", "totalFat"]
 allergens_to_fill = ["allergenEggs",
@@ -66,6 +66,9 @@ class NotFoundLogAdmin(admin.ModelAdmin):
     list_display = ("gtin", "count", "first_searched_for")
     search_fields = ("gtin", "count", "first_searched_for")
 
+class MatchingAdmin(admin.ModelAdmin):
+    list_display = ("gtin", "article_id", "article_type")
+    search_fields = ("gtin", "article_id", "article_type")
 
     
 def approve_crowdsource_product(self, request, queryset):
@@ -95,3 +98,6 @@ admin.site.register(HealthTipp)
 admin.site.register(NutrientName)
 admin.site.register(CrowdsourceProduct, CrowdsourceProductAdmin)
 admin.site.register(NotFoundLog, NotFoundLogAdmin)
+admin.site.register(Matching, MatchingAdmin)
+admin.site.register(ReceiptToNutritionPartner)
+admin.site.register(ReceiptToNutritionUser)
