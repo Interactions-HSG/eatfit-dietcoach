@@ -12,6 +12,10 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from NutritionService.models import CrowdsourceProduct, Product, NutritionFact, Ingredient
 from NutritionService.serializers import CrowdsourceProductSerializer, ProductSerializer
+import os
+import uuid
+from EatFitService.settings import MEDIA_ROOT
+from shutil import copyfile
 
 
 GRAM = 'g'
@@ -190,7 +194,9 @@ def __create_products_from_crowdsource(crowdsource_products):
         product.product_name_it = crowdsource_product.product_name_it
         product.product_name_fr = crowdsource_product.product_name_fr
         product.image = crowdsource_product.front_image
+        __copy_file(product.image)
         product.back_image = crowdsource_product.back_image
+        __copy_file(product.back_image)
         product.comment = crowdsource_product.comment
         product.major_category = crowdsource_product.major_category
         product.minor_category = crowdsource_product.minor_category
@@ -254,13 +260,20 @@ def __create_products_from_crowdsource(crowdsource_products):
     else:
         return False, ERROR_CREATING, ERROR_CREATING
 
+def __copy_file(file):
+    if file:
+        new_filepath = MEDIA_ROOT + "/product_images/" +  os.path.basename(file.name)
+        copyfile(file.path, new_filepath)
+        file.name = "product_images/" +  os.path.basename(file.name)
 
 def __validate_crowdsource_product(crowdsource_product):
     errors = []
     # Make sure there are ALL the nutrition facts.
+    """
     for nutrition in NUTRITION_LIST:
         if not crowdsource_product[nutrition['db_column_name']]:
             errors.append('Missing: ' + nutrition['name'])
+    """
     if not crowdsource_product.name:
         errors.append('Missing product name')
     if not crowdsource_product.gtin:

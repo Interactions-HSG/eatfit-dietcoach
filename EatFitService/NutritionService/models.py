@@ -8,6 +8,8 @@ from rest_framework.authtoken.models import Token
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.conf import settings
 from django.contrib.auth.models import User
+import os
+from uuid import uuid4
 
 ENERGY_KJ = "energyKJ"
 ENERGY_KCAL = "energyKcal"
@@ -20,6 +22,18 @@ PROTEIN = "protein"
 SALT = "salt"
 SODIUM = "sodium"
 
+def path_and_rename(path):
+    def wrapper(instance, filename):
+        ext = filename.split('.')[-1]
+        # get filename
+        if instance.pk:
+            filename = '{}.{}'.format(instance.pk, ext)
+        else:
+            # set filename as random string
+            filename = '{}.{}'.format(uuid4().hex, ext)
+        # return the whole path to the file
+        return os.path.join(path, filename)
+    return wrapper
 
 # categories requested. Careful: Changed IDs changed to autifields and integerers, charfield for minor in snipped
 class MajorCategory(models.Model):
@@ -197,8 +211,8 @@ class CrowdsourceProduct(models.Model):
     product_size_unit_of_measure = models.CharField(max_length=255, null=True, blank=True)
     serving_size = models.CharField(max_length=255, null=True, blank=True, verbose_name="Serving Size")
     comment = models.TextField(null=True, blank=True)
-    front_image = models.ImageField(upload_to="crowdsoure_images", null=True, blank=True)
-    back_image = models.ImageField(upload_to="crowdsoure_images", null=True, blank=True)
+    front_image = models.ImageField(upload_to=path_and_rename("crowdsoure_images/"), null=True, blank=True)
+    back_image = models.ImageField(upload_to=path_and_rename("crowdsoure_images/"), null=True, blank=True)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
     health_percentage = models.FloatField(null=True, blank=True,
