@@ -325,7 +325,7 @@ class Matching(models.Model):
     article_id = models.CharField(max_length=255)
     article_type = models.CharField(max_length=255)
     gtin = models.BigIntegerField()
-    eatfit_product = models.ForeignKey(Product, null=True, blank=True)
+    eatfit_product = models.ForeignKey(Product, null=True, blank=True, editable = False)
 
     def save(self, *args, **kwargs):
         if self.gtin:
