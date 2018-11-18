@@ -269,11 +269,11 @@ def __copy_file(file):
 def __validate_crowdsource_product(crowdsource_product):
     errors = []
     # Make sure there are ALL the nutrition facts.
-    """
+    
     for nutrition in NUTRITION_LIST:
         if not crowdsource_product[nutrition['db_column_name']]:
             errors.append('Missing: ' + nutrition['name'])
-    """
+    
     if not crowdsource_product.name:
         errors.append('Missing product name')
     if not crowdsource_product.gtin:
