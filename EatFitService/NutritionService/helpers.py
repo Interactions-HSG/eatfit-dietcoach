@@ -43,5 +43,5 @@ def is_number(s):
     try:
         v = float(s)
         return True, v 
-    except ValueError:
+    except:
         return False, None

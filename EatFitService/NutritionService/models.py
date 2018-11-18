@@ -358,7 +358,8 @@ def calculate_ofcom_value(product):
     data_quality_sufficient = True
     ofcom_value = 0
     for fact in nutrition_facts:
-        if not is_number(fact.amount):
+        converted, amount  = is_number(fact.amount)
+        if not converted:
             data_quality_sufficient = False
             break
         amount = float(fact.amount)
