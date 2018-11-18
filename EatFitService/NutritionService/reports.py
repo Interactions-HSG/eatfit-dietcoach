@@ -45,6 +45,6 @@ def generate_daily_report():
 
     }
     email = loader.render_to_string("mail/daily_status_report.html", c)
-    mail = EmailMultiAlternatives(u"EatFit Report", email, DEFAULT_FROM_EMAIL, ["klaus.fuchs@autoidlabs.ch", "sven.brunner@holo-one.com"])
+    mail = EmailMultiAlternatives(u"EatFit Report", email, DEFAULT_FROM_EMAIL, ["klaus.fuchs@autoidlabs.ch"])
     mail.attach_alternative(email, "text/html")
     mail.send()

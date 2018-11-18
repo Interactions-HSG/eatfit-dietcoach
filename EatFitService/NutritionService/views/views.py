@@ -5,6 +5,7 @@ Definition of views.
 """
 
 from EatFitService.settings import TRUSTBOX_USERNAME, TRUSTBOX_PASSWORD, TRUSTBOX_URL
+from NutritionService.models import Matching
 from NutritionService.models import DigitalReceipt
 from NutritionService.serializers import MinorCategorySerializer
 from NutritionService.models import MinorCategory
@@ -16,7 +17,7 @@ from NutritionService import data_cleaning
 from NutritionService import reports
 from NutritionService.codecheck_integration.codecheck import import_from_codecheck
 from django.shortcuts import get_object_or_404
-from NutritionService.helpers import store_image
+from NutritionService.helpers import store_image, download_csv
 from django.http.response import HttpResponseForbidden
 from rest_framework import permissions
 from rest_framework.decorators import permission_classes
@@ -382,6 +383,22 @@ def get_health_tipps(request):
         return Response(status = 400)
     serializer = HealthTippSerializer(health_tipps, many=True)
     return Response(serializer.data, status = 200)
+
+@permission_classes((permissions.IsAuthenticated,))
+def export_digital_receipts(request):
+    data = download_csv(request, DigitalReceipt.objects.all())
+    response = HttpResponse(data, content_type='text/csv')
+    filename = "export_digital_receipt_" + datetime.now().strftime("%Y_%m_%d") + ".csv"
+    response['Content-Disposition'] = 'attachment;filename=' + filename
+    return response
+
+@permission_classes((permissions.IsAuthenticated,))
+def export_matching(request):
+    data = download_csv(request, Matching.objects.all())
+    response = HttpResponse(data, content_type='text/csv')
+    filename = "export_matching_" + datetime.now().strftime("%Y_%m_%d") + ".csv"
+    response['Content-Disposition'] = 'attachment;filename=' + filename
+    return response
 
 def __update_objects_from_trustbox(last_updated):
     """

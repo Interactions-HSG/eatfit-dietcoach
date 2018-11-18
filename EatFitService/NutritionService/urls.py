@@ -30,6 +30,8 @@ urlpatterns = [
      url(r'^data/data-cleaning/$', views.data_clean_task),
 
      url(r'^receipt2nutrition/send-receipts/$', views.send_receipts),
+     url(r'^receipt2nutrition/export/receipts/$', views.export_digital_receipts),
+     url(r'^receipt2nutrition/export/matching/$', views.export_matching),
 
      url(r'^update', NutritionService.views.views.update_database),
      url(r'^products/from-openfood/', NutritionService.views.views.get_products_from_openfood),

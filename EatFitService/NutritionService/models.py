@@ -22,18 +22,17 @@ PROTEIN = "protein"
 SALT = "salt"
 SODIUM = "sodium"
 
-def path_and_rename(path):
-    def wrapper(instance, filename):
-        ext = filename.split('.')[-1]
-        # get filename
-        if instance.pk:
-            filename = '{}.{}'.format(instance.pk, ext)
-        else:
-            # set filename as random string
-            filename = '{}.{}'.format(uuid4().hex, ext)
-        # return the whole path to the file
-        return os.path.join(path, filename)
-    return wrapper
+def path_and_rename(instance, filename):
+    base_path = "crowdsoure_images/"
+    ext = filename.split('.')[-1]
+    # get filename
+    if instance.pk:
+        filename = '{}.{}'.format(instance.pk, ext)
+    else:
+        # set filename as random string
+        filename = '{}.{}'.format(uuid4().hex, ext)
+    # return the whole path to the file
+    return os.path.join(base_path, filename)
 
 # categories requested. Careful: Changed IDs changed to autifields and integerers, charfield for minor in snipped
 class MajorCategory(models.Model):
@@ -211,8 +210,8 @@ class CrowdsourceProduct(models.Model):
     product_size_unit_of_measure = models.CharField(max_length=255, null=True, blank=True)
     serving_size = models.CharField(max_length=255, null=True, blank=True, verbose_name="Serving Size")
     comment = models.TextField(null=True, blank=True)
-    front_image = models.ImageField(upload_to=path_and_rename("crowdsoure_images/"), null=True, blank=True)
-    back_image = models.ImageField(upload_to=path_and_rename("crowdsoure_images/"), null=True, blank=True)
+    front_image = models.ImageField(upload_to=path_and_rename, null=True, blank=True)
+    back_image = models.ImageField(upload_to=path_and_rename, null=True, blank=True)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
     health_percentage = models.FloatField(null=True, blank=True,
@@ -325,7 +324,17 @@ class DigitalReceipt(models.Model):
 class Matching(models.Model):
     article_id = models.CharField(max_length=255)
     article_type = models.CharField(max_length=255)
-    gtin = models.BigIntegerField(unique=True)
+    gtin = models.BigIntegerField()
+    eatfit_product = models.ForeignKey(Product, null=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        if self.gtin:
+            products = Product.objects.filter(gtin = self.gtin)
+            if products.exists():
+                product = products[0]
+                self.eatfit_product = product
+        super(Matching, self).save(*args, **kwargs)
+
 
     def __unicode__(self):
         return self.article_id

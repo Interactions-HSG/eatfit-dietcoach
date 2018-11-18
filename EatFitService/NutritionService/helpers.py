@@ -3,8 +3,9 @@ import tempfile
 from django.core import files
 import random
 import string
-
-
+import csv
+from django.http import HttpResponse
+from django.core.exceptions import PermissionDenied
 
 def store_image(image_url, product):
     if product.original_image_url == None or product.original_image_url != image_url:
@@ -45,3 +46,22 @@ def is_number(s):
         return True, v 
     except:
         return False, None
+
+
+def download_csv(request, queryset):
+    if not request.user.is_staff:
+        raise PermissionDenied
+    opts = queryset.model._meta
+    model = queryset.model
+    response = HttpResponse(content_type='text/csv')
+    # force download.
+    response['Content-Disposition'] = 'attachment;filename=export.csv'
+    # the csv writer
+    writer = csv.writer(response)
+    field_names = [field.name for field in opts.fields]
+    # Write a first row with header information
+    writer.writerow(field_names)
+    # Write data rows
+    for obj in queryset:
+        writer.writerow([unicode(getattr(obj, field)).encode('utf-8') for field in field_names])
+    return response

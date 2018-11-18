@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.utils.functional import curry
 from django.contrib import messages
 from NutritionService.models import MajorCategory, Product, MinorCategory, Allergen, NutritionFact, ErrorLog, \
-                                    CrowdsourceProduct, NotFoundLog, HealthTipp, NutrientName, ReceiptToNutritionPartner, ReceiptToNutritionUser, Matching
+                                    CrowdsourceProduct, NotFoundLog, HealthTipp, NutrientName, ReceiptToNutritionPartner, ReceiptToNutritionUser, Matching, DigitalReceipt
 
 nutrients_to_prefill  = ["energyKcal", "energyKJ", "protein", "salt", "sodium", "dietaryFiber", "saturatedFat", "sugars", "totalCarbohydrate", "totalFat"]
 allergens_to_fill = ["allergenEggs",
@@ -88,7 +88,13 @@ class CrowdsourceProductAdmin(admin.ModelAdmin):
     list_display = ('name', )
     actions = [approve_crowdsource_product]
 
+class DigitalReceiptAdmin(admin.ModelAdmin):
+    list_display = ("article_id", "article_type", "business_unit")
+    search_fields = ("article_id", "article_type", "business_unit")
 
+class ReceiptToNutritionUserAdmin(admin.ModelAdmin):
+    list_display = ("r2n_partner", "r2n_username", "r2n_user_active")
+    search_fields = ("r2n_partner", "r2n_username", "r2n_user_active")
 
 admin.site.register(Product, ProductAdmin)
 admin.site.register(MajorCategory)
@@ -100,4 +106,5 @@ admin.site.register(CrowdsourceProduct, CrowdsourceProductAdmin)
 admin.site.register(NotFoundLog, NotFoundLogAdmin)
 admin.site.register(Matching, MatchingAdmin)
 admin.site.register(ReceiptToNutritionPartner)
-admin.site.register(ReceiptToNutritionUser)
+admin.site.register(ReceiptToNutritionUser, ReceiptToNutritionUserAdmin)
+admin.site.register(DigitalReceipt, DigitalReceiptAdmin)
