@@ -321,6 +321,7 @@ class DigitalReceipt(models.Model):
         verbose_name_plural = "DigitalReceipts"
         db_table = 'digital_receipt'
 
+
 class Matching(models.Model):
     article_id = models.CharField(max_length=255)
     article_type = models.CharField(max_length=255)
@@ -344,6 +345,17 @@ class Matching(models.Model):
         verbose_name_plural = "Matchings"
         db_table = 'matching'
 
+class NonFoundMatching(models.Model):
+    article_id = models.CharField(max_length=255)
+    article_type = models.CharField(max_length=255)
+    business_unit = models.CharField(max_length=255)
+    price_per_unit = models.FloatField()
+    counter = models.IntegerField(default=0, editable=False)
+
+    class Meta:
+        verbose_name = "NonFoundMatching"
+        verbose_name_plural = "NonFoundMatchings"
+        db_table = 'non_found_matching'
 
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
 def create_auth_token(sender, instance=None, created=False, **kwargs):
