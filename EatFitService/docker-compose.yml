@@ -1,44 +1,24 @@
 version: '3'
 services:
-  postgres:
-    image: 'postgres:latest'
-  redis:
-    image: 'redis:latest'
+  mysql:
+    image: 'mysql:5.7.24'
+    environment:
+      - MYSQL_USER=root
+      - MYSQL_ROOT_PASSWORD=nRbUrdMUCZycQHsNv9dX
+      - MYSQL_DATABASE=NutritionDB
+      - MYSQL_ROOT_HOST=%
   api:
     build:
       dockerfile: Dockerfile.dev
-      context: ./backend
-    volumes:
-    - ./backend:/app
+      context: .
     ports:
-    - 8000:8000
+      - 8000:8000
     depends_on:
-      - redis
-      - postgres
-  api-worker:
+      - mysql
+  django-worker:
     build:
       dockerfile: Django-Worker.dev
-      context: ./backend
+      context: .
     depends_on:
       - api
-  client:
-    build:
-      dockerfile: Dockerfile.dev
-      context: ./frontend
-    volumes:
-    - /app/node_modules
-    - ./frontend:/app
-    ports:
-    - 8080:8080
-  nginx:
-    restart: always
-    build:
-      dockerfile: Dockerfile.dev
-      context: ./nginx
-    volumes:
-      - ./backend/static:/static
-    ports:
-      - 80:80
-    depends_on:
-      - api
-      - client
+      - mysql
