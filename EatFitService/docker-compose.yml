@@ -8,8 +8,6 @@ services:
       - MYSQL_ROOT_PASSWORD=nRbUrdMUCZycQHsNv9dX
       - MYSQL_DATABASE=NutritionDB
       - MYSQL_ROOT_HOST=%
-#    volumes:
-#      - ./nutritiondb.cnf:/etc/mysql/conf.d/custom.cnf
   api:
     build:
       dockerfile: Dockerfile.dev
