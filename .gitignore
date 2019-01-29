@@ -30,6 +30,6 @@ SaltTrackerService/SaltTrackerService/bin/
 EatFitService/media/
 EatFitService/.vs/
 EatFitService/.idea/
+EatFitService/localenv/
 .DS_Store
 .idea/
-localenv/

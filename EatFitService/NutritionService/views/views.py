@@ -66,7 +66,7 @@ def send_receipts_experimental(request):
                 #digital_receipt.save()
                 if receipts_calcuated < 4:
                     ofcom, nutri_score, product = __calculate_nutri_score(digital_receipt)
-                    if ofcom and nutri_score and product:
+                    if nutri_score and product:
                         weight_in_gram = None
                         if product.product_size == None or product.product_size == "" or product.product_size == "0":
                             ErrorLog.objects.create(reporting_app="Eatfit_R2N", gtin=eatfit_product.gtin, error_description="Product Weight missing")
@@ -85,12 +85,14 @@ def send_receipts_experimental(request):
                                 product_weight_in_basket = None
                                 if digital_receipt.quantity_unit == "" or digital_receipt.quantity_unit == "unit" or digital_receipt.quantity_unit == "units" or digital_receipt.quantity_unit == "G/g" or digital_receipt.quantity_unit == "ml/ML/mL/Ml":
                                     product_weight_in_basket = digital_receipt.quantity * weight_in_gram
+                                    nutri_score_array.append((product_weight_in_basket, nutri_score))
                                 elif digital_receipt.quantity_unit == "kg" or digital_receipt.quantity_unit == "L/l":
                                     product_weight_in_basket = digital_receipt.quantity * weight_in_gram
                                     nutri_score_array.append((product_weight_in_basket, nutri_score))
 
             receipts_calcuated = receipts_calcuated + 1
             total_nutri_score = 0
+            letter_nutri_score = "unknown"
             sum_product_weights = 0
             sum_product_weights_nutri_number = 0
             for t in nutri_score_array:
@@ -99,13 +101,14 @@ def send_receipts_experimental(request):
             if sum_product_weights > 0:
                 total_nutri_score = sum_product_weights_nutri_number / sum_product_weights
                 total_nutri_score = round(total_nutri_score, 3)
+                letter_nutri_score = __get_nutri_score_from_average(total_nutri_score)
             else:
                 total_nutri_score = "unknown"
             receipt_object = {}
             receipt_object["receipt_datetime"] = receipt["receipt_datetime"]
             receipt_object["business_unit"] = receipt["business_unit"]
-            receipt_object["nutriscore"] = total_nutri_score
-            receipt_object["nutriscore_indexed"] = "0"
+            receipt_object["nutriscore"] = letter_nutri_score
+            receipt_object["nutriscore_indexed"] = total_nutri_score
             result["receipts"].append(receipt_object)
         return Response(result, status = 200)
     return Response(serializer.errors, status = 400)
@@ -150,7 +153,7 @@ def __calculate_nutri_score(digital_receipt):
             ErrorLog.objects.create(reporting_app="Eatfit_R2N", gtin=eatfit_product.gtin, error_description="Major or Minor Cateogry missing")
         elif eatfit_product.major_category.pk == 20: #product is not a food product 
             return None, None, None
-        elif eatfit_product.major_category.pk == 1 or eatfit_product.major_category.pk == 1: #product is a drink
+        elif eatfit_product.major_category.pk == 1 or eatfit_product.major_category.pk == 2: #product is a drink
             if eatfit_product.minor_category.pk == 5 or eatfit_product.minor_category.pk == 11:
                 return 0, 1, eatfit_product
             else:
@@ -176,11 +179,15 @@ def __calculate_nutri_score(digital_receipt):
     return None, None, None
 
 def __nutri_score_from_ofcom(product, is_water):
-    if not product.data_score or product.ofcom_value:
+    if not product.data_score or not product.ofcom_value:
         product.save()
-    if not product.data_score or product.data_score < 25:
+    if product.data_score and product.data_score < 25:
+        product.save()
+        if product.data_score < 25:
+            ErrorLog.objects.create(reporting_app="Eatfit_R2N", gtin=product.gtin, error_description="Data Quality low")
+    if not product.data_score:
         ErrorLog.objects.create(reporting_app="Eatfit_R2N", gtin=product.gtin, error_description="Data Quality low")
-    if product.ofcom_value:
+    if product.ofcom_value != None:
         if is_water:
             if product.ofcom_value <= 1:
                 return 2
@@ -202,6 +209,12 @@ def __nutri_score_from_ofcom(product, is_water):
             else:
                return 5
     return None
+
+def __get_nutri_score_from_average(nutriscore_average):
+    rounded_average = int(round(nutriscore_average))
+    if rounded_average > 0:
+        return ["A", "B", "C", "D", "E"][rounded_average - 1]
+    return "A"
 
 
 @api_view(['POST'])
