@@ -112,7 +112,7 @@ Superuser created successfully.
 There is a JSON fixture called nutritiondb.json which can be used to load data into the database. The command for doing so is:
 
 ```
-./manage.py loaddata nutritiondb.json --exclude=auth
+./manage.py loaddata nutritiondb.json
 ```
 
 ### Obtaining a New Data Dump from the Production Database
