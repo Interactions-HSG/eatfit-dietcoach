@@ -60,7 +60,6 @@ def send_receipts_experimental(request):
             return Response({"error": "User not active. Please check if user fulfills all relevant criteria."},
                             status=403)
 
-        receipts_calculated = 0
         result = {"receipts": []}
 
         for receipt in serializer.validated_data["receipts"][:4]:
@@ -122,7 +121,6 @@ def send_receipts_experimental(request):
                                 product_weight_in_basket = digital_receipt.quantity * weight_in_gram
                                 nutri_score_array.append((product_weight_in_basket, nutri_score))
 
-            receipts_calculated += 1
             letter_nutri_score = "unknown"
 
             sum_product_weights = 0
@@ -135,7 +133,9 @@ def send_receipts_experimental(request):
             if sum_product_weights > 0:
                 total_nutri_score = sum_product_weights_nutri_number / sum_product_weights
                 total_nutri_score = round(total_nutri_score, 3)
+
                 letter_nutri_score = __get_nutri_score_from_average(total_nutri_score)
+
             else:
                 total_nutri_score = "unknown"
 
