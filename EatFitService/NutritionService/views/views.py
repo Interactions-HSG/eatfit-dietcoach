@@ -78,20 +78,23 @@ def send_receipts_experimental(request):
         result = {"receipts": []}
 
         for receipt in serializer.validated_data["receipts"]:
+
             nutri_score_array = []
-            for article in receipt["items"]:
-                digital_receipt = DigitalReceipt(r2n_user=r2n_user,
-                                                 business_unit=receipt["business_unit"],
-                                                 receipt_id=receipt["receipt_id"],
-                                                 receipt_datetime=receipt["receipt_datetime"],
-                                                 article_id=article["article_id"],
-                                                 article_type=article["article_type"],
-                                                 quantity=article["quantity"],
-                                                 quantity_unit=article["quantity_unit"],
-                                                 price=article["price"],
-                                                 price_currency=article["price_currency"])
-                # digital_receipt.save()
-                if receipts_calculated <= 4:
+            if receipts_calculated <= 4:
+
+                for article in receipt["items"]:
+                    digital_receipt = DigitalReceipt(r2n_user=r2n_user,
+                                                     business_unit=receipt["business_unit"],
+                                                     receipt_id=receipt["receipt_id"],
+                                                     receipt_datetime=receipt["receipt_datetime"],
+                                                     article_id=article["article_id"],
+                                                     article_type=article["article_type"],
+                                                     quantity=article["quantity"],
+                                                     quantity_unit=article["quantity_unit"],
+                                                     price=article["price"],
+                                                     price_currency=article["price_currency"])
+                    # digital_receipt.save()
+
                     ofcom, nutri_score, product = __calculate_nutri_score(digital_receipt)
                     if nutri_score and product:
                         # weight_in_gram = None
@@ -154,7 +157,7 @@ def send_receipts_experimental(request):
                 total_nutri_score = round(total_nutri_score, 3)
                 letter_nutri_score = __get_nutri_score_from_average(total_nutri_score)
             else:
-                if receipts_calculated < 4 and sum_product_weights <= 0:
+                if receipts_calculated <= 4 and sum_product_weights <= 0:
                     total_nutri_score = "unknown"
                 else:
                     total_nutri_score = "Error: maximum amount of calls exceeded"
