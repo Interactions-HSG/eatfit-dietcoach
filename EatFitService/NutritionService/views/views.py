@@ -63,66 +63,64 @@ def send_receipts_experimental(request):
         receipts_calculated = 0
         result = {"receipts": []}
 
-        for receipt in serializer.validated_data["receipts"]:
+        for receipt in serializer.validated_data["receipts"][:4]:
 
             nutri_score_array = []
-            if receipts_calculated <= 4:
+            for article in receipt["items"]:
+                digital_receipt = DigitalReceipt(r2n_user=r2n_user,
+                                                 business_unit=receipt["business_unit"],
+                                                 receipt_id=receipt["receipt_id"],
+                                                 receipt_datetime=receipt["receipt_datetime"],
+                                                 article_id=article["article_id"],
+                                                 article_type=article["article_type"],
+                                                 quantity=article["quantity"],
+                                                 quantity_unit=article["quantity_unit"],
+                                                 price=article["price"],
+                                                 price_currency=article["price_currency"])
 
-                for article in receipt["items"]:
-                    digital_receipt = DigitalReceipt(r2n_user=r2n_user,
-                                                     business_unit=receipt["business_unit"],
-                                                     receipt_id=receipt["receipt_id"],
-                                                     receipt_datetime=receipt["receipt_datetime"],
-                                                     article_id=article["article_id"],
-                                                     article_type=article["article_type"],
-                                                     quantity=article["quantity"],
-                                                     quantity_unit=article["quantity_unit"],
-                                                     price=article["price"],
-                                                     price_currency=article["price_currency"])
+                ofcom, nutri_score, product = __calculate_nutri_score(digital_receipt)
+                if nutri_score and product:
+                    if not product.product_size or \
+                            product.product_size == "" or \
+                            product.product_size == "0":
 
-                    ofcom, nutri_score, product = __calculate_nutri_score(digital_receipt)
-                    if nutri_score and product:
-                        if not product.product_size or \
-                                product.product_size == "" or \
-                                product.product_size == "0":
-
+                        ErrorLog.objects.create(reporting_app="Eatfit_R2N",
+                                                gtin=product.gtin,
+                                                error_description="Product Weight missing")
+                    else:
+                        converted, weight = is_number(product.product_size)
+                        if not converted:
                             ErrorLog.objects.create(reporting_app="Eatfit_R2N",
                                                     gtin=product.gtin,
-                                                    error_description="Product Weight missing")
+                                                    error_description="Product's weight not a number")
                         else:
-                            converted, weight = is_number(product.product_size)
-                            if not converted:
+                            if not product.product_size_unit_of_measure or \
+                                    product.product_size_unit_of_measure.lower() not in allowed_units_of_measure:
+
                                 ErrorLog.objects.create(reporting_app="Eatfit_R2N",
                                                         gtin=product.gtin,
-                                                        error_description="Product's weight not a number")
+                                                        error_description="Product's size unit not in g, ml, L, kg")
+                                weight_in_gram = weight
+
+                            elif product.product_size_unit_of_measure.lower() == "kg" \
+                                    or product.product_size_unit_of_measure.lower() == "l":
+                                weight_in_gram = weight * 1000
                             else:
-                                if not product.product_size_unit_of_measure or \
-                                        product.product_size_unit_of_measure.lower() not in allowed_units_of_measure:
+                                weight_in_gram = weight
+                            if digital_receipt.quantity_unit == "" or \
+                                    digital_receipt.quantity_unit == "unit" or \
+                                    digital_receipt.quantity_unit == "units" or \
+                                    digital_receipt.quantity_unit == "G/g" or \
+                                    digital_receipt.quantity_unit == "ml/ML/mL/Ml":
 
-                                    ErrorLog.objects.create(reporting_app="Eatfit_R2N",
-                                                            gtin=product.gtin,
-                                                            error_description="Product's size unit not in g, ml, L, kg")
-                                    weight_in_gram = weight
+                                product_weight_in_basket = digital_receipt.quantity * weight_in_gram
+                                nutri_score_array.append((product_weight_in_basket, nutri_score))
 
-                                elif product.product_size_unit_of_measure.lower() == "kg" \
-                                        or product.product_size_unit_of_measure.lower() == "l":
-                                    weight_in_gram = weight * 1000
-                                else:
-                                    weight_in_gram = weight
-                                if digital_receipt.quantity_unit == "" or \
-                                        digital_receipt.quantity_unit == "unit" or \
-                                        digital_receipt.quantity_unit == "units" or \
-                                        digital_receipt.quantity_unit == "G/g" or \
-                                        digital_receipt.quantity_unit == "ml/ML/mL/Ml":
+                            elif digital_receipt.quantity_unit == "kg" or \
+                                    digital_receipt.quantity_unit == "L/l":
 
-                                    product_weight_in_basket = digital_receipt.quantity * weight_in_gram
-                                    nutri_score_array.append((product_weight_in_basket, nutri_score))
-
-                                elif digital_receipt.quantity_unit == "kg" or \
-                                        digital_receipt.quantity_unit == "L/l":
-
-                                    product_weight_in_basket = digital_receipt.quantity * weight_in_gram
-                                    nutri_score_array.append((product_weight_in_basket, nutri_score))
+                                product_weight_in_basket = digital_receipt.quantity * weight_in_gram
+                                nutri_score_array.append((product_weight_in_basket, nutri_score))
 
             receipts_calculated += 1
             letter_nutri_score = "unknown"
@@ -139,11 +137,7 @@ def send_receipts_experimental(request):
                 total_nutri_score = round(total_nutri_score, 3)
                 letter_nutri_score = __get_nutri_score_from_average(total_nutri_score)
             else:
-                if receipts_calculated <= 4 and sum_product_weights <= 0:
-                    total_nutri_score = "unknown"
-                else:
-                    total_nutri_score = "Error: maximum amount of calls exceeded"
-                    letter_nutri_score = "Error: maximum amount of calls exceeded"
+                total_nutri_score = "unknown"
 
             receipt_object = {
                 "receipt_id": receipt["receipt_id"],
@@ -151,6 +145,19 @@ def send_receipts_experimental(request):
                 "business_unit": receipt["business_unit"],
                 "nutriscore": letter_nutri_score,
                 "nutriscore_indexed": total_nutri_score,
+                "r2n_version_code": 1
+            }
+
+            result["receipts"].append(receipt_object)
+
+        for receipt in serializer.validated_data["receipts"][4:]:
+
+            receipt_object = {
+                "receipt_id": receipt["receipt_id"],
+                "receipt_datetime": receipt["receipt_datetime"],
+                "business_unit": receipt["business_unit"],
+                "nutriscore": "error: maximum amount of calls exceeded",
+                "nutriscore_indexed": "error: maximum amount of calls exceeded",
                 "r2n_version_code": 1
             }
 
