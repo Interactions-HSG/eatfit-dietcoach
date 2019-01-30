@@ -4,8 +4,6 @@
 Definition of views.
 """
 
-# from __future__ import division
-
 from EatFitService.settings import TRUSTBOX_USERNAME, TRUSTBOX_PASSWORD, TRUSTBOX_URL
 from NutritionService.models import DigitalReceipt, NonFoundMatching, Matching, ErrorLog
 from NutritionService.serializers import MinorCategorySerializer
@@ -33,24 +31,12 @@ from NutritionService.tasks import import_from_openfood
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
-# import requests
-# import tempfile
-# from django.core import files
-# import random
-# import string
-
 allowed_units_of_measure = ["g", "kg", "ml", "l"]
 
 
 @api_view(['POST'])
 @permission_classes((permissions.IsAuthenticated,))
 def send_receipts_experimental(request):
-    """
-    TODO: Error Reports
-    TODO: Change unknown to string error after four scans
-    TODO: Add receipt id to result
-    TODO: Add result version to major updates
-    """
 
     partner = request.user.partner
 
@@ -93,17 +79,15 @@ def send_receipts_experimental(request):
                                                      quantity_unit=article["quantity_unit"],
                                                      price=article["price"],
                                                      price_currency=article["price_currency"])
-                    # digital_receipt.save()
 
                     ofcom, nutri_score, product = __calculate_nutri_score(digital_receipt)
                     if nutri_score and product:
-                        # weight_in_gram = None
                         if not product.product_size or \
                                 product.product_size == "" or \
                                 product.product_size == "0":
 
                             ErrorLog.objects.create(reporting_app="Eatfit_R2N",
-                                                    gtin=product.gtin,  # Change eatfit_product.gtin to product.gtin
+                                                    gtin=product.gtin,
                                                     error_description="Product Weight missing")
                         else:
                             converted, weight = is_number(product.product_size)
@@ -125,7 +109,6 @@ def send_receipts_experimental(request):
                                     weight_in_gram = weight * 1000
                                 else:
                                     weight_in_gram = weight
-                                # product_weight_in_basket = None
                                 if digital_receipt.quantity_unit == "" or \
                                         digital_receipt.quantity_unit == "unit" or \
                                         digital_receipt.quantity_unit == "units" or \
@@ -142,7 +125,6 @@ def send_receipts_experimental(request):
                                     nutri_score_array.append((product_weight_in_basket, nutri_score))
 
             receipts_calculated += 1
-            # total_nutri_score = 0
             letter_nutri_score = "unknown"
 
             sum_product_weights = 0
@@ -164,12 +146,12 @@ def send_receipts_experimental(request):
                     letter_nutri_score = "Error: maximum amount of calls exceeded"
 
             receipt_object = {
-                "receipt_id": receipt["receipt_id"],  # Add receipt id to result
+                "receipt_id": receipt["receipt_id"],
                 "receipt_datetime": receipt["receipt_datetime"],
                 "business_unit": receipt["business_unit"],
                 "nutriscore": letter_nutri_score,
                 "nutriscore_indexed": total_nutri_score,
-                "r2n_version_code": 1  # Add code versioning (currently v. 1)
+                "r2n_version_code": 1
             }
 
             result["receipts"].append(receipt_object)
