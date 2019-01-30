@@ -30,88 +30,142 @@ from NutritionService.serializers import ProductSerializer, DigitalReceiptSerial
 from NutritionService.tasks import import_from_openfood
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-import requests
-import tempfile
-from django.core import files
-import random
-import string
 
 allowed_units_of_measure = ["g", "kg", "ml", "l"]
+
 
 @api_view(['POST'])
 @permission_classes((permissions.IsAuthenticated,))
 def send_receipts_experimental(request):
+
     partner = request.user.partner
+
     if not partner:
-        return Response({"error" : "You must be a partner to use this API"}, status = 403)
-    serializer = DigitalReceiptSerializer(data = request.data)
+        return Response({"error": "You must be a partner to use this API"}, status=403)
+
+    serializer = DigitalReceiptSerializer(data=request.data)
+
     if serializer.is_valid():
         r2n_username = serializer.validated_data["r2n_username"]
         r2n_partner = serializer.validated_data["r2n_partner"]
+
         if r2n_partner != partner.name:
-            #return Response({"error" : "Partner name and user mismatch"}, status = 403) need to enable in production!
+            # return Response({"error" : "Partner name and user mismatch"}, status = 403) need to enable in production!
             pass
-        r2n_user = get_object_or_404(ReceiptToNutritionUser.objects.filter(r2n_partner__name = r2n_partner), r2n_username = r2n_username)
+
+        r2n_user = get_object_or_404(ReceiptToNutritionUser.objects.filter(r2n_partner__name=r2n_partner),
+                                     r2n_username=r2n_username)
+
         if not r2n_user.r2n_user_active:
-            return Response({"error" : "User not active. Please check if user fulfills all relevant criteria."}, status = 403)
-        receipts_calcuated = 0
-        result = {}
-        result["receipts"] = []
-        for receipt in serializer.validated_data["receipts"]:
+            return Response({"error": "User not active. Please check if user fulfills all relevant criteria."},
+                            status=403)
+
+        result = {"receipts": []}
+
+        for receipt in serializer.validated_data["receipts"][:4]:
+
             nutri_score_array = []
             for article in receipt["items"]:
-                digital_receipt = DigitalReceipt(r2n_user = r2n_user, business_unit = receipt["business_unit"], receipt_id = receipt["receipt_id"], receipt_datetime = receipt["receipt_datetime"],
-                                                 article_id = article["article_id"], article_type = article["article_type"], quantity = article["quantity"], quantity_unit = article["quantity_unit"],
-                                                 price = article["price"], price_currency = article["price_currency"])
-                #digital_receipt.save()
-                if receipts_calcuated < 4:
-                    ofcom, nutri_score, product = __calculate_nutri_score(digital_receipt)
-                    if nutri_score and product:
-                        weight_in_gram = None
-                        if product.product_size == None or product.product_size == "" or product.product_size == "0":
-                            ErrorLog.objects.create(reporting_app="Eatfit_R2N", gtin=eatfit_product.gtin, error_description="Product Weight missing")
-                        else:
-                            converted, weight = is_number(product.product_size)
-                            if not converted:
-                                ErrorLog.objects.create(reporting_app="Eatfit_R2N", gtin=product.gtin, error_description="Product's weight not a number")
-                            else:
-                                if product.product_size_unit_of_measure == None or product.product_size_unit_of_measure.lower() not in allowed_units_of_measure:
-                                    ErrorLog.objects.create(reporting_app="Eatfit_R2N", gtin=product.gtin, error_description="Product's size unit not in g, ml, L, kg")
-                                    weight_in_gram = weight
-                                elif product.product_size_unit_of_measure.lower() == "kg" or product.product_size_unit_of_measure.lower() == "l":
-                                    weight_in_gram = weight * 1000
-                                else:
-                                    weight_in_gram = weight
-                                product_weight_in_basket = None
-                                if digital_receipt.quantity_unit == "" or digital_receipt.quantity_unit == "unit" or digital_receipt.quantity_unit == "units" or digital_receipt.quantity_unit == "G/g" or digital_receipt.quantity_unit == "ml/ML/mL/Ml":
-                                    product_weight_in_basket = digital_receipt.quantity * weight_in_gram
-                                    nutri_score_array.append((product_weight_in_basket, nutri_score))
-                                elif digital_receipt.quantity_unit == "kg" or digital_receipt.quantity_unit == "L/l":
-                                    product_weight_in_basket = digital_receipt.quantity * weight_in_gram
-                                    nutri_score_array.append((product_weight_in_basket, nutri_score))
+                digital_receipt = DigitalReceipt(r2n_user=r2n_user,
+                                                 business_unit=receipt["business_unit"],
+                                                 receipt_id=receipt["receipt_id"],
+                                                 receipt_datetime=receipt["receipt_datetime"],
+                                                 article_id=article["article_id"],
+                                                 article_type=article["article_type"],
+                                                 quantity=article["quantity"],
+                                                 quantity_unit=article["quantity_unit"],
+                                                 price=article["price"],
+                                                 price_currency=article["price_currency"])
 
-            receipts_calcuated = receipts_calcuated + 1
-            total_nutri_score = 0
+                ofcom, nutri_score, product = __calculate_nutri_score(digital_receipt)
+                if nutri_score and product:
+                    if not product.product_size or \
+                            product.product_size == "" or \
+                            product.product_size == "0":
+
+                        ErrorLog.objects.create(reporting_app="Eatfit_R2N",
+                                                gtin=product.gtin,
+                                                error_description="Product Weight missing")
+                    else:
+                        converted, weight = is_number(product.product_size)
+                        if not converted:
+                            ErrorLog.objects.create(reporting_app="Eatfit_R2N",
+                                                    gtin=product.gtin,
+                                                    error_description="Product's weight not a number")
+                        else:
+                            if not product.product_size_unit_of_measure or \
+                                    product.product_size_unit_of_measure.lower() not in allowed_units_of_measure:
+
+                                ErrorLog.objects.create(reporting_app="Eatfit_R2N",
+                                                        gtin=product.gtin,
+                                                        error_description="Product's size unit not in g, ml, L, kg")
+                                weight_in_gram = weight
+
+                            elif product.product_size_unit_of_measure.lower() == "kg" \
+                                    or product.product_size_unit_of_measure.lower() == "l":
+                                weight_in_gram = weight * 1000
+                            else:
+                                weight_in_gram = weight
+                            if digital_receipt.quantity_unit == "" or \
+                                    digital_receipt.quantity_unit == "unit" or \
+                                    digital_receipt.quantity_unit == "units" or \
+                                    digital_receipt.quantity_unit == "G/g" or \
+                                    digital_receipt.quantity_unit == "ml/ML/mL/Ml":
+
+                                product_weight_in_basket = digital_receipt.quantity * weight_in_gram
+                                nutri_score_array.append((product_weight_in_basket, nutri_score))
+
+                            elif digital_receipt.quantity_unit == "kg" or \
+                                    digital_receipt.quantity_unit == "L/l":
+
+                                product_weight_in_basket = digital_receipt.quantity * weight_in_gram
+                                nutri_score_array.append((product_weight_in_basket, nutri_score))
+
             letter_nutri_score = "unknown"
+
             sum_product_weights = 0
             sum_product_weights_nutri_number = 0
+
             for t in nutri_score_array:
-                sum_product_weights_nutri_number = sum_product_weights_nutri_number + (t[0] * t[1])
-                sum_product_weights = sum_product_weights + t[0]
+                sum_product_weights_nutri_number += t[0] * t[1]
+                sum_product_weights += t[0]
+
             if sum_product_weights > 0:
                 total_nutri_score = sum_product_weights_nutri_number / sum_product_weights
                 total_nutri_score = round(total_nutri_score, 3)
+
                 letter_nutri_score = __get_nutri_score_from_average(total_nutri_score)
+
             else:
                 total_nutri_score = "unknown"
-            receipt_object = {}
-            receipt_object["receipt_datetime"] = receipt["receipt_datetime"]
-            receipt_object["business_unit"] = receipt["business_unit"]
-            receipt_object["nutriscore"] = letter_nutri_score
-            receipt_object["nutriscore_indexed"] = total_nutri_score
+
+            receipt_object = {
+                "receipt_id": receipt["receipt_id"],
+                "receipt_datetime": receipt["receipt_datetime"],
+                "business_unit": receipt["business_unit"],
+                "nutriscore": letter_nutri_score,
+                "nutriscore_indexed": total_nutri_score,
+                "r2n_version_code": 1
+            }
+
             result["receipts"].append(receipt_object)
-        return Response(result, status = 200)
-    return Response(serializer.errors, status = 400)
+
+        for receipt in serializer.validated_data["receipts"][4:]:
+
+            receipt_object = {
+                "receipt_id": receipt["receipt_id"],
+                "receipt_datetime": receipt["receipt_datetime"],
+                "business_unit": receipt["business_unit"],
+                "nutriscore": "error: maximum amount of calls exceeded",
+                "nutriscore_indexed": "error: maximum amount of calls exceeded",
+                "r2n_version_code": 1
+            }
+
+            result["receipts"].append(receipt_object)
+
+        return Response(result, status=200)
+
+    return Response(serializer.errors, status=400)
 
 
 @api_view(['POST'])
@@ -129,7 +183,7 @@ def send_receipts(request):
         r2n_user = get_object_or_404(ReceiptToNutritionUser.objects.filter(r2n_partner__name = r2n_partner), r2n_username = r2n_username)
         if not r2n_user.r2n_user_active:
             return Response({"error" : "User not active. Please check if user fulfills all relevant criteria."}, status = 403)
-        receipts_calcuated = 0
+        receipts_calculated = 0
         result = {}
         result["receipts"] = []
         for receipt in serializer.validated_data["receipts"]:
@@ -141,53 +195,94 @@ def send_receipts(request):
                 digital_receipt.save()
     return Response(status = 200)
 
+
 def __calculate_nutri_score(digital_receipt):
+
     matched_product = None
-    if digital_receipt.article_type and digital_receipt.article_id and Matching.objects.filter(article_type = digital_receipt.article_type, article_id = digital_receipt.article_id).exists():
-        matched_product = Matching.objects.filter(article_type = digital_receipt.article_type, article_id = digital_receipt.article_id)[0]
-    elif digital_receipt.article_id and Matching.objects.filter(article_id = digital_receipt.article_id).exists():
-        matched_product = Matching.objects.filter(article_id = digital_receipt.article_id)[0]
-    if matched_product and matched_product.eatfit_product: #article matched
+
+    if digital_receipt.article_type and \
+            digital_receipt.article_id and \
+            Matching.objects.filter(article_type=digital_receipt.article_type,
+                                    article_id=digital_receipt.article_id).exists():
+
+        matched_product = Matching.objects.filter(article_type=digital_receipt.article_type,
+                                                  article_id=digital_receipt.article_id)[0]
+
+    elif digital_receipt.article_id and \
+            Matching.objects.filter(article_id=digital_receipt.article_id).exists():
+
+        matched_product = Matching.objects.filter(article_id=digital_receipt.article_id)[0]
+
+    if matched_product and matched_product.eatfit_product:  # article matched
+
         eatfit_product = matched_product.eatfit_product
-        if not eatfit_product.major_category or not eatfit_product.minor_category:
-            ErrorLog.objects.create(reporting_app="Eatfit_R2N", gtin=eatfit_product.gtin, error_description="Major or Minor Cateogry missing")
-        elif eatfit_product.major_category.pk == 20: #product is not a food product 
+
+        if not eatfit_product.major_category or \
+                not eatfit_product.minor_category:
+
+            ErrorLog.objects.create(reporting_app="Eatfit_R2N",
+                                    gtin=eatfit_product.gtin,
+                                    error_description="Major or Minor Cateogry missing")
+
+        elif eatfit_product.major_category.pk == 20:   # product is not a food product
             return None, None, None
-        elif eatfit_product.major_category.pk == 1 or eatfit_product.major_category.pk == 2: #product is a drink
+
+        elif eatfit_product.major_category.pk == 1 or eatfit_product.major_category.pk == 2:  # product is a drink
             if eatfit_product.minor_category.pk == 5 or eatfit_product.minor_category.pk == 11:
                 return 0, 1, eatfit_product
             else:
                 return eatfit_product.ofcom_value, __nutri_score_from_ofcom(eatfit_product, True), eatfit_product
-        else: #product is "normal" food (not a drink)
+        else:  # product is "normal" food (not a drink)
             return eatfit_product.ofcom_value, __nutri_score_from_ofcom(eatfit_product, False), eatfit_product
-    else: #article not yet matched
+
+    else:  # article not yet matched
         not_found_matching = None
-        if digital_receipt.article_type and NonFoundMatching.objects.filter(article_type = digital_receipt.article_type).exists():
-            not_found_matching = NonFoundMatching.objects.filter(article_type = digital_receipt.article_type)[0]
-        elif digital_receipt.article_id and NonFoundMatching.objects.filter(article_id = digital_receipt.article_id).exists():
-            not_found_matching = NonFoundMatching.objects.filter(article_id = digital_receipt.article_id)[0]
+        if digital_receipt.article_type and \
+                NonFoundMatching.objects.filter(article_type=digital_receipt.article_type).exists():
+
+            not_found_matching = NonFoundMatching.objects.filter(article_type=digital_receipt.article_type)[0]
+
+        elif digital_receipt.article_id and \
+                NonFoundMatching.objects.filter(article_id=digital_receipt.article_id).exists():
+
+            not_found_matching = NonFoundMatching.objects.filter(article_id=digital_receipt.article_id)[0]
+
         if not_found_matching:
-            not_found_matching.counter = not_found_matching.counter + 1
+            not_found_matching.counter += 1
             not_found_matching.save()
+
         else:
-            if digital_receipt.quantity >  0 and digital_receipt.price > 0:
+            if digital_receipt.quantity > 0 and digital_receipt.price > 0:
                 price_per_unit = digital_receipt.price/digital_receipt.quantity
             else:
                 price_per_unit = digital_receipt.price
-            not_found_matching = NonFoundMatching(article_id = digital_receipt.article_id, article_type = digital_receipt.article_type, business_unit = digital_receipt.business_unit, price_per_unit = price_per_unit)
+            not_found_matching = NonFoundMatching(article_id=digital_receipt.article_id,
+                                                  article_type=digital_receipt.article_type,
+                                                  business_unit=digital_receipt.business_unit,
+                                                  price_per_unit=price_per_unit)
             not_found_matching.save()
+
     return None, None, None
 
+
 def __nutri_score_from_ofcom(product, is_water):
+
     if not product.data_score or not product.ofcom_value:
         product.save()
+
     if product.data_score and product.data_score < 25:
         product.save()
+
         if product.data_score < 25:
-            ErrorLog.objects.create(reporting_app="Eatfit_R2N", gtin=product.gtin, error_description="Data Quality low")
+            ErrorLog.objects.create(reporting_app="Eatfit_R2N",
+                                    gtin=product.gtin,
+                                    error_description="Data Quality low")
     if not product.data_score:
-        ErrorLog.objects.create(reporting_app="Eatfit_R2N", gtin=product.gtin, error_description="Data Quality low")
-    if product.ofcom_value != None:
+        ErrorLog.objects.create(reporting_app="Eatfit_R2N",
+                                gtin=product.gtin,
+                                error_description="Data Quality low")
+
+    if product.ofcom_value:
         if is_water:
             if product.ofcom_value <= 1:
                 return 2
@@ -196,7 +291,7 @@ def __nutri_score_from_ofcom(product, is_water):
             elif product.ofcom_value <= 9:
                 return 4
             else:
-               return 5
+                return 5
         else:
             if product.ofcom_value <= -1:
                 return 1
@@ -207,8 +302,9 @@ def __nutri_score_from_ofcom(product, is_water):
             elif product.ofcom_value <= 18:
                 return 4
             else:
-               return 5
+                return 5
     return None
+
 
 def __get_nutri_score_from_average(nutriscore_average):
     rounded_average = int(round(nutriscore_average))

@@ -7,6 +7,7 @@ import csv
 from django.http import HttpResponse
 from django.core.exceptions import PermissionDenied
 
+
 def store_image(image_url, product):
     if product.original_image_url == None or product.original_image_url != image_url:
         try:
