@@ -4,35 +4,29 @@
 Definition of views.
 """
 
-from EatFitService.settings import TRUSTBOX_USERNAME, TRUSTBOX_PASSWORD, TRUSTBOX_URL
-from NutritionService.models import DigitalReceipt, NonFoundMatching, Matching, ErrorLog
-from NutritionService.serializers import MinorCategorySerializer
-from NutritionService.models import MinorCategory
-from NutritionService.serializers import MajorCategorySerializer
-from NutritionService.models import MajorCategory
-from NutritionService.serializers import HealthTippSerializer
-from NutritionService.models import HealthTipp
-from NutritionService import data_cleaning
-from NutritionService import reports
-from NutritionService.codecheck_integration.codecheck import import_from_codecheck
-from django.shortcuts import get_object_or_404
-from NutritionService.helpers import store_image, download_csv
-from django.http.response import HttpResponseForbidden
-from rest_framework import permissions
-from rest_framework.decorators import permission_classes
+from __future__ import print_function
 from datetime import datetime
-from NutritionService.models import ImportLog
+
+from EatFitService.settings import TRUSTBOX_USERNAME, TRUSTBOX_PASSWORD, TRUSTBOX_URL
+from NutritionService import data_cleaning, reports
+from NutritionService.codecheck_integration.codecheck import import_from_codecheck
+from NutritionService.helpers import store_image, download_csv
+from NutritionService.models import DigitalReceipt, NonFoundMatching, Matching, MajorCategory, MinorCategory, \
+    HealthTipp, ImportLog, Product, Allergen, NutritionFact, Ingredient, NotFoundLog, ErrorLog, \
+    ReceiptToNutritionUser, calculate_ofcom_value
+from NutritionService.serializers import MinorCategorySerializer, MajorCategorySerializer, HealthTippSerializer, \
+    ProductSerializer, DigitalReceiptSerializer
+from NutritionService.tasks import import_from_openfood
+from django.http import HttpResponse
+from django.http.response import HttpResponseForbidden
+from django.shortcuts import get_object_or_404
+from rest_framework import permissions
+from rest_framework.decorators import permission_classes, api_view
+from rest_framework.response import Response
 from suds.client import Client
 from suds.sudsobject import asdict
-from django.http import HttpResponse
-from NutritionService.models import Product, Allergen, NutritionFact, Ingredient, NotFoundLog, ErrorLog, ReceiptToNutritionUser, calculate_ofcom_value
-from NutritionService.serializers import ProductSerializer, DigitalReceiptSerializer
-from NutritionService.tasks import import_from_openfood
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
 
 allowed_units_of_measure = ["g", "kg", "ml", "l"]
-
 
 @api_view(['POST'])
 @permission_classes((permissions.IsAuthenticated,))
@@ -62,7 +56,7 @@ def send_receipts_experimental(request):
 
         result = {"receipts": []}
 
-        for receipt in serializer.validated_data["receipts"][:4]:
+        for receipt in serializer.validated_data["receipts"][:10]:  # Changed to 10
 
             nutri_score_array = []
             for article in receipt["items"]:
@@ -78,6 +72,7 @@ def send_receipts_experimental(request):
                                                  price_currency=article["price_currency"])
 
                 ofcom, nutri_score, product = __calculate_nutri_score(digital_receipt)
+
                 if nutri_score and product:
                     if not product.product_size or \
                             product.product_size == "" or \
@@ -106,6 +101,7 @@ def send_receipts_experimental(request):
                                 weight_in_gram = weight * 1000
                             else:
                                 weight_in_gram = weight
+
                             if digital_receipt.quantity_unit == "" or \
                                     digital_receipt.quantity_unit == "unit" or \
                                     digital_receipt.quantity_unit == "units" or \
@@ -150,7 +146,7 @@ def send_receipts_experimental(request):
 
             result["receipts"].append(receipt_object)
 
-        for receipt in serializer.validated_data["receipts"][4:]:
+        for receipt in serializer.validated_data["receipts"][10:]:  # Changed to 10
 
             receipt_object = {
                 "receipt_id": receipt["receipt_id"],
@@ -197,6 +193,10 @@ def send_receipts(request):
 
 
 def __calculate_nutri_score(digital_receipt):
+    """
+    :param digital_receipt:
+    :return: ofcom, nutriscore, product
+    """
 
     matched_product = None
 
@@ -216,6 +216,8 @@ def __calculate_nutri_score(digital_receipt):
     if matched_product and matched_product.eatfit_product:  # article matched
 
         eatfit_product = matched_product.eatfit_product
+
+        print(eatfit_product)
 
         if not eatfit_product.major_category or \
                 not eatfit_product.minor_category:
@@ -260,6 +262,7 @@ def __calculate_nutri_score(digital_receipt):
                                                   article_type=digital_receipt.article_type,
                                                   business_unit=digital_receipt.business_unit,
                                                   price_per_unit=price_per_unit)
+
             not_found_matching.save()
 
     return None, None, None

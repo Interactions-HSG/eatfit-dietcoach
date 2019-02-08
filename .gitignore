@@ -31,5 +31,6 @@ EatFitService/media/
 EatFitService/.vs/
 EatFitService/.idea/
 EatFitService/localenv/
+EatFitService/static/
 .DS_Store
 .idea/

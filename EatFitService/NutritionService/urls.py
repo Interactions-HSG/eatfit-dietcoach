@@ -30,7 +30,8 @@ urlpatterns = [
      url(r'^data/data-cleaning/$', views.data_clean_task),
 
      url(r'^receipt2nutrition/send-receipts/$', views.send_receipts),
-     url(r'^receipt2nutrition/send-receipts-experimental/$', views.send_receipts_experimental),
+     url(r'^receipt2nutrition/send-receipts-experimental/$', views.send_receipts_experimental,
+         name='send-receipts-experimental'),
      url(r'^receipt2nutrition/export/receipts/$', views.export_digital_receipts),
      url(r'^receipt2nutrition/export/matching/$', views.export_matching),
 
