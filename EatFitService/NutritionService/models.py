@@ -392,6 +392,9 @@ class MarketRegion(models.Model):
         verbose_name_plural = 'Market Regions'
         db_table = 'retailers'
 
+    def __unicode__(self):
+        return self.market_region_id
+
 
 class ProductInMarketRegion(models.Model):
     eatfit_id = models.ForeignKey(Product, to_field='id')
