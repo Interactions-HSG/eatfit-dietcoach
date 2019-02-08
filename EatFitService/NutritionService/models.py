@@ -22,6 +22,7 @@ PROTEIN = "protein"
 SALT = "salt"
 SODIUM = "sodium"
 
+
 def path_and_rename(instance, filename):
     base_path = "crowdsoure_images/"
     ext = filename.split('.')[-1]
@@ -34,7 +35,10 @@ def path_and_rename(instance, filename):
     # return the whole path to the file
     return os.path.join(base_path, filename)
 
+
 # categories requested. Careful: Changed IDs changed to autifields and integerers, charfield for minor in snipped
+
+
 class MajorCategory(models.Model):
     id = models.AutoField(primary_key=True)
     name_de = models.TextField(max_length=1024, blank=True, null=True)
@@ -117,7 +121,6 @@ class Product(models.Model):
             self.major_category = self.minor_category.category_major
         super(Product, self).save(*args, **kwargs)
 
-
     class Meta:
         verbose_name = "Product"
         verbose_name_plural = "Products"
@@ -144,7 +147,7 @@ class Allergen(models.Model):
     product = models.ForeignKey(Product, related_name='allergens')
     name = models.CharField(max_length=64, null=True, blank=True)
     certainity = models.TextField()
-    
+
     class Meta:
         verbose_name = 'Allergen'
         verbose_name_plural = 'Allergens'
@@ -181,7 +184,7 @@ class NotFoundLog(models.Model):
     gtin = models.BigIntegerField()
     count = models.BigIntegerField(default=1)
     first_searched_for = models.DateTimeField(auto_now_add=True)
-    processed = models.BooleanField(default = False)
+    processed = models.BooleanField(default=False)
 
     class Meta:
         db_table = 'not_found_log'
@@ -245,9 +248,10 @@ class CrowdsourceProduct(models.Model):
         verbose_name_plural = "Crowdsource Products"
         db_table = 'crowdsource_product'
 
+
 class NutrientName(models.Model):
     name = models.CharField(max_length=255, verbose_name="Name", primary_key=True)
-    
+
     def __unicode__(self):
         return self.name
 
@@ -255,6 +259,7 @@ class NutrientName(models.Model):
         verbose_name = "Nutrient Name"
         verbose_name_plural = "Nutrient Names"
         db_table = 'nutrient_name'
+
 
 class HealthTipp(models.Model):
     text_de = models.TextField(null=True, blank=True)
@@ -268,16 +273,16 @@ class HealthTipp(models.Model):
     def __unicode__(self):
         return self.text_de
 
-
     class Meta:
         verbose_name = "Health Tipp"
         verbose_name_plural = "Health Tipps"
         db_table = 'health_tipp'
 
+
 class ReceiptToNutritionPartner(models.Model):
-    user = models.OneToOneField(User, primary_key=True, related_name = "partner")
+    user = models.OneToOneField(User, primary_key=True, related_name="partner")
     name = models.CharField(max_length=255)
-    
+
     def __unicode__(self):
         return self.name
 
@@ -286,10 +291,11 @@ class ReceiptToNutritionPartner(models.Model):
         verbose_name_plural = "ReceiptToNutritionPartners"
         db_table = 'receipt_to_nutrition_partner'
 
+
 class ReceiptToNutritionUser(models.Model):
     r2n_partner = models.ForeignKey(ReceiptToNutritionPartner)
     r2n_username = models.CharField(max_length=255)
-    r2n_user_active = models.BooleanField(default = True)
+    r2n_user_active = models.BooleanField(default=True)
 
     def __unicode__(self):
         return self.r2n_username
@@ -299,6 +305,7 @@ class ReceiptToNutritionUser(models.Model):
         verbose_name = "ReceiptToNutritionUser"
         verbose_name_plural = "ReceiptToNutritionUsers"
         db_table = 'receipt_to_nutrition_user'
+
 
 class DigitalReceipt(models.Model):
     r2n_user = models.ForeignKey(ReceiptToNutritionUser)
@@ -316,7 +323,7 @@ class DigitalReceipt(models.Model):
         return self.article_id
 
     class Meta:
-        #unique_together = ('r2n_user', 'business_unit', 'receipt_id')
+        # unique_together = ('r2n_user', 'business_unit', 'receipt_id')
         verbose_name = "DigitalReceipt"
         verbose_name_plural = "DigitalReceipts"
         db_table = 'digital_receipt'
@@ -326,16 +333,15 @@ class Matching(models.Model):
     article_id = models.CharField(max_length=255)
     article_type = models.CharField(max_length=255)
     gtin = models.BigIntegerField()
-    eatfit_product = models.ForeignKey(Product, null=True, blank=True, editable = False)
+    eatfit_product = models.ForeignKey(Product, null=True, blank=True, editable=False)
 
     def save(self, *args, **kwargs):
         if self.gtin:
-            products = Product.objects.filter(gtin = self.gtin)
+            products = Product.objects.filter(gtin=self.gtin)
             if products.exists():
                 product = products[0]
                 self.eatfit_product = product
         super(Matching, self).save(*args, **kwargs)
-
 
     def __unicode__(self):
         return self.article_id
@@ -344,6 +350,7 @@ class Matching(models.Model):
         verbose_name = "Matching"
         verbose_name_plural = "Matchings"
         db_table = 'matching'
+
 
 class NonFoundMatching(models.Model):
     article_id = models.CharField(max_length=255)
@@ -356,6 +363,40 @@ class NonFoundMatching(models.Model):
         verbose_name = "NonFoundMatching"
         verbose_name_plural = "NonFoundMatchings"
         db_table = 'non_found_matching'
+
+
+class Retailers(models.Model):
+    retailer_id = models.CharField(max_length=255, unique=True)
+    retailer_name = models.CharField(max_length=255)
+
+    class Meta:
+        verbose_name = "Retailers"
+        verbose_name_plural = "Retailers"
+        db_table = 'retailers'
+
+    def __unicode__(self):
+        return self.retailer_name
+
+
+class ProductAtRetailer(models.Model):
+    eatfit_id = models.ForeignKey(Product, to_field='id')
+    retailer_id = models.ForeignKey(Retailers, to_field="retailer_id")
+
+
+class MarketRegion(models.Model):
+    market_region_id = models.CharField(max_length=255, unique=True)
+    market_region_name = models.CharField(max_length=255)
+
+    class Meta:
+        verbose_name = 'Market Region'
+        verbose_name_plural = 'Market Regions'
+        db_table = 'retailers'
+
+
+class ProductInMarketRegion(models.Model):
+    eatfit_id = models.ForeignKey(Product, to_field='id')
+    market_region_id = models.ForeignKey(MarketRegion, to_field='market_region_id')
+
 
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
 def create_auth_token(sender, instance=None, created=False, **kwargs):
@@ -376,11 +417,11 @@ def calculate_data_score(product):
     if product.health_percentage and product.health_percentage != 0:
         data_score = data_score + 5
 
-    nutrition_facts = NutritionFact.objects.filter(product = product)[:10]
+    nutrition_facts = NutritionFact.objects.filter(product=product)[:10]
     for fact in nutrition_facts:
         if fact.amount and fact.amount != 0:
             data_score = data_score + 1
-    allergens = Allergen.objects.filter(product = product)
+    allergens = Allergen.objects.filter(product=product)
     for allergen in allergens:
         if allergen.certainity == "true" or allergen.certainity == "false":
             data_score = data_score + 1
@@ -388,27 +429,33 @@ def calculate_data_score(product):
             data_score = data_score - 0.5
     product.data_score = data_score
 
+
 def calculate_ofcom_value(product):
-    nutrition_facts = NutritionFact.objects.filter(product = product)
+    nutrition_facts = NutritionFact.objects.filter(product=product)
     data_quality_sufficient = True
     ofcom_value = 0
     for fact in nutrition_facts:
-        converted, amount  = is_number(fact.amount)
+        converted, amount = is_number(fact.amount)
         if not converted:
             data_quality_sufficient = False
             break
         amount = float(fact.amount)
         if fact.name == ENERGY_KJ:
-            ofcom_value = ofcom_value + __calcluate_ofcom_point(amount, [3350, 3015, 2680, 2345, 2010, 1675, 1340, 1005, 670, 335])
+            ofcom_value = ofcom_value + __calcluate_ofcom_point(amount,
+                                                                [3350, 3015, 2680, 2345, 2010, 1675, 1340, 1005, 670,
+                                                                 335])
         elif fact.name == SATURATED_FAT:
             ofcom_value = ofcom_value + __calcluate_ofcom_point(amount, [10, 9, 8, 7, 6, 5, 4, 3, 2, 1])
         elif fact.name == SUGARS:
             ofcom_value = ofcom_value + __calcluate_ofcom_point(amount, [45, 40, 36, 31, 27, 22.5, 18, 13.5, 9, 4.5])
         elif fact.name == SODIUM:
             if fact.unit_of_measure == "mg":
-                ofcom_value = ofcom_value + __calcluate_ofcom_point(amount, [900, 810, 720, 630, 540, 450, 360, 270, 180, 90])
+                ofcom_value = ofcom_value + __calcluate_ofcom_point(amount,
+                                                                    [900, 810, 720, 630, 540, 450, 360, 270, 180, 90])
             elif fact.unit_of_measure == "g":
-                ofcom_value = ofcom_value + __calcluate_ofcom_point(amount, [0.9, 0.81, 0.72, 0.63, 0.54, 0.45, 0.36, 0.27, 0.18, 0.09])
+                ofcom_value = ofcom_value + __calcluate_ofcom_point(amount,
+                                                                    [0.9, 0.81, 0.72, 0.63, 0.54, 0.45, 0.36, 0.27,
+                                                                     0.18, 0.09])
             else:
                 data_quality_sufficient = False
                 break
