@@ -32,6 +32,5 @@ EatFitService/.vs/
 EatFitService/.idea/
 EatFitService/localenv/
 EatFitService/static/
-EatFitService/NutritionService/migrations/
 .DS_Store
 .idea/

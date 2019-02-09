@@ -365,8 +365,8 @@ class NonFoundMatching(models.Model):
         db_table = 'non_found_matching'
 
 
-class Retailers(models.Model):
-    retailer_id = models.CharField(max_length=255, unique=True)
+class Retailer(models.Model):
+    retailer_id = models.CharField(max_length=255, unique=True, db_index=True)
     retailer_name = models.CharField(max_length=255)
 
     class Meta:
@@ -380,7 +380,7 @@ class Retailers(models.Model):
 
 class ProductAtRetailer(models.Model):
     eatfit_id = models.ForeignKey(Product, to_field='id')
-    retailer_id = models.ForeignKey(Retailers, to_field="retailer_id")
+    retailer_id = models.ForeignKey(Retailer, to_field="retailer_id")
 
 
 class MarketRegion(models.Model):
@@ -390,7 +390,7 @@ class MarketRegion(models.Model):
     class Meta:
         verbose_name = 'Market Region'
         verbose_name_plural = 'Market Regions'
-        db_table = 'retailers'
+        db_table = 'market_regions'
 
     def __unicode__(self):
         return self.market_region_id
