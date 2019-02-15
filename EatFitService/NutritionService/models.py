@@ -181,7 +181,7 @@ class Ingredient(models.Model):
 
 class Image(models.Model):
     id = models.BigAutoField(primary_key=True)
-    product = models.ForeignKey(Product, related_name='additional_images')
+    product = models.ForeignKey(Product, related_name='additional_image')
     image = models.ImageField(upload_to="product_images", null=True, blank=True)
     source = models.CharField(max_length=256, null=True, blank=True)
     image_url = models.TextField(null=True, blank=True)
@@ -379,7 +379,8 @@ class NonFoundMatching(models.Model):
 
 
 class Retailer(models.Model):
-    retailer_id = models.CharField(max_length=255, unique=True, db_index=True)
+    id = models.BigAutoField(primary_key=True, db_index=True)
+    retailer_id = models.CharField(max_length=255, unique=True)
     retailer_name = models.CharField(max_length=255)
 
     class Meta:
@@ -392,11 +393,13 @@ class Retailer(models.Model):
 
 
 class ProductAtRetailer(models.Model):
+    id = models.BigAutoField(primary_key=True, db_index=True)
     eatfit_id = models.ForeignKey(Product, to_field='id')
     retailer_id = models.ForeignKey(Retailer, to_field="retailer_id")
 
 
 class MarketRegion(models.Model):
+    id = models.BigAutoField(primary_key=True, db_index=True)
     market_region_id = models.CharField(max_length=255, unique=True)
     market_region_name = models.CharField(max_length=255)
 
@@ -410,6 +413,7 @@ class MarketRegion(models.Model):
 
 
 class ProductInMarketRegion(models.Model):
+    id = models.BigAutoField(primary_key=True, db_index=True)
     eatfit_id = models.ForeignKey(Product, to_field='id')
     market_region_id = models.ForeignKey(MarketRegion, to_field='market_region_id')
 
