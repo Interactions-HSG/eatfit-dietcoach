@@ -8,6 +8,11 @@ services:
       - MYSQL_ROOT_PASSWORD=nRbUrdMUCZycQHsNv9dX
       - MYSQL_DATABASE=NutritionDB
       - MYSQL_ROOT_HOST=%
+  start_dependencies:
+    image: dadarek/wait-for-dependencies
+    depends_on:
+      - mysql
+    command: mysql:3306
   api:
     build:
       dockerfile: Dockerfile.dev
@@ -19,3 +24,4 @@ services:
       - mysql
     volumes:
       - .:/home/eatfit/eatfitrepo/EatFitService
+

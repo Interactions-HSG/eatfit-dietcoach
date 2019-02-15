@@ -1,11 +1,46 @@
+from django.core import files
+from django.http import HttpResponse
+from django.core.exceptions import PermissionDenied
 import requests
 import tempfile
-from django.core import files
 import random
 import string
 import csv
-from django.http import HttpResponse
-from django.core.exceptions import PermissionDenied
+import cv2
+from skimage.measure import structural_similarity
+
+
+def calculate_image_ssim(image_original, image_new):
+    original = cv2.imread(image_original)
+    new = cv2.imread(image_new)
+
+    original = cv2.cvtColor(original, cv2.COLOR_BGR2GRAY)
+    new = cv2.cvtColor(new, cv2.COLOR_BGR2GRAY)
+
+    ssim = structural_similarity(original, new)
+
+    return ssim
+
+
+def store_image_optim(url, product):
+    img = requests.get(url, stream=True)
+    if img.ok:
+        file_name = ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(20)) + ".jpg"
+        temp = tempfile.NamedTemporaryFile()
+
+        for chunk in img.iter_content(1024):
+            temp.write(chunk)
+
+        if product.image:
+
+            ssim = calculate_image_ssim(product.image, temp)
+
+            if ssim <= 0.75:  # Structural similarity: 1 = perfect similarity, -1 = perfect dissimilarity
+                product.image.save(file_name, files.File(temp))
+            # else:
+                # save as additional image
+        else:
+            product.image.save(file_name, files.File(temp))
 
 
 def store_image(image_url, product):
