@@ -5,18 +5,11 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
-- EAT-7: Add Models 
-    - Retailer
-    - ProductAtRetailer
-    - MarketRegion
-    - ProductInMarketRegion
+- EAT-7: New ORM models 
 
 ### Changed
 
-- EAT-7: Code Review 1
-    - Retailer: plural to singular model name, add db_index to retailer_id field
-    - MarketRegion: Correct DB table name from retailers to market_region
-    - Re-add database migrations to repo
+- EAT-7: Product model to accomodate multiple images
 
 ### Deprecated
 

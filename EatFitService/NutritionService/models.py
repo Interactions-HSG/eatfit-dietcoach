@@ -179,6 +179,19 @@ class Ingredient(models.Model):
         db_table = 'ingredient'
 
 
+class Image(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    product = models.ForeignKey(Product, related_name='additional_images')
+    image = models.ImageField(upload_to="product_images", null=True, blank=True)
+    source = models.CharField(max_length=256, null=True, blank=True)
+    image_url = models.TextField(null=True, blank=True)
+
+    class Meta:
+        verbose_name = 'additional_image'
+        verbose_name_plural = 'additional_images'
+        db_table = 'additional_image'
+
+
 class NotFoundLog(models.Model):
     id = models.AutoField(primary_key=True)
     gtin = models.BigIntegerField()
