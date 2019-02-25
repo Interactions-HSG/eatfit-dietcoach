@@ -33,13 +33,8 @@ def test_category_logging():
     #                    gtin=getattr(product, 'gtin'),
     #                    eatfit_product=product)
 
-    non_match = mommy.make(NonFoundMatching,
-                           article_id="Lego")
+    mommy.make(NonFoundMatching, article_id="Lego")
 
-    product = views.match_receipt(digital_receipt)
-    error_report = views.test_product(product) if product else []
+    views.match_receipt(digital_receipt)
 
-    print(digital_receipt.article_id)
-    print(NonFoundMatching.objects.filter())
-
-    assert NonFoundMatching.objects.filter(article_id__exact=getattr(digital_receipt, 'article_id')).exists()
+    assert NonFoundMatching.objects.all().count() == 2
