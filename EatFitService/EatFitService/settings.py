@@ -181,3 +181,29 @@ MEDIA_ROOT = path.join(BASE_DIR, 'media').replace('\\', '/')
 
 
 CELERY_BROKER_URL = 'amqp://localhost'
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '[%(levelname)s %(asctime)s %(name)s]: %(message)s',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': '/var/log/nutrition-service.log',
+            'formatter': 'verbose'
+        },
+    },
+    'loggers': {
+        'NutritionService': {
+            'handlers': ['file'],
+            'level': 'WARNING',
+            'propagate': True,
+        },
+    },
+}

@@ -33,7 +33,7 @@ def test_category_logging():
     #                    gtin=getattr(product, 'gtin'),
     #                    eatfit_product=product)
 
-    mommy.make(NonFoundMatching, article_id="Lego")
+    mommy.make(NonFoundMatching, article_id=digital_receipt.article_id, article_type="Mafia")
 
     views.match_receipt(digital_receipt)
 

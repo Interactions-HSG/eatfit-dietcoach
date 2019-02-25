@@ -6,6 +6,7 @@ Definition of views.
 
 from __future__ import print_function, division
 from datetime import datetime
+import logging
 
 from EatFitService.settings import TRUSTBOX_USERNAME, TRUSTBOX_PASSWORD, TRUSTBOX_URL
 from NutritionService import data_cleaning, reports
@@ -27,6 +28,7 @@ from suds.client import Client
 from suds.sudsobject import asdict
 
 allowed_units_of_measure = ["g", "kg", "ml", "l"]
+
 
 
 @api_view(['POST'])
@@ -148,16 +150,18 @@ def match_receipt(digital_receipt):
     if digital_receipt.article_type and \
             digital_receipt.article_id:
 
-        if Matching.objects.filter(article_type=getattr(digital_receipt, 'article_type'),
-                                   article_id=getattr(digital_receipt, 'article_id')).exists():
+        if Matching.objects.filter(article_type=digital_receipt.article_type,
+                                   article_id=digital_receipt.article_id).exists():
 
-            matched_product = Matching.objects.get(article_type=getattr(digital_receipt, 'article_type'),
-                                                   article_id=getattr(digital_receipt, 'article_id'))
+            matched_product = Matching.objects.get(article_type=digital_receipt.article_type,
+                                                   article_id=digital_receipt.article_id)
             result = matched_product.eatfit_product
 
-        if NonFoundMatching.objects.filter(article_id__exact=getattr(digital_receipt, 'article_id')).exists():
+        if NonFoundMatching.objects.filter(article_id__exact=digital_receipt.article_id,
+                                           article_type__exact=digital_receipt.article_type).exists():
 
-            not_found_matching = NonFoundMatching.objects.get(article_id__exact=getattr(digital_receipt, 'article_id'))
+            not_found_matching = NonFoundMatching.objects.get(article_id__exact=digital_receipt.article_id,
+                                                              article_type__exact=digital_receipt.article_type)
             not_found_matching.counter += 1
 
         else:
@@ -214,12 +218,13 @@ def __get_nutri_score_from_average(nutriscore_average):
 
 def test_product(product):
     report = []
+    logger = logging.getLogger('NutritionService.test_product')
 
     if not product.product_size or \
             product.product_size == "" or \
             product.product_size == "0":
-        description = "Product Weight missing"
-
+        description = "Product (gtin: %s) Weight missing" % product.gtin
+        logger.warn(description)
         ErrorLog.objects.create(reporting_app="Eatfit_R2N",
                                 gtin=product.gtin,
                                 error_description=description)
@@ -228,7 +233,8 @@ def test_product(product):
 
     if not product.major_category or \
             not product.minor_category:
-        description = "Major or Minor Cateogry missing"
+        logger.warn(description)
+        description = "Major or Minor Cateogry missing: (gtin: %s)" % product.gtin
 
         ErrorLog.objects.create(reporting_app="Eatfit_R2N",
                                 gtin=product.gtin,
@@ -240,7 +246,8 @@ def test_product(product):
         product.save()
 
         if not product.data_score or product.data_score < 25:
-            description = "Data Quality low"
+            logger.warn(description)
+            description = "Data Quality low: (gtin: %s)" % product.gtin
 
             ErrorLog.objects.create(reporting_app="Eatfit_R2N",
                                     gtin=product.gtin,
@@ -249,10 +256,10 @@ def test_product(product):
             report.append(description)
 
     try:
-        weight = float(product.product_size)
+        float(product.product_size)
     except TypeError:
-        description = "Product's weight not a number"
-
+        description = "Product's (gtin: %s) weight not a number" % product.gtin
+        logger.warn(description)
         ErrorLog.objects.create(reporting_app="Eatfit_R2N",
                                 gtin=product.gtin,
                                 error_description=description)
@@ -261,8 +268,8 @@ def test_product(product):
 
     if not product.product_size_unit_of_measure or \
             product.product_size_unit_of_measure.lower() not in allowed_units_of_measure:
-        description = "Product's size unit not in g, ml, L, kg"
-
+        description = "Product's (gtin: %s) size unit not in g, ml, L, kg" % product.gtin
+        logger.warn(description)
         ErrorLog.objects.create(reporting_app="Eatfit_R2N",
                                 gtin=product.gtin,
                                 error_description=description)
