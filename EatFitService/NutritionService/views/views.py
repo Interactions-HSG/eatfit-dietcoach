@@ -30,7 +30,6 @@ from suds.sudsobject import asdict
 allowed_units_of_measure = ["g", "kg", "ml", "l"]
 
 
-
 @api_view(['POST'])
 @permission_classes((permissions.IsAuthenticated,))
 def send_receipts_experimental(request):
@@ -74,22 +73,18 @@ def send_receipts_experimental(request):
                                                  price_currency=article["price_currency"])
 
                 product = match_receipt(digital_receipt)
-                error_report = test_product(product) if product else []
-
-                if product and "Product's weight not a number" not in error_report:
-
+                if product:
+                    log_product_errors(product)
                     nutri_score = nutri_score_from_ofcom(product)
+                    is_a_number,_ = is_number(product.product_size)
+                    if is_a_number:
+                        if product.product_size_unit_of_measure.lower() in ["kg", "l"]:
+                            weight = float(product.product_size) * 1000  # weight in g or ml
+                        else:
+                            weight = float(product.product_size)
 
-                    if product.product_size_unit_of_measure.lower() == "kg" \
-                            or product.product_size_unit_of_measure.lower() == "l":
-
-                        weight = float(product.product_size) * 1000  # weight in g or ml
-
-                    else:
-                        weight = float(product.product_size)
-
-                    product_weight_in_basket = digital_receipt.quantity * weight
-                    nutri_score_array.append((product_weight_in_basket, nutri_score))
+                        product_weight_in_basket = digital_receipt.quantity * weight
+                        nutri_score_array.append((product_weight_in_basket, nutri_score))
 
             letter_nutri_score = "unknown"
 
@@ -139,38 +134,30 @@ def send_receipts_experimental(request):
 
 
 def match_receipt(digital_receipt):
-
-    result = None
-
     if digital_receipt.quantity > 0 and digital_receipt.price > 0:
         price_per_unit = digital_receipt.price / digital_receipt.quantity
     else:
         price_per_unit = digital_receipt.price
 
-    if digital_receipt.article_type and \
-            digital_receipt.article_id:
+    if digital_receipt.article_type and digital_receipt.article_id:
 
-        if Matching.objects.filter(article_type=digital_receipt.article_type,
-                                   article_id=digital_receipt.article_id).exists():
-
+        try:
             matched_product = Matching.objects.get(article_type=digital_receipt.article_type,
                                                    article_id=digital_receipt.article_id)
-            result = matched_product.eatfit_product
 
-        if NonFoundMatching.objects.filter(article_id__exact=digital_receipt.article_id,
-                                           article_type__exact=digital_receipt.article_type).exists():
-
-            not_found_matching = NonFoundMatching.objects.get(article_id__exact=digital_receipt.article_id,
-                                                              article_type__exact=digital_receipt.article_type)
-            not_found_matching.counter += 1
-
-        else:
-            NonFoundMatching.objects.create(article_id=digital_receipt.article_id,
-                                            article_type=digital_receipt.article_type,
-                                            business_unit=digital_receipt.business_unit,
-                                            price_per_unit=price_per_unit)
-
-    return result
+            return matched_product.eatfit_product
+        except Matching.DoesNotExist:
+            try:
+                not_found_matching = NonFoundMatching.objects.get(article_id=digital_receipt.article_id,
+                                                                  article_type=digital_receipt.article_type)
+                not_found_matching.counter += 1
+                not_found_matching.save()
+            except NonFoundMatching.DoesNotExist:
+                NonFoundMatching.objects.create(article_id=digital_receipt.article_id,
+                                                article_type=digital_receipt.article_type,
+                                                business_unit=digital_receipt.business_unit,
+                                                price_per_unit=price_per_unit)
+    return None
 
 
 def nutri_score_from_ofcom(product):
@@ -216,67 +203,51 @@ def __get_nutri_score_from_average(nutriscore_average):
     return "A"
 
 
-def test_product(product):
-    report = []
+class ProductWeightNotANumber(Exception):
+    pass
+
+
+def log_product_errors(product):
     logger = logging.getLogger('NutritionService.test_product')
+    product.save()
 
-    if not product.product_size or \
-            product.product_size == "" or \
-            product.product_size == "0":
-        description = "Product (gtin: %s) Weight missing" % product.gtin
+    category_check_fail = not product.major_category or not product.minor_category
+    score_check_fail = not product.data_score or product.data_score < 25
+    measurement_check_fail = not product.product_size_unit_of_measure or product.product_size_unit_of_measure.lower() not in allowed_units_of_measure
+    product_size_check_fail = not product.product_size or product.product_size == "" or product.product_size == "0"
+    is_number_check, _ = is_number(product.product_size)
+
+    error_logs = []
+
+    if category_check_fail:
+        description = "Major or Minor Category missing: (gtin: %s)" % product.gtin
         logger.warn(description)
-        ErrorLog.objects.create(reporting_app="Eatfit_R2N",
-                                gtin=product.gtin,
-                                error_description=description)
+        error_logs.append(description)
 
-        report.append(description)
-
-    if not product.major_category or \
-            not product.minor_category:
+    if score_check_fail:
+        description = "Data Quality low: (gtin: %s)" % product.gtin
         logger.warn(description)
-        description = "Major or Minor Cateogry missing: (gtin: %s)" % product.gtin
+        error_logs.append(description)
 
-        ErrorLog.objects.create(reporting_app="Eatfit_R2N",
-                                gtin=product.gtin,
-                                error_description=description)
-
-        report.append(description)
-
-    if not product.data_score or product.data_score < 25:
-        product.save()
-
-        if not product.data_score or product.data_score < 25:
-            logger.warn(description)
-            description = "Data Quality low: (gtin: %s)" % product.gtin
-
-            ErrorLog.objects.create(reporting_app="Eatfit_R2N",
-                                    gtin=product.gtin,
-                                    error_description=description)
-
-            report.append(description)
-
-    try:
-        float(product.product_size)
-    except TypeError:
+    if not is_number_check:
         description = "Product's (gtin: %s) weight not a number" % product.gtin
         logger.warn(description)
-        ErrorLog.objects.create(reporting_app="Eatfit_R2N",
-                                gtin=product.gtin,
-                                error_description=description)
+        error_logs.append(description)
 
-        report.append(description)
-
-    if not product.product_size_unit_of_measure or \
-            product.product_size_unit_of_measure.lower() not in allowed_units_of_measure:
+    if measurement_check_fail:
         description = "Product's (gtin: %s) size unit not in g, ml, L, kg" % product.gtin
         logger.warn(description)
-        ErrorLog.objects.create(reporting_app="Eatfit_R2N",
-                                gtin=product.gtin,
-                                error_description=description)
+        error_logs.append(description)
 
-        report.append(description)
+    if product_size_check_fail:
+        description = "Product (gtin: %s) weight missing" % product.gtin
+        logger.warn(description)
+        error_logs.append(description)
 
-    return report
+    log_models = [ErrorLog(reporting_app="Eatfit_R2N",
+                           gtin=product.gtin,
+                           error_description=description) for description in error_logs]
+    ErrorLog.objects.bulk_create(log_models)
 
 
 @api_view(['POST'])

@@ -24,8 +24,12 @@ def test_category_logging():
                                  r2n_user=r2n_user,
                                  business_unit='Migros')
 
-    mommy.make(NonFoundMatching, article_id=digital_receipt.article_id, article_type="Mafia")
+    mommy.make(NonFoundMatching, article_id=digital_receipt.article_id, article_type=digital_receipt.article_type)
 
     views.match_receipt(digital_receipt)
+    views.match_receipt(digital_receipt)
 
-    assert NonFoundMatching.objects.all().count() == 2
+    test_case = NonFoundMatching.objects.get(article_id=digital_receipt.article_id,
+                                             article_type=digital_receipt.article_type)
+
+    assert test_case.counter == 1
