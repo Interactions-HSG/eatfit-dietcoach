@@ -193,7 +193,7 @@ LOGGING = {
     },
     'handlers': {
         'file': {
-            'level': 'DEBUG',
+            'level': 'WARNING',
             'class': 'logging.FileHandler',
             'filename': '/var/log/nutrition-service.log',
             'formatter': 'verbose'
