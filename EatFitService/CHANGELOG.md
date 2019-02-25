@@ -13,7 +13,7 @@ Possible log types:
 
 ### Unnamed Release
 
-- [added] Log of product errors to `NutritionService.views.views.test_product` (EAT-9)
+- [added] Log of product errors to `NutritionService.test_product` (EAT-9)
 - [fixed] Fix NonFoundMatching Error (EAT-9)
 - [changed] Rebuild send_receipts_experimental API (EAT-9)
 
