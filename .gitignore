@@ -32,5 +32,8 @@ EatFitService/.vs/
 EatFitService/.idea/
 EatFitService/localenv/
 EatFitService/static/
+EatFitService/Dockerfile.dev
+EatFitService/docker-compose.yml
+EatFitService/worker.sh
 .DS_Store
 .idea/
