@@ -57,7 +57,7 @@ def send_receipts_experimental(request):
 
         result = {"receipts": []}
 
-        for receipt in serializer.validated_data["receipts"][:4]:
+        for receipt in serializer.validated_data["receipts"][:10]:
 
             nutri_score_array = []
             for article in receipt["items"]:
@@ -115,7 +115,7 @@ def send_receipts_experimental(request):
 
             result["receipts"].append(receipt_object)
 
-        for receipt in serializer.validated_data["receipts"][4:]:
+        for receipt in serializer.validated_data["receipts"][10:]:
 
             receipt_object = {
                 "receipt_id": receipt["receipt_id"],
