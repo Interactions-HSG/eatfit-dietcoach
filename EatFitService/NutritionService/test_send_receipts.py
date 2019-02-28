@@ -27,7 +27,6 @@ def test_category_logging():
     mommy.make(NonFoundMatching, article_id=digital_receipt.article_id, article_type=digital_receipt.article_type)
 
     views.match_receipt(digital_receipt)
-    views.match_receipt(digital_receipt)
 
     test_case = NonFoundMatching.objects.get(article_id=digital_receipt.article_id,
                                              article_type=digital_receipt.article_type)
