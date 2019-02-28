@@ -35,5 +35,7 @@ EatFitService/static/
 EatFitService/Dockerfile.dev
 EatFitService/docker-compose.yml
 EatFitService/worker.sh
+EatFitService/nutritiondb.json
 .DS_Store
 .idea/
+
