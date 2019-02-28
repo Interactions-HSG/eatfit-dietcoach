@@ -350,7 +350,7 @@ class NonFoundMatching(models.Model):
     article_type = models.CharField(max_length=255)
     business_unit = models.CharField(max_length=255)
     price_per_unit = models.FloatField()
-    counter = models.IntegerField(default=0, editable=False)
+    counter = models.IntegerField(default=0)
 
     class Meta:
         verbose_name = "NonFoundMatching"
