@@ -58,13 +58,25 @@ class NutrientInline(admin.TabularInline):
             return formset
 
 
+class RetailerInline(admin.TabularInline):
+    model = Retailer
+    extra = 10
+
+
+class MarketRegionInline(admin.TabularInline):
+    model = MarketRegion
+    extra = 10
+
+
 class ProductAdmin(admin.ModelAdmin):
     list_display = ("product_name_de", "gtin")
     search_fields = ('product_name_de', 'gtin')
     save_as = True
     inlines = [
         AllergenInline,
-        NutrientInline
+        NutrientInline,
+        RetailerInline,
+        MarketRegionInline
     ]
 
 

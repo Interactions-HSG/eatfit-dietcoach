@@ -1,15 +1,19 @@
 # -*- coding: utf-8 -*-
 
-from django.db import models
-from NutritionService.helpers import is_number
-from django.dispatch.dispatcher import receiver
-from django.db.models.signals import post_save
-from rest_framework.authtoken.models import Token
-from django.core.validators import MaxValueValidator, MinValueValidator
-from django.conf import settings
-from django.contrib.auth.models import User
 import os
 from uuid import uuid4
+
+from django.conf import settings
+from django.contrib.auth.models import User
+from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch.dispatcher import receiver
+
+from rest_framework.authtoken.models import Token
+
+from NutritionService.helpers import is_number
+from NutritionService.validators import minimum_float_validator, maximum_float_validator, retailer_id_validator, \
+    market_region_id_validator
 
 ENERGY_KJ = "energyKJ"
 ENERGY_KCAL = "energyKcal"
@@ -107,7 +111,7 @@ class Product(models.Model):
     source_checked = models.BooleanField(default=False)  # Flag if the product source is trusted
     source = models.CharField(max_length=256, null=True, blank=True, choices=PRODUCT_SOURCES)
     health_percentage = models.FloatField(null=True, blank=True,
-                                          validators=[MinValueValidator(0.0), MaxValueValidator(100.0)],
+                                          validators=[minimum_float_validator, maximum_float_validator],
                                           verbose_name='Fruit, Vegetable, Nuts Share')
     quality_checked = models.DateTimeField(null=True, blank=True)
     automatic_update = models.BooleanField(default=True)
@@ -125,6 +129,81 @@ class Product(models.Model):
         verbose_name = "Product"
         verbose_name_plural = "Products"
         db_table = 'product'
+
+
+class Retailer(models.Model):
+    MIGROS = 'Migros'
+    COOP = 'Coop'
+    FARMY = 'Farmy'
+    VOLG = 'Volg'
+    EDEKA = 'Edeka'
+
+    RETAILER_CHOICES = (
+        (MIGROS, MIGROS),
+        (COOP, COOP),
+        (FARMY, FARMY),
+        (VOLG, VOLG),
+        (EDEKA, EDEKA),
+    )
+
+    retailer_code = models.CharField(max_length=52, unique=True, validators=[retailer_id_validator])
+    retailer_name = models.CharField(max_length=50, choices=RETAILER_CHOICES)
+    product = models.ForeignKey(Product, related_name='retailer')
+
+    class Meta:
+        verbose_name = 'Retailer'
+        verbose_name_plural = 'Retailers'
+        db_table = 'retailers'
+
+    def __unicode__(self):
+        return self.retailer_name
+
+
+class MarketRegion(models.Model):
+
+    SWITZERLAND = 'Switzerland'
+    GERMANY = 'Germany'
+    AUSTRIA = 'Austria'
+    FRANCE = 'France'
+    ITALY = 'Italy'
+
+    MARKET_REGIONS = (
+        (SWITZERLAND, SWITZERLAND),
+        (GERMANY, GERMANY),
+        (AUSTRIA, AUSTRIA),
+        (FRANCE, FRANCE),
+        (ITALY, ITALY),
+    )
+
+    market_region_code = models.CharField(max_length=2, unique=True, validators=[market_region_id_validator])
+    market_region_name = models.CharField(max_length=52, choices=MARKET_REGIONS, null=True, blank=True)
+    product = models.ForeignKey(Product, related_name='market_region')
+
+    class Meta:
+        verbose_name = 'Market Region'
+        verbose_name_plural = 'Market Regions'
+        db_table = 'market_regions'
+
+    def __unicode__(self):
+        return self.market_region_id
+
+
+class ProductInMarketRegionAtRetailer(models.Model):
+    product = models.ForeignKey(Product, to_field='id')
+    retailer = models.ForeignKey(Retailer, to_field='retailer_id', null=True, blank=True)
+    market_region = models.ForeignKey(MarketRegion, to_field='market_region_id', null=True, blank=True)
+
+
+class AdditionalImage(models.Model):
+    product = models.ForeignKey(Product, related_name='additional_image')
+    image = models.ImageField(upload_to="product_images", null=True, blank=True)
+    source = models.CharField(max_length=100, null=True, blank=True)
+    image_url = models.URLField()
+
+    class Meta:
+        verbose_name = 'Additional Image'
+        verbose_name_plural = 'Additional Images'
+        db_table = 'additional_image'
 
 
 class ErrorLog(models.Model):
@@ -179,19 +258,6 @@ class Ingredient(models.Model):
         db_table = 'ingredient'
 
 
-class Image(models.Model):
-    id = models.BigAutoField(primary_key=True)
-    product = models.ForeignKey(Product, related_name='additional_image')
-    image = models.ImageField(upload_to="product_images", null=True, blank=True)
-    source = models.CharField(max_length=256, null=True, blank=True)
-    image_url = models.TextField(null=True, blank=True)
-
-    class Meta:
-        verbose_name = 'additional_image'
-        verbose_name_plural = 'additional_images'
-        db_table = 'additional_image'
-
-
 class NotFoundLog(models.Model):
     id = models.AutoField(primary_key=True)
     gtin = models.BigIntegerField()
@@ -231,7 +297,7 @@ class CrowdsourceProduct(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
     health_percentage = models.FloatField(null=True, blank=True,
-                                          validators=[MinValueValidator(0.0), MaxValueValidator(100.0)],
+                                          validators=[minimum_float_validator, maximum_float_validator],
                                           verbose_name='Fruit, Vegetable, Nuts Share')
 
     # Will create new nutrition entries when creating the Product model entry.
@@ -376,46 +442,6 @@ class NonFoundMatching(models.Model):
         verbose_name = "NonFoundMatching"
         verbose_name_plural = "NonFoundMatchings"
         db_table = 'non_found_matching'
-
-
-class Retailer(models.Model):
-    id = models.BigAutoField(primary_key=True, db_index=True)
-    retailer_id = models.CharField(max_length=255, unique=True)
-    retailer_name = models.CharField(max_length=255)
-
-    class Meta:
-        verbose_name = "Retailers"
-        verbose_name_plural = "Retailers"
-        db_table = 'retailers'
-
-    def __unicode__(self):
-        return self.retailer_name
-
-
-class ProductAtRetailer(models.Model):
-    id = models.BigAutoField(primary_key=True, db_index=True)
-    eatfit_id = models.ForeignKey(Product, to_field='id')
-    retailer_id = models.ForeignKey(Retailer, to_field="retailer_id")
-
-
-class MarketRegion(models.Model):
-    id = models.BigAutoField(primary_key=True, db_index=True)
-    market_region_id = models.CharField(max_length=255, unique=True)
-    market_region_name = models.CharField(max_length=255)
-
-    class Meta:
-        verbose_name = 'Market Region'
-        verbose_name_plural = 'Market Regions'
-        db_table = 'market_regions'
-
-    def __unicode__(self):
-        return self.market_region_id
-
-
-class ProductInMarketRegion(models.Model):
-    id = models.BigAutoField(primary_key=True, db_index=True)
-    eatfit_id = models.ForeignKey(Product, to_field='id')
-    market_region_id = models.ForeignKey(MarketRegion, to_field='market_region_id')
 
 
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
