@@ -24,6 +24,7 @@ EatFitService/db.sqlite3
 EatFitService/.vs/EatFitService/v14/.suo
 EatFitService/EatFitService.pyproj.user
 EatFitService/EatFitService/local_settings.py
+EatFitService/EatFitService/settings_keys.py
 EatFitService/obj/
 EatFitService/bin/
 EatFitService/ptvs_virtualenv_proxy.py

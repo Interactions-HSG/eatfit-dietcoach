@@ -13,7 +13,12 @@ from __future__ import absolute_import
 import os
 import posixpath
 from os import path
-from EatFitService import local_settings
+
+try:
+    from EatFitService.settings_keys import *
+except ImportError:
+    print("Please create settings_keys.py file")
+    exit(-1)
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -21,26 +26,9 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.9/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '7a3ff875-85c2-41eb-be28-aa5ad3d284b9'
-
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = local_settings.DEBUG
-USE_DEBUG_DB = local_settings.USE_DEBUG_DB
-
-TRUSTBOX_USERNAME = "autoidlabs_admin"
-TRUSTBOX_PASSWORD = "1p$H@-!6m0"
 TRUSTBOX_URL = "http://trustbox.stepcom.ch/trustBox/WS?wsdl"
 
 REEBATE_URL = "https://autoidlabs.reebate.net:8443/shoco/receipts"
-REEBATE_USERNAME = "klauslfuchs"
-REEBATE_PASSWORD = "autoidlabs"
-
-ALLOWED_HOSTS = [    
-    'localhost',
-    '*',
-]
-
 
 REST_FRAMEWORK = {
     'DEFAULT_RENDERER_CLASSES': (
@@ -63,6 +51,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'NutritionService',
+    'storages',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -102,21 +91,19 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'EatFitService.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/1.9/ref/settings/#databases
 
-if USE_DEBUG_DB:
-
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-        }
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'NutritionDB',
+        'USER': 'root',
+        'PASSWORD': 'nRbUrdMUCZycQHsNv9dX',
+        'HOST': 'mysql',
+        'PORT': '3306',
     }
-else:
-    DATABASES = local_settings.DATABASES
-
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/1.9/ref/settings/#auth-password-validators
@@ -147,11 +134,8 @@ EMAIL_USE_SSL = True
 SERVER_EMAIL = 'contact@holo-one.com'
 EMAIL_HOST = 'asmtp.mail.hostpoint.ch'
 EMAIL_PORT = 465
-EMAIL_HOST_USER = 'contact@holo-one.com'
-EMAIL_HOST_PASSWORD = 'martyMcFly1985'
 DEFAULT_FROM_EMAIL = SERVER_EMAIL
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.9/topics/i18n/
@@ -169,13 +153,9 @@ USE_TZ = False
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.9/howto/static-files/
 
-STATIC_URL = '/static/'
 
-#STATIC_ROOT = posixpath.join(*(BASE_DIR.split(os.path.sep) + ['static']))
 STATIC_ROOT = path.join(BASE_DIR, 'static').replace('\\', '/')
 
-
-MEDIA_URL = '/media/'
 
 MEDIA_ROOT = path.join(BASE_DIR, 'media').replace('\\', '/')
 
@@ -207,3 +187,9 @@ LOGGING = {
         },
     },
 }
+
+DEFAULT_FILE_STORAGE = 'EatFitService.custom_azure.AzureMediaStorage'
+STATICFILES_STORAGE = 'EatFitService.custom_azure.AzureStaticStorage'
+
+STATIC_URL = 'https://eatfitmedias.blob.core.windows.net/static/'
+MEDIA_URL = 'https://eatfitmedias.blob.core.windows.net/media/'
