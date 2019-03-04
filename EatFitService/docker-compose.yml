@@ -5,7 +5,7 @@ services:
     command: --character-set-server=utf8 --collation-server=utf8_general_ci
     environment:
       - MYSQL_USER=root
-      - MYSQL_ROOT_PASSWORD=nRbUrdMUCZycQHsNv9dX
+      - MYSQL_ROOT_PASSWORD=123456
       - MYSQL_DATABASE=NutritionDB
       - MYSQL_ROOT_HOST=%
   api:
