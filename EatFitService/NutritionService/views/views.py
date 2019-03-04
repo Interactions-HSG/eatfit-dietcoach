@@ -162,9 +162,9 @@ def match_receipt(digital_receipt):
 
 def nutri_score_from_ofcom(product):
 
-    if not product.ofcom_value:
+    if product.ofcom_value is None:
         product.save()
-        if not product.ofcom_value:
+        if product.ofcom_value is None:
             return None
 
     if product.major_category.pk == 20:
