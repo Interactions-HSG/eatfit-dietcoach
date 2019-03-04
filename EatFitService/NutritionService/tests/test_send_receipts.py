@@ -171,3 +171,77 @@ def test_calculate_nutriscore_from_ofcom():
     nutri_score = views.nutri_score_from_ofcom(product_zero)
 
     assert nutri_score == 2
+
+@pytest.mark.django_db
+def test_product_size_of_measurement():
+    from rest_framework.test import APIClient
+    from rest_framework.reverse import reverse
+    from django.contrib.auth.models import User
+    from rest_framework import status
+    from requests.auth import HTTPBasicAuth
+
+    user = User.objects.create_user(username='test', password='test')
+    user.set_password('test')
+
+    api_client = APIClient()
+    api_client.force_authenticate(user=user)
+    #api_client.auth = HTTPBasicAuth('test', 'test')
+    #api_client.headers.update({'x-test': 'true'})
+    #api_client.credentials(HTTP_AUTHORIZATION='Basic {}')
+    #api_client.login(username='test', password='test')
+
+    url = reverse('send-receipts-experimental')
+
+    r2n_partner = mommy.make(ReceiptToNutritionPartner, user=user)
+    r2n_user = mommy.make(ReceiptToNutritionUser,
+                          r2n_partner=r2n_partner)
+    major_category = mommy.make(MajorCategory)
+    minor_category = mommy.make(MinorCategory, category_major=major_category)
+
+    # Catch TypeError
+
+    product = mommy.make(Product,
+               major_category=major_category,
+               minor_category=minor_category,
+               product_size_unit_of_measure = None)
+
+
+    mommy.make(Matching, article_id='Apfel Braeburn', article_type='Migros_long_v1', eatfit_product=product)
+
+    data = {
+        "r2n_partner": r2n_partner.name,
+        "r2n_username": r2n_user.r2n_username,
+        "receipts": [
+            {
+                "receipt_id": "1551533421",
+                "receipt_datetime": "2019-03-02T14:30:21Z",
+                "business_unit": "Migros",
+                "items": [
+                    {
+                        "article_id": "Apfel Braeburn",
+                        "article_type": "Migros_long_v1",
+                        "quantity": 0.712,
+                        "quantity_unit": "kg",
+                        "price": "1.85",
+                        "price_currency": "CHF"
+                    }
+                ]
+            }
+        ]
+    }
+
+    response = api_client.post(url, data, format='json')
+    assert response.status_code == status.HTTP_200_OK
+
+    # Catch ValueError
+
+    product = mommy.make(Product,
+                         major_category=major_category,
+                         minor_category=minor_category,
+                         product_size='Huge',
+                         test_product_size_of_measurement='ugdugilawg')
+
+    mommy.make(Matching, article_id='Apfel Braeburn', article_type='Migros_long_v1', eatfit_product=product)
+
+    response = api_client.post(url, data, format='json')
+    assert response.status_code == status.HTTP_200_OK
