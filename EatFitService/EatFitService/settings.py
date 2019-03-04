@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/1.9/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.9/ref/settings/
 """
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 import sys
 import os
 import posixpath
@@ -108,9 +108,9 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'NutritionDB',
-        'USER': 'root',
-        'PASSWORD': 'nRbUrdMUCZycQHsNv9dX',
-        'HOST': 'mysql',
+        'USER': DB_USER,
+        'PASSWORD': DB_PASSWORD,
+        'HOST': 'localhost',
         'PORT': '3306',
     }
 }
