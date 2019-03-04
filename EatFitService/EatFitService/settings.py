@@ -205,5 +205,11 @@ LOGGING = {
             'level': 'WARNING',
             'propagate': True,
         },
+         # Log all exceptions in logfile
+        '': {
+            'handlers': ['file'],
+            'level': 'ERROR',
+            'propagate': True
+        }
     },
 }
