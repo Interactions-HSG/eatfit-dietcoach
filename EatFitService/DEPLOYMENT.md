@@ -2,13 +2,19 @@
 
 ## Create log file
 
-Move to directory `/var/log/apache2`
+Move to directory `/var/log/`
 
 Create log file and grant corrct permissions:
 
 ```
 touch nutrition-service.log
 chmod 777 nutrition-service.log
+```
+
+## Create file holding keys from settings_keys.template.py
+
+```
+cp settings_keys.template.py settings_keys.py
 ```
 
 ## Update Packages
@@ -23,6 +29,10 @@ pip install -r requirements.txt
 ## Apply migrations
 
 `python manage.py migrate`
+
+## Collect static files
+
+`python manage.py collectstatic`
 
 ## Run Tests
 

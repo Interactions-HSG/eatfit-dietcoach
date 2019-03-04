@@ -23,7 +23,7 @@ EatFitService/env/
 EatFitService/db.sqlite3
 EatFitService/.vs/EatFitService/v14/.suo
 EatFitService/EatFitService.pyproj.user
-EatFitService/EatFitService/local_settings.py
+EatFitService/EatFitService/settings_keys.py
 EatFitService/obj/
 EatFitService/bin/
 EatFitService/ptvs_virtualenv_proxy.py
@@ -42,3 +42,4 @@ EatFitService/000-default-le-ssl.conf
 EatFitService/000-default.conf
 EatFitService/modules.load
 EatFitService/options-ssl-apache.conf
+EatFitService/test.log
