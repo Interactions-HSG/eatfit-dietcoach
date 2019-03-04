@@ -10,6 +10,12 @@ Possible log types:
 - `[security]` to invite users to upgrade in case of vulnerabilities.
 - `[chore]` for things like maintenance tasks
 
+### v2 (2019-03-04)
+
+- [changed] Transfer storage to Azure Blob (EAT-12)
+- [fixed] Fix crash when matching not specified in Product (EAT-18)
+- [added] Log all exceptions to logfile (EAT-19)
+
 ### v1 (2019-03-01)
 
 - [fixed] Fix NonFoundMatchings Error Logging (EAT-9)

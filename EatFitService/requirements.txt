@@ -8,6 +8,7 @@ Django==1.11.8
 django-celery==3.1.17
 django-cleanup==1.0.1
 django-pyodbc-azure==1.11.0.0
+django-storages[azure]==1.7.1
 djangorestframework==3.6.3
 fuzzywuzzy==0.10.0
 idna==2.6
