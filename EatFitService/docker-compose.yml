@@ -19,3 +19,5 @@ services:
       - mysql
     volumes:
       - .:/home/eatfit/eatfitrepo/EatFitService
+    environment:
+      - DJANGO_SETTINGS_MODULE=EatFitService.local_settings

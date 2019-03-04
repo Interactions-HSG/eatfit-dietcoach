@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.9/ref/settings/
 """
 from __future__ import absolute_import
+import sys
 import os
 import posixpath
 from os import path
@@ -18,13 +19,22 @@ try:
     from EatFitService.settings_keys import *
 except ImportError:
     print("Please create settings_keys.py file")
-    exit(-1)
+    sys.exit(-1)
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.9/howto/deployment/checklist/
+
+DEBUG = False
+
+ALLOWED_HOSTS = [
+    'localhost',
+    '*',
+]
+
+# ALLOWED_HOSTS = []
 
 TRUSTBOX_URL = "http://trustbox.stepcom.ch/trustBox/WS?wsdl"
 
@@ -188,8 +198,8 @@ LOGGING = {
     },
 }
 
-DEFAULT_FILE_STORAGE = 'EatFitService.custom_azure.AzureMediaStorage'
-STATICFILES_STORAGE = 'EatFitService.custom_azure.AzureStaticStorage'
+DEFAULT_FILE_STORAGE = 'EatFitService.azure_storage_backend.AzureMediaStorage'
+STATICFILES_STORAGE = 'EatFitService.azure_storage_backend.AzureStaticStorage'
 
 STATIC_URL = 'https://eatfitmedias.blob.core.windows.net/static/'
 MEDIA_URL = 'https://eatfitmedias.blob.core.windows.net/media/'
