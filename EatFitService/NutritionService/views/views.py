@@ -146,6 +146,15 @@ def match_receipt(digital_receipt):
                                                    article_id=digital_receipt.article_id)
 
             return matched_product.eatfit_product
+
+        except Matching.MultipleObjectsReturned:
+            # If more than one matching found return randomly one for now
+            # TODO return the one with the closest price
+            matched_product = Matching.objects.filter(article_type=digital_receipt.article_type,
+                                                      article_id=digital_receipt.article_id).first()
+
+            return matched_product.eatfit_product
+
         except Matching.DoesNotExist:
             try:
                 not_found_matching = NonFoundMatching.objects.get(article_id=digital_receipt.article_id,
