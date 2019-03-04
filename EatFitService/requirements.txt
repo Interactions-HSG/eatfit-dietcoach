@@ -19,7 +19,7 @@ Pillow==4.2.1
 pip==10.0.1
 pyodbc==4.0.21
 pytz==2016.4
-requests==2.18.4
+requests==2.20.0
 setuptools==15.0
 suds==0.4
 urllib3==1.22
