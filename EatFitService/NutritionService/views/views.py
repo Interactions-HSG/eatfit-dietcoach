@@ -96,14 +96,20 @@ def send_receipts_experimental(request):
             sum_product_weights_nutri_number = 0
 
             for t in nutri_score_array:
-                sum_product_weights_nutri_number += t[0] * t[1]
-                sum_product_weights += t[0]
+                try:
+                    sum_product_weights_nutri_number += t[0] * t[1]
+                    sum_product_weights += t[0]
+                except (TypeError, ValueError):
+                    continue
 
             if sum_product_weights > 0:
-                total_nutri_score = sum_product_weights_nutri_number / sum_product_weights
-                total_nutri_score = round(total_nutri_score, 3)
+                try:
+                    total_nutri_score = sum_product_weights_nutri_number / sum_product_weights
+                    total_nutri_score = round(total_nutri_score, 3)
 
-                letter_nutri_score = __get_nutri_score_from_average(total_nutri_score)
+                    letter_nutri_score = __get_nutri_score_from_average(total_nutri_score)
+                except (TypeError, ValueError):
+                    pass
 
             else:
                 total_nutri_score = "unknown"
