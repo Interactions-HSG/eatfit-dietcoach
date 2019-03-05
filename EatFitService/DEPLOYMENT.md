@@ -1,5 +1,14 @@
 # Deployment Guide
 
+## Create log file
+
+Move to directory `/var/log/`
+
+```
+touch nutrition-service.log
+chmod 777 nutrition-service.log
+```
+
 ## Create file holding keys from settings_keys.template.py
 
 ```
