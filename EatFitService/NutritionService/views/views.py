@@ -181,39 +181,42 @@ def match_receipt(digital_receipt):
 
 def nutri_score_from_ofcom(product):
 
-    if product.ofcom_value is None:
-        product.save()
+    try:
+
         if product.ofcom_value is None:
-            return None
+            product.save()
+            if product.ofcom_value is None:
+                return None
 
-    if product.major_category.pk == 20:
-        return None  # product is not a food product
+        if product.major_category.pk == 20:
+            return None  # product is not a food product
 
-    if (product.major_category.pk == 1 or product.major_category.pk == 2) and \
-            (not product.minor_category or product.minor_category.pk == 5 or product.minor_category.pk == 11):
-        # product is a drink -> CHECK IF WATER!!!
+        if (product.major_category.pk == 1 or product.major_category.pk == 2) and \
+                (not product.minor_category or product.minor_category.pk == 5 or product.minor_category.pk == 11):
+            # product is a drink -> CHECK IF WATER!!!
 
-        if product.ofcom_value <= 1:
-            return 2
-        elif product.ofcom_value <= 5:
-            return 3
-        elif product.ofcom_value <= 9:
-            return 4
+            if product.ofcom_value <= 1:
+                return 2
+            elif product.ofcom_value <= 5:
+                return 3
+            elif product.ofcom_value <= 9:
+                return 4
+            else:
+                return 5
+
         else:
-            return 5
-
-    else:
-        if product.ofcom_value <= -1:
-            return 1
-        elif product.ofcom_value <= 2:
-            return 2
-        elif product.ofcom_value <= 10:
-            return 3
-        elif product.ofcom_value <= 18:
-            return 4
-        else:
-            return 5
-
+            if product.ofcom_value <= -1:
+                return 1
+            elif product.ofcom_value <= 2:
+                return 2
+            elif product.ofcom_value <= 10:
+                return 3
+            elif product.ofcom_value <= 18:
+                return 4
+            else:
+                return 5
+    except AttributeError:
+        return None
 
 def __get_nutri_score_from_average(nutriscore_average):
     rounded_average = int(round(nutriscore_average))
