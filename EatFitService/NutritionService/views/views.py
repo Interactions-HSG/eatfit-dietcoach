@@ -79,7 +79,7 @@ def send_receipts_experimental(request):
                     number_check, _ = is_number(product.product_size)
                     if product.product_size_unit_of_measure is None:
                         continue
-                    if number_check:
+                    try:
                         if product.product_size_unit_of_measure.lower() in ["kg", "l"]:
                             weight = float(product.product_size) * 1000  # weight in g or ml
                         else:
@@ -87,6 +87,8 @@ def send_receipts_experimental(request):
 
                         product_weight_in_basket = digital_receipt.quantity * weight
                         nutri_score_array.append((product_weight_in_basket, nutri_score))
+                    except (TypeError, ValueError):
+                        continue
 
             letter_nutri_score = "unknown"
 
