@@ -74,6 +74,7 @@ MIDDLEWARE_CLASSES = [
     'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'applicationinsights.django.ApplicationInsightsMiddleware',
 ]
 
 ROOT_URLCONF = 'EatFitService.urls'
@@ -167,6 +168,11 @@ MEDIA_ROOT = path.join(BASE_DIR, 'media').replace('\\', '/')
 
 CELERY_BROKER_URL = 'amqp://localhost'
 
+
+APPLICATION_INSIGHTS = {
+    'ikey': APPINSIGHTS_IKEY,
+}
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -177,22 +183,21 @@ LOGGING = {
         },
     },
     'handlers': {
-        'file': {
+        'appinsights': {
             'level': 'WARNING',
-            'class': 'logging.FileHandler',
-            'filename': '/var/log/nutrition-service.log',
+            'class': 'applicationinsights.django.LoggingHandler',
             'formatter': 'verbose'
         },
     },
     'loggers': {
         'NutritionService': {
-            'handlers': ['file'],
+            'handlers': ['appinsights'],
             'level': 'WARNING',
             'propagate': True,
         },
          # Log all exceptions in logfile
         '': {
-            'handlers': ['file'],
+            'handlers': ['appinsights'],
             'level': 'ERROR',
             'propagate': True
         }
@@ -204,3 +209,5 @@ STATICFILES_STORAGE = 'EatFitService.azure_storage_backend.AzureStaticStorage'
 
 STATIC_URL = 'https://eatfitmedias.blob.core.windows.net/static/'
 MEDIA_URL = 'https://eatfitmedias.blob.core.windows.net/media/'
+
+
