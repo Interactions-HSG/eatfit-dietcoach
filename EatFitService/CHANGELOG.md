@@ -1,20 +1,23 @@
 # Changelog
-All notable changes to this project will be documented in this file.
 
+Possible log types:
 
-## [Unreleased]
+- `[added]` for new features.
+- `[changed]` for changes in existing functionality.
+- `[deprecated]` for once-stable features removed in upcoming releases.
+- `[removed]` for deprecated features removed in this release.
+- `[fixed]` for any bug fixes.
+- `[security]` to invite users to upgrade in case of vulnerabilities.
+- `[chore]` for things like maintenance tasks
 
-### Added
-- EAT-7: New ORM models 
+### v2 (2019-03-04)
 
-### Changed
+- [changed] Transfer storage to Azure Blob (EAT-12)
+- [fixed] Fix crash when matching not specified in Product (EAT-18)
+- [added] Log all exceptions to logfile (EAT-19)
 
-- EAT-7: Product model to accomodate multiple images
+### v1 (2019-03-01)
 
-### Deprecated
-
-### Removed
-
-### Fixed
-
-### Security
+- [fixed] Fix NonFoundMatchings Error Logging (EAT-9)
+- [fixed] DigitalReceipts not stored in database (EAT-14)
+- [changed] Increase API calls for `send_receipt_experimental` from 4 to 10 (EAT-13)
