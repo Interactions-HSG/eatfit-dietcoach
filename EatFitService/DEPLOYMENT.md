@@ -4,8 +4,6 @@
 
 Move to directory `/var/log/`
 
-Create log file and grant corrct permissions:
-
 ```
 touch nutrition-service.log
 chmod 777 nutrition-service.log
