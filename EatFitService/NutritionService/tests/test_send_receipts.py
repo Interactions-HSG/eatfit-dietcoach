@@ -3,6 +3,11 @@ import pytest
 from model_mommy import mommy
 
 from django.conf import settings
+from django.contrib.auth.models import User
+
+from rest_framework.test import APIClient
+from rest_framework.reverse import reverse
+from rest_framework import status
 
 from NutritionService.views import views
 from NutritionService.models import NonFoundMatching, DigitalReceipt, ReceiptToNutritionUser, \
@@ -174,21 +179,11 @@ def test_calculate_nutriscore_from_ofcom():
 
 @pytest.mark.django_db
 def test_product_size_of_measurement():
-    from rest_framework.test import APIClient
-    from rest_framework.reverse import reverse
-    from django.contrib.auth.models import User
-    from rest_framework import status
-    from requests.auth import HTTPBasicAuth
 
     user = User.objects.create_user(username='test', password='test')
-    user.set_password('test')
 
     api_client = APIClient()
     api_client.force_authenticate(user=user)
-    #api_client.auth = HTTPBasicAuth('test', 'test')
-    #api_client.headers.update({'x-test': 'true'})
-    #api_client.credentials(HTTP_AUTHORIZATION='Basic {}')
-    #api_client.login(username='test', password='test')
 
     url = reverse('send-receipts-experimental')
 
@@ -203,7 +198,8 @@ def test_product_size_of_measurement():
     product = mommy.make(Product,
                major_category=major_category,
                minor_category=minor_category,
-               product_size_unit_of_measure = None)
+               product_size=None,
+               product_size_unit_of_measure=None)
 
 
     mommy.make(Matching, article_id='Apfel Braeburn', article_type='Migros_long_v1', eatfit_product=product)
@@ -239,7 +235,7 @@ def test_product_size_of_measurement():
                          major_category=major_category,
                          minor_category=minor_category,
                          product_size='Huge',
-                         test_product_size_of_measurement='ugdugilawg')
+                         product_size_unit_of_measure='ugdugilawg')
 
     mommy.make(Matching, article_id='Apfel Braeburn', article_type='Migros_long_v1', eatfit_product=product)
 
