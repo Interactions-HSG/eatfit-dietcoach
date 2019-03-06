@@ -1,20 +1,29 @@
 # Changelog
-All notable changes to this project will be documented in this file.
 
+Possible log types:
 
-## [Unreleased]
+- `[added]` for new features.
+- `[changed]` for changes in existing functionality.
+- `[deprecated]` for once-stable features removed in upcoming releases.
+- `[removed]` for deprecated features removed in this release.
+- `[fixed]` for any bug fixes.
+- `[security]` to invite users to upgrade in case of vulnerabilities.
+- `[chore]` for things like maintenance tasks
 
-### Added
-- EAT-8: Import view for Product model and testing framework
+### v3 (2019-03-05)
 
-### Changed
+- [fixed] NoneType and ValueType error on product_size_unit_of_measure (EAT-22)
+- [added] Azure application insights integration (EAT-11)
 
-### Deprecated
+### v2 (2019-03-04)
 
-- NutritionService/helpers.py: store_image() function
+- [changed] Transfer storage to Azure Blob (EAT-12)
+- [fixed] Fix crash when matching not specified in Product (EAT-18)
+- [added] Log all exceptions to logfile (EAT-19)
 
-### Removed
+### v1 (2019-03-01)
 
-### Fixed
-
-### Security
+- [fixed] Fix NonFoundMatchings Error Logging (EAT-9)
+- [fixed] DigitalReceipts not stored in database (EAT-14)
+- [changed] Increase API calls for `send_receipt_experimental` from 4 to 10 (EAT-13)
+>>>>>>> develop
