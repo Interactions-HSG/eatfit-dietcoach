@@ -132,3 +132,9 @@ Copy the file inside the shell of your local machine as follows:
 ```
 scp eatfit@eatfit.northeurope.cloudapp.azure.com:/home/eatfit/eatfitrepo/EatFitService/nutritiondb.json /path/to/EatFitService/nutritiondb.json
 ```
+
+### Copying Images to Azure Storage
+
+```
+azcopy --source /home/eatfit/eatfitrepo/EatFitService/media_bkp --dest-key [KEY] --destination https://eatfitmedias.blob.core.windows.net/media/ --recursive
+```

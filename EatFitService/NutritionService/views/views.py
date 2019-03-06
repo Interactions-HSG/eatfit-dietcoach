@@ -76,8 +76,10 @@ def send_receipts_experimental(request):
                 if product:
                     log_product_errors(product)
                     nutri_score = nutri_score_from_ofcom(product)
-                    is_a_number,_ = is_number(product.product_size)
-                    if is_a_number:
+                    number_check, _ = is_number(product.product_size)
+                    if product.product_size_unit_of_measure is None:
+                        continue
+                    try:
                         if product.product_size_unit_of_measure.lower() in ["kg", "l"]:
                             weight = float(product.product_size) * 1000  # weight in g or ml
                         else:
@@ -85,6 +87,8 @@ def send_receipts_experimental(request):
 
                         product_weight_in_basket = digital_receipt.quantity * weight
                         nutri_score_array.append((product_weight_in_basket, nutri_score))
+                    except (TypeError, ValueError):
+                        continue
 
             letter_nutri_score = "unknown"
 
@@ -92,14 +96,20 @@ def send_receipts_experimental(request):
             sum_product_weights_nutri_number = 0
 
             for t in nutri_score_array:
-                sum_product_weights_nutri_number += t[0] * t[1]
-                sum_product_weights += t[0]
+                try:
+                    sum_product_weights_nutri_number += t[0] * t[1]
+                    sum_product_weights += t[0]
+                except (TypeError, ValueError):
+                    continue
 
             if sum_product_weights > 0:
-                total_nutri_score = sum_product_weights_nutri_number / sum_product_weights
-                total_nutri_score = round(total_nutri_score, 3)
+                try:
+                    total_nutri_score = sum_product_weights_nutri_number / sum_product_weights
+                    total_nutri_score = round(total_nutri_score, 3)
 
-                letter_nutri_score = __get_nutri_score_from_average(total_nutri_score)
+                    letter_nutri_score = __get_nutri_score_from_average(total_nutri_score)
+                except (TypeError, ValueError):
+                    pass
 
             else:
                 total_nutri_score = "unknown"
@@ -171,39 +181,42 @@ def match_receipt(digital_receipt):
 
 def nutri_score_from_ofcom(product):
 
-    if product.ofcom_value is None:
-        product.save()
+    try:
+
         if product.ofcom_value is None:
-            return None
+            product.save()
+            if product.ofcom_value is None:
+                return None
 
-    if product.major_category.pk == 20:
-        return None  # product is not a food product
+        if product.major_category.pk == 20:
+            return None  # product is not a food product
 
-    if (product.major_category.pk == 1 or product.major_category.pk == 2) and \
-            (not product.minor_category or product.minor_category.pk == 5 or product.minor_category.pk == 11):
-        # product is a drink -> CHECK IF WATER!!!
+        if (product.major_category.pk == 1 or product.major_category.pk == 2) and \
+                (not product.minor_category or product.minor_category.pk == 5 or product.minor_category.pk == 11):
+            # product is a drink -> CHECK IF WATER!!!
 
-        if product.ofcom_value <= 1:
-            return 2
-        elif product.ofcom_value <= 5:
-            return 3
-        elif product.ofcom_value <= 9:
-            return 4
+            if product.ofcom_value <= 1:
+                return 2
+            elif product.ofcom_value <= 5:
+                return 3
+            elif product.ofcom_value <= 9:
+                return 4
+            else:
+                return 5
+
         else:
-            return 5
-
-    else:
-        if product.ofcom_value <= -1:
-            return 1
-        elif product.ofcom_value <= 2:
-            return 2
-        elif product.ofcom_value <= 10:
-            return 3
-        elif product.ofcom_value <= 18:
-            return 4
-        else:
-            return 5
-
+            if product.ofcom_value <= -1:
+                return 1
+            elif product.ofcom_value <= 2:
+                return 2
+            elif product.ofcom_value <= 10:
+                return 3
+            elif product.ofcom_value <= 18:
+                return 4
+            else:
+                return 5
+    except AttributeError:
+        return None
 
 def __get_nutri_score_from_average(nutriscore_average):
     rounded_average = int(round(nutriscore_average))
@@ -224,6 +237,7 @@ def log_product_errors(product):
     score_check_fail = not product.data_score or product.data_score < 25
     measurement_check_fail = not product.product_size_unit_of_measure or product.product_size_unit_of_measure.lower() not in allowed_units_of_measure
     product_size_check_fail = not product.product_size or product.product_size == "" or product.product_size == "0"
+
     is_number_check, _ = is_number(product.product_size)
 
     error_logs = []
@@ -741,5 +755,5 @@ def is_number(s):
     try:
         v = float(s)
         return True, v 
-    except ValueError:
+    except (ValueError, TypeError):
         return False, None

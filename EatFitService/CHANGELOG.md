@@ -10,6 +10,11 @@ Possible log types:
 - `[security]` to invite users to upgrade in case of vulnerabilities.
 - `[chore]` for things like maintenance tasks
 
+### v3 (2019-03-05)
+
+- [fixed] NoneType and ValueType error on product_size_unit_of_measure (EAT-22)
+- [added] Azure application insights integration (EAT-11)
+
 ### v2 (2019-03-04)
 
 - [changed] Transfer storage to Azure Blob (EAT-12)
