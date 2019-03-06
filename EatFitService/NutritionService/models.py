@@ -1,15 +1,19 @@
 # -*- coding: utf-8 -*-
 
-from django.db import models
-from NutritionService.helpers import is_number
-from django.dispatch.dispatcher import receiver
-from django.db.models.signals import post_save
-from rest_framework.authtoken.models import Token
-from django.core.validators import MaxValueValidator, MinValueValidator
-from django.conf import settings
-from django.contrib.auth.models import User
 import os
 from uuid import uuid4
+
+from django.conf import settings
+from django.contrib.auth.models import User
+from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch.dispatcher import receiver
+
+from rest_framework.authtoken.models import Token
+
+from NutritionService.helpers import is_number
+from NutritionService.validators import minimum_float_validator, maximum_float_validator, retailer_id_validator, \
+    market_region_id_validator
 
 ENERGY_KJ = "energyKJ"
 ENERGY_KCAL = "energyKcal"
@@ -21,6 +25,7 @@ DIETARY_FIBER = "dietaryFiber"
 PROTEIN = "protein"
 SALT = "salt"
 SODIUM = "sodium"
+
 
 def path_and_rename(instance, filename):
     base_path = "crowdsoure_images/"
@@ -34,7 +39,10 @@ def path_and_rename(instance, filename):
     # return the whole path to the file
     return os.path.join(base_path, filename)
 
+
 # categories requested. Careful: Changed IDs changed to autifields and integerers, charfield for minor in snipped
+
+
 class MajorCategory(models.Model):
     id = models.AutoField(primary_key=True)
     name_de = models.TextField(max_length=1024, blank=True, null=True)
@@ -103,7 +111,7 @@ class Product(models.Model):
     source_checked = models.BooleanField(default=False)  # Flag if the product source is trusted
     source = models.CharField(max_length=256, null=True, blank=True, choices=PRODUCT_SOURCES)
     health_percentage = models.FloatField(null=True, blank=True,
-                                          validators=[MinValueValidator(0.0), MaxValueValidator(100.0)],
+                                          validators=[minimum_float_validator, maximum_float_validator],
                                           verbose_name='Fruit, Vegetable, Nuts Share')
     quality_checked = models.DateTimeField(null=True, blank=True)
     automatic_update = models.BooleanField(default=True)
@@ -117,11 +125,85 @@ class Product(models.Model):
             self.major_category = self.minor_category.category_major
         super(Product, self).save(*args, **kwargs)
 
-
     class Meta:
         verbose_name = "Product"
         verbose_name_plural = "Products"
         db_table = 'product'
+
+
+class Retailer(models.Model):
+    MIGROS = 'Migros'
+    COOP = 'Coop'
+    FARMY = 'Farmy'
+    VOLG = 'Volg'
+    EDEKA = 'Edeka'
+
+    RETAILER_CHOICES = (
+        (MIGROS, MIGROS),
+        (COOP, COOP),
+        (FARMY, FARMY),
+        (VOLG, VOLG),
+        (EDEKA, EDEKA),
+    )
+
+    retailer_code = models.CharField(max_length=52, unique=True, null=False, blank=False, validators=[retailer_id_validator])
+    retailer_name = models.CharField(max_length=20, choices=RETAILER_CHOICES)
+    product = models.ForeignKey(Product, related_name='retailer')
+
+    class Meta:
+        verbose_name = 'Retailer'
+        verbose_name_plural = 'Retailers'
+        db_table = 'retailers'
+
+    def __unicode__(self):
+        return self.retailer_name
+
+
+class MarketRegion(models.Model):
+
+    SWITZERLAND = 'Switzerland'
+    GERMANY = 'Germany'
+    AUSTRIA = 'Austria'
+    FRANCE = 'France'
+    ITALY = 'Italy'
+
+    MARKET_REGIONS = (
+        (SWITZERLAND, SWITZERLAND),
+        (GERMANY, GERMANY),
+        (AUSTRIA, AUSTRIA),
+        (FRANCE, FRANCE),
+        (ITALY, ITALY),
+    )
+
+    market_region_code = models.CharField(max_length=2, unique=True, validators=[market_region_id_validator])
+    market_region_name = models.CharField(max_length=52, choices=MARKET_REGIONS, null=True, blank=True)
+    product = models.ForeignKey(Product, related_name='market_region')
+
+    class Meta:
+        verbose_name = 'Market Region'
+        verbose_name_plural = 'Market Regions'
+        db_table = 'market_regions'
+
+    def __unicode__(self):
+        return self.market_region_id
+
+
+class ProductInMarketRegionAtRetailer(models.Model):
+    product = models.ForeignKey(Product, to_field='id')
+    retailer = models.ForeignKey(Retailer, to_field='retailer_code', null=True, blank=True)
+    market_region = models.ForeignKey(MarketRegion, to_field='market_region_code', null=True, blank=True)
+
+
+class AdditionalImage(models.Model):
+    product = models.ForeignKey(Product, related_name='additional_image')
+    image = models.ImageField(upload_to="product_images", null=True, blank=True)
+    source = models.CharField(max_length=100, null=True, blank=True)
+    image_url = models.URLField()
+
+    class Meta:
+        verbose_name = 'Additional Image'
+        verbose_name_plural = 'Additional Images'
+        db_table = 'additional_image'
 
 
 class ErrorLog(models.Model):
@@ -144,7 +226,7 @@ class Allergen(models.Model):
     product = models.ForeignKey(Product, related_name='allergens')
     name = models.CharField(max_length=64, null=True, blank=True)
     certainity = models.TextField()
-    
+
     class Meta:
         verbose_name = 'Allergen'
         verbose_name_plural = 'Allergens'
@@ -181,7 +263,7 @@ class NotFoundLog(models.Model):
     gtin = models.BigIntegerField()
     count = models.BigIntegerField(default=1)
     first_searched_for = models.DateTimeField(auto_now_add=True)
-    processed = models.BooleanField(default = False)
+    processed = models.BooleanField(default=False)
 
     class Meta:
         db_table = 'not_found_log'
@@ -215,7 +297,7 @@ class CrowdsourceProduct(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
     health_percentage = models.FloatField(null=True, blank=True,
-                                          validators=[MinValueValidator(0.0), MaxValueValidator(100.0)],
+                                          validators=[minimum_float_validator, maximum_float_validator],
                                           verbose_name='Fruit, Vegetable, Nuts Share')
 
     # Will create new nutrition entries when creating the Product model entry.
@@ -245,9 +327,10 @@ class CrowdsourceProduct(models.Model):
         verbose_name_plural = "Crowdsource Products"
         db_table = 'crowdsource_product'
 
+
 class NutrientName(models.Model):
     name = models.CharField(max_length=255, verbose_name="Name", primary_key=True)
-    
+
     def __unicode__(self):
         return self.name
 
@@ -255,6 +338,7 @@ class NutrientName(models.Model):
         verbose_name = "Nutrient Name"
         verbose_name_plural = "Nutrient Names"
         db_table = 'nutrient_name'
+
 
 class HealthTipp(models.Model):
     text_de = models.TextField(null=True, blank=True)
@@ -268,16 +352,16 @@ class HealthTipp(models.Model):
     def __unicode__(self):
         return self.text_de
 
-
     class Meta:
         verbose_name = "Health Tipp"
         verbose_name_plural = "Health Tipps"
         db_table = 'health_tipp'
 
+
 class ReceiptToNutritionPartner(models.Model):
-    user = models.OneToOneField(User, primary_key=True, related_name = "partner")
+    user = models.OneToOneField(User, primary_key=True, related_name="partner")
     name = models.CharField(max_length=255)
-    
+
     def __unicode__(self):
         return self.name
 
@@ -286,10 +370,11 @@ class ReceiptToNutritionPartner(models.Model):
         verbose_name_plural = "ReceiptToNutritionPartners"
         db_table = 'receipt_to_nutrition_partner'
 
+
 class ReceiptToNutritionUser(models.Model):
     r2n_partner = models.ForeignKey(ReceiptToNutritionPartner)
     r2n_username = models.CharField(max_length=255)
-    r2n_user_active = models.BooleanField(default = True)
+    r2n_user_active = models.BooleanField(default=True)
 
     def __unicode__(self):
         return self.r2n_username
@@ -299,6 +384,7 @@ class ReceiptToNutritionUser(models.Model):
         verbose_name = "ReceiptToNutritionUser"
         verbose_name_plural = "ReceiptToNutritionUsers"
         db_table = 'receipt_to_nutrition_user'
+
 
 class DigitalReceipt(models.Model):
     r2n_user = models.ForeignKey(ReceiptToNutritionUser)
@@ -316,7 +402,7 @@ class DigitalReceipt(models.Model):
         return self.article_id
 
     class Meta:
-        #unique_together = ('r2n_user', 'business_unit', 'receipt_id')
+        # unique_together = ('r2n_user', 'business_unit', 'receipt_id')
         verbose_name = "DigitalReceipt"
         verbose_name_plural = "DigitalReceipts"
         db_table = 'digital_receipt'
@@ -326,16 +412,15 @@ class Matching(models.Model):
     article_id = models.CharField(max_length=255)
     article_type = models.CharField(max_length=255)
     gtin = models.BigIntegerField()
-    eatfit_product = models.ForeignKey(Product, null=True, blank=True, editable = False)
+    eatfit_product = models.ForeignKey(Product, null=True, blank=True, editable=False)
 
     def save(self, *args, **kwargs):
         if self.gtin:
-            products = Product.objects.filter(gtin = self.gtin)
+            products = Product.objects.filter(gtin=self.gtin)
             if products.exists():
                 product = products[0]
                 self.eatfit_product = product
         super(Matching, self).save(*args, **kwargs)
-
 
     def __unicode__(self):
         return self.article_id
@@ -344,6 +429,7 @@ class Matching(models.Model):
         verbose_name = "Matching"
         verbose_name_plural = "Matchings"
         db_table = 'matching'
+
 
 class NonFoundMatching(models.Model):
     article_id = models.CharField(max_length=255)
@@ -356,6 +442,7 @@ class NonFoundMatching(models.Model):
         verbose_name = "NonFoundMatching"
         verbose_name_plural = "NonFoundMatchings"
         db_table = 'non_found_matching'
+
 
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
 def create_auth_token(sender, instance=None, created=False, **kwargs):
@@ -376,11 +463,11 @@ def calculate_data_score(product):
     if product.health_percentage and product.health_percentage != 0:
         data_score = data_score + 5
 
-    nutrition_facts = NutritionFact.objects.filter(product = product)[:10]
+    nutrition_facts = NutritionFact.objects.filter(product=product)[:10]
     for fact in nutrition_facts:
         if fact.amount and fact.amount != 0:
             data_score = data_score + 1
-    allergens = Allergen.objects.filter(product = product)
+    allergens = Allergen.objects.filter(product=product)
     for allergen in allergens:
         if allergen.certainity == "true" or allergen.certainity == "false":
             data_score = data_score + 1
@@ -390,26 +477,31 @@ def calculate_data_score(product):
 
 
 def calculate_ofcom_value(product):
-    nutrition_facts = NutritionFact.objects.filter(product = product)
+    nutrition_facts = NutritionFact.objects.filter(product=product)
     data_quality_sufficient = True
     ofcom_value = 0
     for fact in nutrition_facts:
-        converted, amount  = is_number(fact.amount)
+        converted, amount = is_number(fact.amount)
         if not converted:
             data_quality_sufficient = False
             break
         amount = float(fact.amount)
         if fact.name == ENERGY_KJ:
-            ofcom_value = ofcom_value + __calcluate_ofcom_point(amount, [3350, 3015, 2680, 2345, 2010, 1675, 1340, 1005, 670, 335])
+            ofcom_value = ofcom_value + __calcluate_ofcom_point(amount,
+                                                                [3350, 3015, 2680, 2345, 2010, 1675, 1340, 1005, 670,
+                                                                 335])
         elif fact.name == SATURATED_FAT:
             ofcom_value = ofcom_value + __calcluate_ofcom_point(amount, [10, 9, 8, 7, 6, 5, 4, 3, 2, 1])
         elif fact.name == SUGARS:
             ofcom_value = ofcom_value + __calcluate_ofcom_point(amount, [45, 40, 36, 31, 27, 22.5, 18, 13.5, 9, 4.5])
         elif fact.name == SODIUM:
             if fact.unit_of_measure == "mg":
-                ofcom_value = ofcom_value + __calcluate_ofcom_point(amount, [900, 810, 720, 630, 540, 450, 360, 270, 180, 90])
+                ofcom_value = ofcom_value + __calcluate_ofcom_point(amount,
+                                                                    [900, 810, 720, 630, 540, 450, 360, 270, 180, 90])
             elif fact.unit_of_measure == "g":
-                ofcom_value = ofcom_value + __calcluate_ofcom_point(amount, [0.9, 0.81, 0.72, 0.63, 0.54, 0.45, 0.36, 0.27, 0.18, 0.09])
+                ofcom_value = ofcom_value + __calcluate_ofcom_point(amount,
+                                                                    [0.9, 0.81, 0.72, 0.63, 0.54, 0.45, 0.36, 0.27,
+                                                                     0.18, 0.09])
             else:
                 data_quality_sufficient = False
                 break
