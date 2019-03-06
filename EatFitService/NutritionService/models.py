@@ -146,8 +146,8 @@ class Retailer(models.Model):
         (EDEKA, EDEKA),
     )
 
-    retailer_code = models.CharField(max_length=52, unique=True, validators=[retailer_id_validator])
-    retailer_name = models.CharField(max_length=50, choices=RETAILER_CHOICES)
+    retailer_code = models.CharField(max_length=52, unique=True, null=False, blank=False, validators=[retailer_id_validator])
+    retailer_name = models.CharField(max_length=20, choices=RETAILER_CHOICES)
     product = models.ForeignKey(Product, related_name='retailer')
 
     class Meta:
@@ -190,8 +190,8 @@ class MarketRegion(models.Model):
 
 class ProductInMarketRegionAtRetailer(models.Model):
     product = models.ForeignKey(Product, to_field='id')
-    retailer = models.ForeignKey(Retailer, to_field='retailer_id', null=True, blank=True)
-    market_region = models.ForeignKey(MarketRegion, to_field='market_region_id', null=True, blank=True)
+    retailer = models.ForeignKey(Retailer, to_field='retailer_code', null=True, blank=True)
+    market_region = models.ForeignKey(MarketRegion, to_field='market_region_code', null=True, blank=True)
 
 
 class AdditionalImage(models.Model):
