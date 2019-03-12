@@ -2,10 +2,23 @@ from django import forms
 from NutritionService.validators import csv_validator
 
 
+class ImportTypes:
+    ALLERGEN = 'Allergen'
+    NUTRIENTS = 'Nutrients'
+    PRODUCTS = 'Products'
+    CHOICES = (
+        (ALLERGEN, ALLERGEN),
+        (NUTRIENTS, NUTRIENTS),
+        (PRODUCTS, PRODUCTS)
+    )
+
+
 class CSVForm(forms.Form):
     """
     Form for uploading CSV files.
     """
+
+    import_type = forms.ChoiceField(label='Import Type', choices=ImportTypes.CHOICES)
 
     allergen_name = forms.BooleanField(label='Allergen Name', required=False)
     allergen_certainty = forms.BooleanField(label='Allergen Certainty', required=False)

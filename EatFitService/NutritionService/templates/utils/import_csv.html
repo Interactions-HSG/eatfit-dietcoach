@@ -8,11 +8,9 @@
 <form class="form" action="" method="POST" enctype="multipart/form-data">
     {% csrf_token %}
     <p>Import Type:</p>
-    <select id="form-selection" label="Import Type" onchange="hideFields()">
-        <option value="Allergens" selected="Selected">Allergens</option>
-        <option value="Nutrients">Nutrients</option>
-        <option value="Products">Products</option>
-    </select>
+    <div id="import-type">
+        {{ form.import_type.label }} : {{ form.import_type }}
+    </div>
     <br>
     <br>
     <div id="allergen-fields">
