@@ -7,8 +7,7 @@ import random
 import string
 import csv
 import cv2
-from skimage.measure import structural_similarity
-
+from skimage.measure import compare_ssim
 
 def calculate_image_ssim(image_original, image_new):
     original = cv2.imread(image_original)
@@ -17,7 +16,7 @@ def calculate_image_ssim(image_original, image_new):
     original = cv2.cvtColor(original, cv2.COLOR_BGR2GRAY)
     new = cv2.cvtColor(new, cv2.COLOR_BGR2GRAY)
 
-    ssim = structural_similarity(original, new)
+    ssim = compare_ssim(original, new)
 
     return ssim
 
@@ -25,7 +24,7 @@ def calculate_image_ssim(image_original, image_new):
 def store_image_optim(url, product):
     img = requests.get(url, stream=True)
     if img.ok:
-        file_name = ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(20)) + ".jpg"
+        file_name = ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(20)) + '.jpg'
         temp = tempfile.NamedTemporaryFile()
 
         for chunk in img.iter_content(1024):
@@ -37,10 +36,11 @@ def store_image_optim(url, product):
 
             if ssim <= 0.75:  # Structural similarity: 1 = perfect similarity, -1 = perfect dissimilarity
                 product.image.save(file_name, files.File(temp))
-            # else:
-                # save as additional image
+            else:
+                return AdditionalImage(product=product, image=files.File(temp), image_url=url)
         else:
             product.image.save(file_name, files.File(temp))
+
 
 
 def store_image(image_url, product):
