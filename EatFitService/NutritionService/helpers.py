@@ -9,8 +9,6 @@ import csv
 import cv2
 from skimage.measure import compare_ssim
 
-from EatFitService.NutritionService.models import AdditionalImage
-
 
 def calculate_image_ssim(image_original, image_new):
     original = cv2.imread(image_original)
@@ -40,7 +38,7 @@ def store_image_optim(url, product):
             if ssim <= 0.75:  # Structural similarity: 1 = perfect similarity, -1 = perfect dissimilarity
                 product.image.save(file_name, files.File(temp))
             else:
-                return AdditionalImage(product=product, image=files.File(temp), image_url=url)
+                return {'product': product, 'image': files.File(temp), 'image_url': url}
         else:
             product.image.save(file_name, files.File(temp))
 

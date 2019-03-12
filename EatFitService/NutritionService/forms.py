@@ -3,7 +3,7 @@ from NutritionService.validators import csv_validator
 
 
 class ImportTypes:
-    ALLERGEN = 'Allergen'
+    ALLERGEN = 'Allergens'
     NUTRIENTS = 'Nutrients'
     PRODUCTS = 'Products'
     CHOICES = (

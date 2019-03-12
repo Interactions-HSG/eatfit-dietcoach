@@ -10,51 +10,56 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from NutritionService.models import Product, Allergen, NutritionFact, MajorCategory, MinorCategory, Ingredient, AdditionalImage
 from NutritionService.helpers import store_image_optim, calculate_image_ssim
 from NutritionService.forms import CSVForm
+from NutritionService.views.utils_view import ImportBase, ALLERGEN_HEADERS
+
+
+def test_encoding():
+
+    form_data = {'import_type': 'Allergens',
+                 'allergen_name': True}
+
+    bad_file = open('NutritionService/tests/badfile_test.csv')
+    bad_test = ImportBase(bad_file, form_data)
+
+    good_file = open('NutritionService/tests/allergens_test.csv')
+    good_test = ImportBase(good_file, form_data)
+
+    assert not bad_test.check_encoding()
+    assert good_test.check_encoding()
+
+
+def test_headers():
+
+    allergen_data = {'import_type': 'Allergens',
+                     'allergen_name': True}
+
+    bad_file = open('NutritionService/tests/badfile_test.csv')
+    bad_test = ImportBase(bad_file, allergen_data)
+    bad_test.HEADERS = ALLERGEN_HEADERS
+
+    good_file = open('NutritionService/tests/allergens_test.csv')
+    good_test = ImportBase(good_file, allergen_data)
+    good_test.HEADERS = ALLERGEN_HEADERS
+
+    assert not bad_test.check_headers()
+    assert good_test.check_headers()
 
 
 def test_form():
 
     # Test allergens
 
-    with open('NutritionService/tests/allergens_test.csv', 'rb') as infile:
+    with open('NutritionService/tests/allergens_test.csv') as infile:
         allergen_csv_file = SimpleUploadedFile(infile.name, infile.read())
 
-    allergen_fields = {'allergen_name': 'string_one',
-                       'allergen_certainty': 'string_two'}
+    allergen_fields = {'import_type': 'Allergens',
+                       'allergen_name': True}
 
     allergen_file = {'file': allergen_csv_file}
 
     allergen_form = CSVForm(allergen_fields, allergen_file)
 
     assert allergen_form.is_valid()
-
-    # Test nutrients
-
-    with open('NutritionService/tests/nutrients_test.csv', 'rb') as infile:
-        nutrient_csv_file = SimpleUploadedFile(infile.name, infile.read())
-
-    nutrient_fields = {'nutrients_name': 'string_one',
-                       'nutrients_amount': 'string_two',
-                       'nutrients_unit_of_measure': 'string_three'}
-
-    nutrient_file = {'file': nutrient_csv_file}
-
-    nutrient_form = CSVForm(nutrient_fields, nutrient_file)
-
-    assert nutrient_form.is_valid()
-
-    # Test products
-
-    with open('NutritionService/tests/products_test.csv', 'rb') as infile:
-        product_csv_file = SimpleUploadedFile(infile.name, infile.read())
-
-    product_fields = {}
-
-    product_file = {'file': product_csv_file}
-
-    product_form = CSVForm(product_fields, product_file)
-
-    assert product_form.is_valid()
 
 # @pytest.mark.django_db
 # def test_allergen():
@@ -199,6 +204,7 @@ def test_product():
 
                 if obj_product.filter(image__isnull=True).exists() and row['imageLink']:
                     additional_img = store_image_optim(row['imageLink'], obj_product)
+                    AdditionalImage(**additional_img).save()
                     if additional_img is not None:
                         additional_img.save()
 

@@ -25,7 +25,7 @@ class ImportBase:
         self.csv_file.seek(0)
         encoding_detector = chardet.detect(self.csv_file.read())
         encoding = encoding_detector['encoding']
-        check_encoding = encoding == 'UTF-8'
+        check_encoding = True if encoding.find('UTF-8') == 0 or encoding.find('ascii') == 0 else False
         self.csv_file.seek(0)
         return check_encoding
 
@@ -38,7 +38,7 @@ class ImportBase:
         return check_headers
 
 
-class AlergenImport(ImportBase):
+class AllergenImport(ImportBase):
     HEADERS = ALLERGEN_HEADERS
 
     def import_csv(self):
@@ -118,7 +118,7 @@ class ImportCSV(FormView):
 
         else:
             if import_type == ImportTypes.ALLERGEN:
-                ImportClass = AlergenImport
+                ImportClass = AllergenImport
                 form_data = {key: value for key, value in data.items() if 'allergen' in key}
 
             elif import_type == ImportTypes.NUTRIENTS:
