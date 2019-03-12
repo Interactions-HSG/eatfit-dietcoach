@@ -9,6 +9,9 @@ import csv
 import cv2
 from skimage.measure import compare_ssim
 
+from EatFitService.NutritionService.models import AdditionalImage
+
+
 def calculate_image_ssim(image_original, image_new):
     original = cv2.imread(image_original)
     new = cv2.imread(image_new)
@@ -40,7 +43,6 @@ def store_image_optim(url, product):
                 return AdditionalImage(product=product, image=files.File(temp), image_url=url)
         else:
             product.image.save(file_name, files.File(temp))
-
 
 
 def store_image(image_url, product):
@@ -88,7 +90,6 @@ def download_csv(request, queryset):
     if not request.user.is_staff:
         raise PermissionDenied
     opts = queryset.model._meta
-    model = queryset.model
     response = HttpResponse(content_type='text/csv')
     # force download.
     response['Content-Disposition'] = 'attachment;filename=export.csv'
