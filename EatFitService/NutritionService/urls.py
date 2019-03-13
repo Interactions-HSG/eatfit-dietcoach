@@ -35,8 +35,10 @@ urlpatterns = [
      url(r'^receipt2nutrition/export/receipts/$', views.export_digital_receipts),
      url(r'^receipt2nutrition/export/matching/$', views.export_matching),
 
-     url(r'^tools/$', utils_view.UtilsList.as_view()),
-     url(r'^tools/import-data/$', utils_view.ImportCSV.as_view(), name='import-data'),
+     url(r'^tools/$', utils_view.UtilsList.as_view(), name='tools'),
+     url(r'^tools/import-allergens/$', utils_view.AllergensView.as_view(), name='import-allergens'),
+     url(r'^tools/import-nutrients/$', utils_view.NutrientsView.as_view(), name='import-nutrients'),
+     url(r'^tools/import-products/$', utils_view.ProductsView.as_view(), name='import-products'),
 
      url(r'^update', NutritionService.views.views.update_database),
      url(r'^products/from-openfood/', NutritionService.views.views.get_products_from_openfood),
