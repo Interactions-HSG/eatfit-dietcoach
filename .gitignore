@@ -34,11 +34,4 @@ EatFitService/.vs/
 EatFitService/.idea/
 EatFitService/localenv/
 EatFitService/static/
-EatFitService/Dockerfile.dev
-EatFitService/docker-compose.yml
-EatFitService/worker.sh
 EatFitService/nutritiondb.json
-EatFitService/000-default-le-ssl.conf
-EatFitService/000-default.conf
-EatFitService/modules.load
-EatFitService/options-ssl-apache.conf
