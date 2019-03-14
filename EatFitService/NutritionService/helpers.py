@@ -1,13 +1,24 @@
+import csv
+import cv2
+import random
+import requests
+from skimage.measure import compare_ssim
+import string
+import tempfile
+from textblob import TextBlob
+
 from django.core import files
 from django.http import HttpResponse
 from django.core.exceptions import PermissionDenied
-import requests
-import tempfile
-import random
-import string
-import csv
-import cv2
-from skimage.measure import compare_ssim
+
+
+def detect_language(text):
+    try:
+        blob = TextBlob(text.decode('utf-8'))
+        lang = blob.detect_language()
+        return lang
+    except AttributeError:
+        return None
 
 
 def calculate_image_ssim(image_original, image_new):
@@ -20,6 +31,23 @@ def calculate_image_ssim(image_original, image_new):
     ssim = compare_ssim(original, new)
 
     return ssim
+
+
+def store_additional_image(url, product):
+    img = requests.get(url, stream=True)
+    if img.ok:
+        temp = tempfile.NamedTemporaryFile()
+
+        for chunk in img.iter_content(1024):
+            temp.write(chunk)
+
+        file_name = ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(20)) + ".jpg"
+
+        additional_img = {
+            'image': (file_name, temp),
+            'image_url': url
+        }
+        product.additional_image.create(**additional_img)
 
 
 def store_image_optim(url, product):
@@ -39,7 +67,8 @@ def store_image_optim(url, product):
             if ssim <= 0.75:  # Structural similarity: 1 = perfect similarity, -1 = perfect dissimilarity
                 product.image.save(temp.name, files.File(temp))
             else:
-                return {'product': product, 'image': files.File(temp), 'image_url': url}
+                new_image = {'image': (file_name, files.File(temp)), 'image_url': url}
+                product.additional_image.create(**new_image)
         else:
             product.image.save(file_name, files.File(temp))
 

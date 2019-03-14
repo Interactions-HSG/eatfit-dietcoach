@@ -1,7 +1,8 @@
 import chardet
 import csv
 
-from NutritionService.models import Product, Allergen
+from NutritionService.helpers import detect_language, store_image, store_additional_image, store_image_optim
+from NutritionService.models import Product, MajorCategory, MinorCategory
 
 ALLERGEN_HEADERS = ['import_product_id', 'gtin', 'allergen_name', 'certainity', 'major', 'minor']
 NUTRIENTS_HEADERS = ['import_product_id', 'gtin', 'nutrient_name', 'amount', 'unit_of_measure']
@@ -117,4 +118,128 @@ class ProductsImport(ImportBase):
     HEADERS = PRODUCT_HEADERS
 
     def import_csv(self):
-        pass
+        transform_form_headers = {
+            'product_name_de': 'product_name_de',
+            'product_image': 'imageLink',
+            'product_ingredients': 'ingredients',
+            'product_major': 'major',
+            'product_minor': 'minor',
+            'product_weight_unit': 'weight_unit',
+            'product_weight_integer': 'weight_integer'
+        }
+        transform_csv_headers = {
+            'product_name_de': 'product_name_de',
+            'imageLink': 'original_image_url',
+            'ingredients': 'ingredients',
+            'major': 'major',
+            'minor': 'minor',
+            'weight_unit': 'product_size_unit_of_measure',
+            'weight_integer': 'product_size'
+        }
+        safe_update_headers = ['product_name_de', 'product_size_unit_of_measure', 'product_size']
+
+        update_headers = [transform_form_headers[key] for key, value in self.form_params.items() if value]
+        reader = csv.DictReader(self.csv_file)
+
+        for row in reader:
+
+            get_row_headers = {header: row[header] for header in update_headers}
+            update_products = {transform_csv_headers[key]: value for key, value in get_row_headers.items()}
+            safe_update_products = {update_products[key]: value for key, value in update_products.items() if key in safe_update_headers}
+
+            ingredient_condition = row['ingredients'] and 'ingredients' in update_products.keys()
+            image_condition = row['imageLink'] and 'original_image_url' in update_products.keys()
+            major_category_condition = row['major'] and 'major' in update_products.keys()
+            minor_category_condition = row['minor'] and 'minor' in update_products.keys()
+
+            try:
+                product_object = Product.objects.get(id=int(row['import_product_id']),
+                                                     gtin=int(row['gtin']))
+
+                product_object.update(**safe_update_products)
+
+                if ingredient_condition:
+                    ingredients_dict = {'text': row['ingredients'],
+                                        'lang': detect_language(row['ingredients'])}
+
+                    if product_object.ingredients.filter(text=row['ingredients']).exists():
+                        product_object.ingredients.update(**ingredients_dict)
+                    else:
+                        product_object.ingredients.create(**ingredients_dict)
+
+                if image_condition:
+                    main_image_condition = product_object.filter(original_image_url=row['imageLink']).exists()
+                    additional_image_condition = product_object.additional_image.filter(image_url=row['imageLink']).exists()
+
+                    if main_image_condition:
+
+                        if product_object.image:
+                            # Calculate structural similarity
+                            store_image_optim(row['imageLink'], product_object)
+                        else:
+                            store_image(row['imageLink'], product_object)
+
+                    if not additional_image_condition:
+                        store_additional_image(row['imageLink'], product_object)
+
+                if major_category_condition:
+
+                    try:
+                        major_object = MajorCategory.object.get(id=int(row['major']))
+
+                        if not product_object.major_category.filter(id=int(row['major'])).exists():
+                            product_object.major_category.update(major_object)
+
+                    except MajorCategory.DoesNotExist:
+                        # Log wrong major category
+                        pass
+
+                if minor_category_condition:
+
+                    try:
+                        minor_object = MinorCategory.object.get(id=int(row['minor']))
+
+                        if not product_object.minor_category.filter(id=int(row['minor'])).exists():
+                            product_object.minor_category.update(minor_object)
+
+                    except MinorCategory.DoesNotExist:
+                        # Log wrong minor category
+                        pass
+
+            except Product.DoesNotExist:
+                product_object = Product.objects.create(id=int(row['import_product_id']),
+                                                        gtin=int(row['gtin']))
+
+                product_object.update(**safe_update_products)
+
+                if ingredient_condition:
+                    ingredients_dict = {'text': row['ingredients'],
+                                        'lang': detect_language(row['ingredients'])}
+                    product_object.ingredients.create(**ingredients_dict)
+
+                if image_condition:
+                    store_image_optim(row['imageLink'], product_object)
+
+                if major_category_condition:
+
+                    try:
+                        major_object = MajorCategory.object.get(id=int(row['major']))
+                        product_object.major_category.update(major_object)
+
+                    except MajorCategory.DoesNotExist:
+                        # Log wrong major category
+                        pass
+
+                if minor_category_condition:
+
+                    try:
+                        minor_object = MajorCategory.object.get(id=int(row['minor']))
+                        product_object.major_category.update(minor_object)
+
+                    except MinorCategory.DoesNotExist:
+                        # Log wrong minor category
+                        pass
+
+            except Product.MultipleObjectsReturned:
+                # Log multiple product object existence
+                continue
