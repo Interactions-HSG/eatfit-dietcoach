@@ -151,6 +151,7 @@ def test_digital_receipt_creation():
     assert len(DigitalReceipt.objects.all()) == len(digital_receipt_list)
     assert len(digital_receipt_list) == len(response_object_ok) + len(response_object_error)
 
+
 @pytest.mark.django_db
 def test_calculate_nutriscore_from_ofcom():
     r2n_partner = mommy.make(ReceiptToNutritionPartner)
@@ -177,6 +178,7 @@ def test_calculate_nutriscore_from_ofcom():
 
     assert nutri_score == 2
 
+
 @pytest.mark.django_db
 def test_product_size_of_measurement():
 
@@ -200,7 +202,6 @@ def test_product_size_of_measurement():
                minor_category=minor_category,
                product_size=None,
                product_size_unit_of_measure=None)
-
 
     mommy.make(Matching, article_id='Apfel Braeburn', article_type='Migros_long_v1', eatfit_product=product)
 
