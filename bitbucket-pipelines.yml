@@ -1,0 +1,12 @@
+image: atlassian/default-image:2
+
+pipelines:
+  default:
+    - step:
+        services:
+          - docker
+        script:
+          - curl -L "https://github.com/docker/compose/releases/download/1.23.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+          - cd EatFitService
+          - cp EatFitService/settings_keys.template.py EatFitService/settings_keys.py
+          - docker-compose -f docker-compose.yml run api py.test
