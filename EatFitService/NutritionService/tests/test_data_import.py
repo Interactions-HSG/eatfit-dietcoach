@@ -7,49 +7,58 @@ from textblob import TextBlob
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import RequestFactory
 
-from NutritionService.models import Product, Allergen, NutritionFact, MajorCategory, MinorCategory, Ingredient, AdditionalImage
-from NutritionService.helpers import store_image_optim, calculate_image_ssim
+from NutritionService.data_import import AllergensImport
 from NutritionService.forms import AllergensForm, NutrientsForm, ProductsForm
-from NutritionService.views.utils_view import ImportBase, AllergensView, ALLERGEN_HEADERS
+from NutritionService.helpers import store_image_optim, calculate_image_ssim
+from NutritionService.models import Product, Allergen, NutritionFact, MajorCategory, MinorCategory, Ingredient, AdditionalImage
+from NutritionService.views.utils_view import AllergensView
 
 
-def test_forms():
+def test_allergens_form():
 
     with open('NutritionService/tests/allergens_test.csv') as infile:
         allergens_csv_file = SimpleUploadedFile(infile.name, infile.read())
 
+    allergens_fields = {'allergen_name': 'on'}
+    allergens_file = {'file': allergens_csv_file}
+    allergens_form = AllergensForm(allergens_fields, allergens_file)
+
+    assert allergens_form.is_valid()
+
+
+def test_nutrients_form():
+
     with open('NutritionService/tests/nutrients_test.csv') as infile:
         nutrients_csv_file = SimpleUploadedFile(infile.name, infile.read())
+
+    nutrients_fields = {'amount': 'on'}
+    nutrients_file = {'file': nutrients_csv_file}
+    nutrients_form = NutrientsForm(nutrients_fields, nutrients_file)
+
+    assert nutrients_form.is_valid()
+
+
+def test_products_form():
 
     with open('NutritionService/tests/products_test.csv') as infile:
         products_csv_file = SimpleUploadedFile(infile.name, infile.read())
 
-    allergens_fields = {'allergen_name': True}
-    nutrients_fields = {'amount': True}
-    products_fields = {'product_minor': True}
-
-    allergens_file = {'file': allergens_csv_file}
-    nutrients_file = {'file': nutrients_csv_file}
+    products_fields = {'product_minor': 'on'}
     products_file = {'file': products_csv_file}
-
-    allergens_form = AllergensForm(allergens_fields, allergens_file)
-    nutrients_form = NutrientsForm(nutrients_fields, nutrients_file)
     products_form = ProductsForm(products_fields, products_file)
 
-    assert allergens_form.is_valid()
-    assert nutrients_form.is_valid()
     assert products_form.is_valid()
 
 
 def test_encoding():
 
-    form_data = {'allergen_name': True}
+    form_data = {'allergen_name': 'on'}
 
     bad_file = open('NutritionService/tests/badfile_test.csv')
-    bad_test = ImportBase(bad_file, form_data)
+    bad_test = AllergensImport(bad_file, form_data)
 
     good_file = open('NutritionService/tests/allergens_test.csv')
-    good_test = ImportBase(good_file, form_data)
+    good_test = AllergensImport(good_file, form_data)
 
     assert not bad_test.check_encoding()
     assert good_test.check_encoding()
@@ -57,15 +66,13 @@ def test_encoding():
 
 def test_headers():
 
-    allergen_data = {'allergen_name': True}
+    allergen_data = {'allergen_name': 'on'}
 
-    bad_file = open('NutritionService/tests/badfile_test.csv')
+    bad_file = open('NutritionService/tests/nutrients_test.csv')
     bad_test = ImportBase(bad_file, allergen_data)
-    bad_test.HEADERS = ALLERGEN_HEADERS
 
     good_file = open('NutritionService/tests/allergens_test.csv')
     good_test = ImportBase(good_file, allergen_data)
-    good_test.HEADERS = ALLERGEN_HEADERS
 
     assert not bad_test.check_headers()
     assert good_test.check_headers()
@@ -73,6 +80,8 @@ def test_headers():
 
 @pytest.mark.django_db
 def test_allergens_import():
+
+    assert Allergen.objects.count() == 0
 
     mommy.make(Product, id=466560, gtin=5000159431668)
 
@@ -94,6 +103,7 @@ def test_allergens_import():
 
     assert response.status_code == 302
     assert Allergen.objects.count() == 2
+
 
 @pytest.mark.django_db
 def test_nutrition():
@@ -123,7 +133,7 @@ def test_nutrition():
 @pytest.mark.django_db
 def test_product():
 
-    test_case = Product.objects.create(id=455362, gtin=4008088917148)
+    Product.objects.create(id=455362, gtin=4008088917148)
 
     with open('NutritionService/tests/products_test.csv', 'r') as infile:
         reader = csv.DictReader(infile)
@@ -152,24 +162,6 @@ def test_product():
                     obj_ingredient = Ingredient.objects.create(product=obj_product, text=row['ingredients'], lang=lang)
                     obj_product.ingredients.add(obj_ingredient)
 
-                # if row['major'] != "null" and MajorCategory.objects.filter(pk=row['major']).exists():
-                #     obj_major = MajorCategory.objects.get(pk=int(row['major']))
-                #     obj_product.major_category.add(obj_major)
-                # else:
-                #     try:
-                #         mommy.make(MajorCategory, pk=int(row['major']))  # Only in test!
-                #     except (TypeError, ValueError):
-                #         pass
-                #
-                # if row['minor'] != "null" and MajorCategory.objects.filter(pk=row['minor']).exists():
-                #     obj_minor = MinorCategory.objects.get(pk=int(row['minor']))
-                #     obj_product.minor_category.add(obj_minor)
-                # else:
-                #     try:
-                #         mommy.make(MinorCategory, pk=int(row['minor']))  # Only in test!
-                #     except (TypeError, ValueError):
-                #         pass
-
             else:
                 obj_product = Product.objects.filter(gtin=int(row['gtin']))
 
@@ -186,22 +178,6 @@ def test_product():
 
                 if obj_product.filter(product_size__isnull=True).exists() and row['weight_integer']:
                     update_kwargs.update({'product_size': row['weight_integer']})
-
-                # Check location
-
-
-
-                # # Check major_category
-                #
-                # if not MajorCategory.objects.filter(product=obj_product).exists() and row['major'] != "null":
-                #     obj_major = MajorCategory.objects.get(pk=row['major'])
-                #     obj_product.major_category.add(obj_major)
-                #
-                # # Check minor_category
-                #
-                # if not MinorCategory.objects.filter(product=obj_product).exists() and row['minor'] != "null":
-                #     obj_minor = MajorCategory.objects.get(pk=row['minor'])
-                #     obj_product.major_category.add(obj_minor)
 
                 # Check ingredient
 

@@ -26,4 +26,4 @@ Possible log types:
 - [fixed] Fix NonFoundMatchings Error Logging (EAT-9)
 - [fixed] DigitalReceipts not stored in database (EAT-14)
 - [changed] Increase API calls for `send_receipt_experimental` from 4 to 10 (EAT-13)
->>>>>>> develop
+
