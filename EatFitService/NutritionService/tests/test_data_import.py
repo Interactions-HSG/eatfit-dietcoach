@@ -11,7 +11,7 @@ from NutritionService.data_import import AllergensImport
 from NutritionService.forms import AllergensForm, NutrientsForm, ProductsForm
 from NutritionService.helpers import store_image_optim, calculate_image_ssim
 from NutritionService.models import Product, Allergen, NutritionFact, MajorCategory, MinorCategory, Ingredient, AdditionalImage
-from NutritionService.views.utils_view import AllergensView
+from NutritionService.views.utils_view import AllergensView, NutrientsView
 
 
 def test_allergens_form():
@@ -106,29 +106,31 @@ def test_allergens_import():
 
 
 @pytest.mark.django_db
-def test_nutrition():
+def test_nutrient_import():
 
-    with open('NutritionService/tests/nutrients_test.csv', 'r') as infile:
-        reader = csv.reader(infile)
-        header = next(reader, None)
+    assert NutritionFact.objects.count() == 0
 
-        for row in reader:
-            if Product.objects.filter(gtin=int(row[1])).exists():
+    mommy.make(Product, id=494802, gtin=9011900196084)
 
-                obj_product = Product.objects.get(gtin=int(row[1]))
+    update_test = mommy.make(Product, id=1018225, gtin=4335896269665)
+    mommy.make(NutritionFact, name='saturated_fat', amount=12.4, unit_of_measure='hl', product=update_test)
 
-                if not obj_product.nutrients.filter(name=row[2]).exists():
-                    obj_allergen = NutritionFact.objects.create(name=row[2], certainity=row[3], product=obj_product)
-                    obj_product.nutrients.add(obj_allergen)
+    factory = RequestFactory()
 
-            else:
-                obj_product = Product.objects.create(id=int(row[0]), gtin=int(row[1]))
-                obj_nutrition = NutritionFact.objects.create(name=row[2], amount=row[3], unit_of_measure=row[4],
-                                                             product=obj_product)
-                obj_product.nutrients.add(obj_nutrition)
+    with open('NutritionService/tests/nutrients_test.csv') as infile:
+        nutrients_csv_file = SimpleUploadedFile(infile.name, infile.read())
 
-        assert True
+    form_data = {'nutrients_name': 'on',
+                 'nutrients_amount': 'on',
+                 'nutrients_unit_of_measure': 'on',
+                 'file': nutrients_csv_file}
 
+    request = factory.post('/tools/import-nutrients/', form_data)
+    view = NutrientsView.as_view()
+    response = view(request)
+
+    assert response.status_code == 302
+    assert NutritionFact.objects.count() == 2
 
 @pytest.mark.django_db
 def test_product():

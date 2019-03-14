@@ -35,6 +35,7 @@ class AllergensView(FormView):
 class NutrientsView(FormView):
     template_name = 'utils/import_nutrients.html'
     form_class = NutrientsForm
+    success_url = reverse_lazy('tools')
 
     def form_valid(self, form):
         csv_file = form.cleaned_data['file']
