@@ -30,6 +30,8 @@ def store_image_optim(url, product):
         for chunk in img.iter_content(1024):
             temp.write(chunk)
 
+        file_name = ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(20)) + ".jpg"
+
         if product.image:
 
             ssim = calculate_image_ssim(product.image, temp)
@@ -39,7 +41,7 @@ def store_image_optim(url, product):
             else:
                 return {'product': product, 'image': files.File(temp), 'image_url': url}
         else:
-            product.image.save(temp.name, files.File(temp))
+            product.image.save(file_name, files.File(temp))
 
 
 def store_image(image_url, product):

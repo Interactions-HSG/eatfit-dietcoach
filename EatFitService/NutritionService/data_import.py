@@ -59,7 +59,11 @@ class AllergensImport(ImportBase):
             try:
                 product_object = Product.objects.get(id=int(row['import_product_id']),
                                                      gtin=int(row['gtin']))
-                product_object.allergens.create_or_update(**update_allergens)
+
+                if product_object.allergens.filter(name=row['allergen_name']).exists():
+                    product_object.allergens.update(**update_allergens)
+                else:
+                    product_object.allergens.create(**update_allergens)
 
             except Product.DoesNotExist:
                 # log Product does not exit

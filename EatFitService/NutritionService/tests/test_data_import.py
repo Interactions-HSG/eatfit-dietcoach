@@ -69,10 +69,10 @@ def test_headers():
     allergen_data = {'allergen_name': 'on'}
 
     bad_file = open('NutritionService/tests/nutrients_test.csv')
-    bad_test = ImportBase(bad_file, allergen_data)
+    bad_test = AllergensImport(bad_file, allergen_data)
 
     good_file = open('NutritionService/tests/allergens_test.csv')
-    good_test = ImportBase(good_file, allergen_data)
+    good_test = AllergensImport(good_file, allergen_data)
 
     assert not bad_test.check_headers()
     assert good_test.check_headers()
