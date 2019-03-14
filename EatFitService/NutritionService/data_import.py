@@ -76,12 +76,45 @@ class AllergensImport(ImportBase):
 class NutrientsImport(ImportBase):
     HEADERS = NUTRIENTS_HEADERS
 
-    def import_csv(csv_file, form_data):
-        pass
+    def import_csv(self):
+        transform_form_headers = {
+            'nutrients_name': 'nutrient_name',
+            'nutrients_amount': 'amount',
+            'nutrients_unit_of_measure': 'unit_of_measure'
+        }
+        transform_csv_headers = {
+            'nutrient_name': 'name',
+            'amount': 'amount',
+            'unit_of_measure': 'unit_of_measure'
+        }
+
+        update_headers = [transform_form_headers[key] for key, value in self.form_params.items() if value]
+        reader = csv.DictReader(self.csv_file)
+
+        for row in reader:
+
+            get_row_headers = {header: row[header] for header in update_headers}
+            update_nutrients = {transform_csv_headers[key]: value for key, value in get_row_headers.items()}
+
+            try:
+                product_object = Product.objects.get(id=int(row['import_product_id']),
+                                                     gtin=int(row['gtin']))
+
+                if product_object.nutrients.filter(name=row['nutrient_name']).exists():
+                    product_object.nutrients.update(**update_nutrients)
+                else:
+                    product_object.nutrients.create(**update_nutrients)
+
+            except Product.DoesNotExist:
+                # log Product does not exit
+                continue
+
+            except Product.MultipleObjectsReturned:
+                continue
 
 
 class ProductsImport(ImportBase):
     HEADERS = PRODUCT_HEADERS
 
-    def import_csv(csv_file, form_data):
+    def import_csv(self):
         pass
