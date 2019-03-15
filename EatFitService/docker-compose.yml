@@ -8,6 +8,11 @@ services:
       - MYSQL_ROOT_PASSWORD=123456
       - MYSQL_DATABASE=NutritionDB
       - MYSQL_ROOT_HOST=%
+  start-dependencies:
+    image: dadarek/wait-for-dependencies
+    depends_on:
+      - mysql
+    command: mysql:3306
   api:
     build:
       dockerfile: Dockerfile.dev
