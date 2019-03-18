@@ -1,9 +1,13 @@
 import csv
 import cv2
+import numpy as np
+from PIL import Image
 import random
 import requests
+import shutil
 from skimage.measure import compare_ssim
 import string
+from StringIO import StringIO
 import tempfile
 from textblob import TextBlob
 
@@ -22,13 +26,18 @@ def detect_language(text):
 
 
 def calculate_image_ssim(image_original, image_new):
-    original = cv2.imread(image_original)
-    new = cv2.imread(image_new)
 
-    original = cv2.cvtColor(original, cv2.COLOR_BGR2GRAY)
-    new = cv2.cvtColor(new, cv2.COLOR_BGR2GRAY)
+    temp_buffer = StringIO()
+    temp_buffer.write(image_original.read())
+    temp_buffer.seek(0)
 
-    ssim = compare_ssim(original, new)
+    orig_img = np.array(Image.open(temp_buffer), dtype=np.uint8)
+    test_img = cv2.imread(image_new.name, cv2.IMREAD_UNCHANGED)
+
+    original_img_processed = cv2.cvtColor(orig_img, cv2.COLOR_BGR2GRAY)
+    new_img_processed = cv2.cvtColor(test_img, cv2.COLOR_BGR2GRAY)
+
+    ssim = compare_ssim(original_img_processed, new_img_processed)
 
     return ssim
 
@@ -44,7 +53,7 @@ def store_additional_image(url, product):
         file_name = ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(20)) + ".jpg"
 
         additional_img = {
-            'image': (file_name, temp),
+            'image': files.File(temp),
             'image_url': url
         }
         product.additional_image.create(**additional_img)
@@ -53,21 +62,23 @@ def store_additional_image(url, product):
 def store_image_optim(url, product):
     img = requests.get(url, stream=True)
     if img.ok:
-        temp = tempfile.NamedTemporaryFile()
+        temp = tempfile.NamedTemporaryFile(suffix='.jpg')
+        img.raw.decode_content = True
+        shutil.copyfileobj(img.raw, temp)
 
-        for chunk in img.iter_content(1024):
-            temp.write(chunk)
-
-        file_name = ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(20)) + ".jpg"
+        file_name = ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(20)) + '.jpg'
 
         if product.image:
 
             ssim = calculate_image_ssim(product.image, temp)
 
             if ssim <= 0.75:  # Structural similarity: 1 = perfect similarity, -1 = perfect dissimilarity
-                product.image.save(temp.name, files.File(temp))
+                if product.original_image_url:
+                    new_image = {'image': product.image, 'image_url': product.original_image_url}
+                    product.additional_image.create(**new_image)
+                product.image.save(file_name, files.File(temp))
             else:
-                new_image = {'image': (file_name, files.File(temp)), 'image_url': url}
+                new_image = {'image': files.File(temp), 'image_url': url}
                 product.additional_image.create(**new_image)
         else:
             product.image.save(file_name, files.File(temp))
