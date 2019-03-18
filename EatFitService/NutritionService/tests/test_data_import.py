@@ -247,7 +247,12 @@ def test_product_import_main_image_exists():
 @pytest.mark.django_db
 def test_product_import_major_category():
 
-    test_prod = mommy.make(Product, id=522726, gtin=4018852104216)
+    test_cat = MajorCategory.objects.create(id=10, name_de='Hallo')
+    test_prod = mommy.make(Product, id=543070, gtin=4009233003433, major_category=test_cat)
+
+    assert test_prod.major_category
+
+    new_cat = MajorCategory.objects.create(id=12, name_de='Welt')
 
     factory = RequestFactory()
 
@@ -255,7 +260,7 @@ def test_product_import_major_category():
         product_csv_file = SimpleUploadedFile(infile.name, infile.read())
 
     form_data = {
-        'major': 'on',
+        'product_major': 'on',
         'file': product_csv_file
     }
 
@@ -265,4 +270,33 @@ def test_product_import_major_category():
 
     assert response.status_code == 302
     assert Product.objects.count() == 30
-    assert test_prod.major_category_id == 12
+    assert Product.objects.filter(id=543070, gtin=4009233003433, major_category=new_cat).exists()
+
+
+@pytest.mark.django_db
+def test_product_import_minor_category():
+
+    test_cat = MinorCategory.objects.create(id=50, name_de='Freundlicher Gruss')
+    test_prod = mommy.make(Product, id=543070, gtin=4009233003433, minor_category=test_cat)
+
+    assert test_prod.minor_category
+
+    new_cat = MinorCategory.objects.create(id=56, name_de='Umher')
+
+    factory = RequestFactory()
+
+    with open('NutritionService/tests/products_test.csv') as infile:
+        product_csv_file = SimpleUploadedFile(infile.name, infile.read())
+
+    form_data = {
+        'product_minor': 'on',
+        'file': product_csv_file
+    }
+
+    request = factory.post('/tools/import-products/', form_data)
+    view = ProductsView.as_view()
+    response = view(request)
+
+    assert response.status_code == 302
+    assert Product.objects.count() == 30
+    assert Product.objects.filter(id=543070, gtin=4009233003433, minor_category=new_cat).exists()

@@ -131,29 +131,29 @@ class ProductsImport(ImportBase):
 
         store_image_optim(datum, product)
 
-    def update_major_category(self, product, row):
+    def update_major_category(self, product, datum):
 
         try:
-            major_object = MajorCategory.objects.get(id=int(row['major']))
+            major_object = MajorCategory.objects.get(id=int(datum))
 
-            if not product.minor_category.filter(id=int(row['major'])).exists():
-                product.minor_category.update(major_object)
+            if product.major_category != major_object:
+                product.major_category = major_object
 
-        except MinorCategory.DoesNotExist:
-            # Log wrong minor category
+        except MajorCategory.DoesNotExist:
             pass
+            # Log wrong major category
 
-    def update_minor_category(self, product, row):
+    def update_minor_category(self, product, datum):
 
         try:
-            minor_object = MinorCategory.objects.get(id=int(row['minor']))
+            minor_object = MinorCategory.objects.get(id=int(datum))
 
-            if not product.minor_category.filter(id=int(row['minor'])).exists():
-                product.minor_category.update(minor_object)
+            if product.minor_category != minor_object:
+                product.minor_category = minor_object
 
         except MinorCategory.DoesNotExist:
-            # Log wrong minor category
             pass
+            # Log wrong minor category
 
     def import_csv(self):
         transform_form_headers = {
@@ -188,14 +188,15 @@ class ProductsImport(ImportBase):
 
             ingredients_update_or_create_condition = row['ingredients'] and 'ingredients' in update_products.keys()
             save_image_condition = row['imageLink'] and 'original_image_url' in update_products.keys()
-            major_category_update_condition = row['major'] and 'major' in update_products.keys()
-            minor_category_update_condition = row['minor'] and 'minor' in update_products.keys()
+            major_category_create_condition = row['major'] and row['major'] != 'null'
+            minor_category_create_condition = row['minor'] and row['minor'] != 'null'
+            major_category_update_condition = major_category_create_condition and 'major' in update_products.keys()
+            minor_category_update_condition = minor_category_create_condition and 'minor' in update_products.keys()
 
             product_object, created = Product.objects.get_or_create(id=int(row['import_product_id']),
                                                                     gtin=int(row['gtin']))
 
             product_object.__dict__.update(safe_update_products)
-            product_object.save()
 
             if ingredients_update_or_create_condition:
                 self.update_or_create_ingredient(product_object, row['ingredients'])
@@ -203,8 +204,10 @@ class ProductsImport(ImportBase):
             if save_image_condition:
                 self.save_image(product_object, row['imageLink'])
 
-            if major_category_update_condition:
+            if (created and major_category_create_condition) or major_category_update_condition:
                 self.update_major_category(product_object, row['major'])
 
-            if minor_category_update_condition:
+            if (created and minor_category_create_condition) or minor_category_update_condition:
                 self.update_minor_category(product_object, row['minor'])
+
+            product_object.save()
