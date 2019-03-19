@@ -247,7 +247,7 @@ def test_product_import_major_category():
     test_cat = MajorCategory.objects.create(id=10, name_de='Hallo')
     test_prod = mommy.make(Product, id=543070, gtin=4009233003433, major_category=test_cat)
 
-    assert test_prod.major_category
+    assert test_prod.major_category is not None
 
     new_cat = MajorCategory.objects.create(id=12, name_de='Welt')
 
