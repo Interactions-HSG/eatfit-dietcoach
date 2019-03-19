@@ -36,7 +36,6 @@ def prepare_image_buffered(image):
 
 
 def calculate_image_ssim(original_image, new_image, original_buffered=True, new_buffered=False):
-
     if original_buffered:
         original_image = prepare_image_buffered(original_image)
     else:
@@ -50,9 +49,10 @@ def calculate_image_ssim(original_image, new_image, original_buffered=True, new_
     original_image_processed = cv2.cvtColor(original_image, cv2.COLOR_BGR2GRAY)
     new_image_processed = cv2.cvtColor(new_image, cv2.COLOR_BGR2GRAY)
 
-    ssim = compare_ssim(original_image_processed, new_image_processed)
-
-    return ssim
+    if original_image_processed.shape == new_image_processed.shape:
+        return compare_ssim(original_image_processed, new_image_processed)
+    else:
+        return -99  # SSIM not meaningful for arrays of unequal dimensions / SSIM of -99 is undefined for [1, -1]
 
 
 def store_image_optim(url, product):
