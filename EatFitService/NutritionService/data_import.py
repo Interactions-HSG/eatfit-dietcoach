@@ -1,7 +1,7 @@
 import chardet
 import csv
 
-from NutritionService.helpers import detect_language, store_image, store_additional_image, store_image_optim
+from NutritionService.helpers import detect_language, store_image_optim
 from NutritionService.models import Product, MajorCategory, MinorCategory
 
 ALLERGEN_HEADERS = ['import_product_id', 'gtin', 'allergen_name', 'certainity', 'major', 'minor']

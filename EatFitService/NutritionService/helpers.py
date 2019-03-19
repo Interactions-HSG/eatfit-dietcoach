@@ -25,42 +25,38 @@ def detect_language(text):
         return None
 
 
-def calculate_image_ssim(image_original, image_new):
+def prepare_image_buffered(image):
 
     temp_buffer = StringIO()
-    temp_buffer.write(image_original.read())
+    temp_buffer.write(image.read())
     temp_buffer.seek(0)
+    image = np.array(Image.open(temp_buffer), dtype=np.uint8)
 
-    orig_img = np.array(Image.open(temp_buffer), dtype=np.uint8)
-    test_img = cv2.imread(image_new.name, cv2.IMREAD_UNCHANGED)
+    return image
 
-    original_img_processed = cv2.cvtColor(orig_img, cv2.COLOR_BGR2GRAY)
-    new_img_processed = cv2.cvtColor(test_img, cv2.COLOR_BGR2GRAY)
 
-    ssim = compare_ssim(original_img_processed, new_img_processed)
+def calculate_image_ssim(original_image, new_image, original_buffered=True, new_buffered=False):
+
+    if original_buffered:
+        original_image = prepare_image_buffered(original_image)
+    else:
+        original_image = cv2.imread(original_image.name, cv2.IMREAD_UNCHANGED)
+
+    if new_buffered:
+        new_image = prepare_image_buffered(new_image)
+    else:
+        new_image = cv2.imread(new_image.name, cv2.IMREAD_UNCHANGED)
+
+    original_image_processed = cv2.cvtColor(original_image, cv2.COLOR_BGR2GRAY)
+    new_image_processed = cv2.cvtColor(new_image, cv2.COLOR_BGR2GRAY)
+
+    ssim = compare_ssim(original_image_processed, new_image_processed)
 
     return ssim
 
 
-def store_additional_image(url, product):
-    img = requests.get(url, stream=True)
-    if img.ok:
-        temp = tempfile.NamedTemporaryFile()
-
-        for chunk in img.iter_content(1024):
-            temp.write(chunk)
-
-        file_name = ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(20)) + ".jpg"
-
-        additional_img = {
-            'image': files.File(temp),
-            'image_url': url
-        }
-        product.additional_image.create(**additional_img)
-
-
 def store_image_optim(url, product):
-    img = requests.get(url, stream=True)
+    img = requests.get(url, stream=True, timeout=10)
     if img.ok:
         temp = tempfile.NamedTemporaryFile(suffix='.jpg')
         img.raw.decode_content = True

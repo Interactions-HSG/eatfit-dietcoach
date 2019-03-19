@@ -2,10 +2,7 @@
 
 from __future__ import print_function
 from model_mommy import mommy
-from PIL import Image
 import pytest
-import random
-import string
 
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import RequestFactory
@@ -62,7 +59,7 @@ def test_encoding():
     good_file = open('NutritionService/tests/allergens_test.csv')
     good_test = AllergensImport(good_file, form_data)
 
-    #assert not bad_test.check_encoding()
+    assert not bad_test.check_encoding()
     assert good_test.check_encoding()
 
 
@@ -279,7 +276,7 @@ def test_product_import_minor_category():
     test_cat = MinorCategory.objects.create(id=50, name_de='Freundlicher Gruss')
     test_prod = mommy.make(Product, id=543070, gtin=4009233003433, minor_category=test_cat)
 
-    assert test_prod.minor_category
+    assert test_prod.minor_category is not None
 
     new_cat = MinorCategory.objects.create(id=56, name_de='Umher')
 
