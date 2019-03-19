@@ -49,10 +49,12 @@ def calculate_image_ssim(original_image, new_image, original_buffered=True, new_
     original_image_processed = cv2.cvtColor(original_image, cv2.COLOR_BGR2GRAY)
     new_image_processed = cv2.cvtColor(new_image, cv2.COLOR_BGR2GRAY)
 
-    if original_image_processed.shape == new_image_processed.shape:
-        return compare_ssim(original_image_processed, new_image_processed)
-    else:
-        return -99  # SSIM not meaningful for arrays of unequal dimensions / SSIM of -99 is undefined for [1, -1]
+    try:
+        ssim = compare_ssim(original_image_processed, new_image_processed)
+    except ValueError:
+        ssim = None
+
+    return ssim
 
 
 def store_image_optim(url, product):
@@ -68,7 +70,7 @@ def store_image_optim(url, product):
 
             ssim = calculate_image_ssim(product.image, temp)
 
-            if ssim <= 0.75:  # Structural similarity: 1 = perfect similarity, -1 = perfect dissimilarity
+            if ssim is not None and ssim <= 0.75:  # Structural similarity: 1 = perfect similarity, -1 = perfect dissimilarity
                 if product.original_image_url:
                     new_image = {'image': product.image, 'image_url': product.original_image_url}
                     product.additional_image.create(**new_image)
