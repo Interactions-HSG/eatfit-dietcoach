@@ -225,6 +225,23 @@ class ErrorLog(models.Model):
         db_table = 'error_log'
 
 
+class ImportErrorLog(models.Model):
+    import_type = models.CharField(max_length=50)
+    file_name = models.CharField(max_length=150)
+    row_data = models.TextField()
+    error_field = models.CharField(max_length=50)
+    error_message = models.TextField()
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __unicode__(self):
+        return self.filename
+
+    class Meta:
+        verbose_name = 'Import Error Log'
+        verbose_name_plural = 'Import Error Logs'
+        db_table = 'import_error'
+
+
 class Allergen(models.Model):
     id = models.BigAutoField(primary_key=True)
     product = models.ForeignKey(Product, related_name='allergens')
