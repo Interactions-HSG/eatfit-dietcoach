@@ -34,7 +34,6 @@ def prepare_image_buffered(image):
 
     return image
 
-
 def calculate_image_ssim(original_image, new_image, original_buffered=True, new_buffered=False):
     if original_buffered:
         original_image = prepare_image_buffered(original_image)
@@ -56,7 +55,7 @@ def calculate_image_ssim(original_image, new_image, original_buffered=True, new_
 
 
 def store_image_optim(url, product):
-    img = requests.get(url, stream=True, timeout=10)
+    img = requests.get(url, stream=True, timeout=3)
     if img.ok:
         temp = tempfile.NamedTemporaryFile(suffix='.jpg')
         img.raw.decode_content = True
