@@ -9,7 +9,7 @@ from django.test import RequestFactory
 
 from NutritionService.data_import import AllergensImport
 from NutritionService.forms import AllergensForm, NutrientsForm, ProductsForm
-from NutritionService.models import Product, Allergen, NutritionFact, MajorCategory, MinorCategory, Ingredient, AdditionalImage
+from NutritionService.models import Product, Allergen, NutritionFact, MajorCategory, MinorCategory, ImportErrorLog, Ingredient, AdditionalImage
 from NutritionService.views.utils_view import AllergensView, NutrientsView, ProductsView
 
 
@@ -78,7 +78,7 @@ def test_headers():
 
 
 @pytest.mark.django_db
-def test_allergens_import():
+def test_allergen_import():
 
     assert Allergen.objects.count() == 0
 
@@ -102,6 +102,32 @@ def test_allergens_import():
 
     assert response.status_code == 302
     assert Allergen.objects.count() == 2
+
+
+@pytest.mark.django_db
+def test_allergen_import_error_logging():
+
+    assert ImportErrorLog.objects.count() == 0
+    assert Allergen.objects.count() == 0
+
+    mommy.make(Product, id=466560, gtin=5000159431668)
+
+    factory = RequestFactory()
+
+    with open('NutritionService/tests/allergens_test.csv') as infile:
+        allergens_csv_file = SimpleUploadedFile(infile.name, infile.read())
+
+    form_data = {'allergen_name': 'on',
+                 'allergen_certainty': 'on',
+                 'file': allergens_csv_file}
+
+    request = factory.post('/tools/import-allergens/', form_data)
+    view = AllergensView.as_view()
+    response = view(request)
+
+    assert response.status_code == 302
+    assert Allergen.objects.count() == 1
+    assert ImportErrorLog.objects.count() == 29
 
 
 @pytest.mark.django_db
@@ -130,6 +156,33 @@ def test_nutrient_import():
 
     assert response.status_code == 302
     assert NutritionFact.objects.count() == 2
+
+
+@pytest.mark.django_db
+def test_nutrient_import_error_logging():
+
+    assert ImportErrorLog.objects.count() == 0
+    assert NutritionFact.objects.count() == 0
+
+    mommy.make(Product, id=494802, gtin=9011900196084)
+
+    factory = RequestFactory()
+
+    with open('NutritionService/tests/nutrients_test.csv') as infile:
+        nutrients_csv_file = SimpleUploadedFile(infile.name, infile.read())
+
+    form_data = {'nutrients_name': 'on',
+                 'nutrients_amount': 'on',
+                 'nutrients_unit_of_measure': 'on',
+                 'file': nutrients_csv_file}
+
+    request = factory.post('/tools/import-nutrients/', form_data)
+    view = NutrientsView.as_view()
+    response = view(request)
+
+    assert response.status_code == 302
+    assert NutritionFact.objects.count() == 1
+    assert ImportErrorLog.objects.count() == 29
 
 
 @pytest.mark.django_db
@@ -297,3 +350,31 @@ def test_product_import_minor_category():
     assert response.status_code == 302
     assert Product.objects.count() == 30
     assert Product.objects.filter(id=543070, gtin=4009233003433, minor_category=new_cat).exists()
+
+
+@pytest.mark.django_db
+def test_product_import_error_logging():
+
+    assert ImportErrorLog.objects.count() == 0
+    assert Product.objects.count() == 0
+
+    factory = RequestFactory()
+
+    with open('NutritionService/tests/products_test.csv') as infile:
+        product_csv_file = SimpleUploadedFile(infile.name, infile.read())
+
+    form_data = {'product_name_de': 'on',
+                 'product_ingredients': 'on',
+                 'product_major': 'on',
+                 'product_minor': 'on',
+                 'product_weight_unit': 'on',
+                 'product_weight_integer': 'on',
+                 'file': product_csv_file}
+
+    request = factory.post('/tools/import-products/', form_data)
+    view = ProductsView.as_view()
+    response = view(request)
+
+    assert response.status_code == 302
+    assert Product.objects.count() == 30
+    assert ImportErrorLog.objects.count() == 36

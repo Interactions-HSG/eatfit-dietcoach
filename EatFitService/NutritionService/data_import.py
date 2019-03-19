@@ -52,12 +52,10 @@ class AllergensImport(ImportBase):
         update_headers = [transform_form_headers[key] for key, value in self.form_params.items() if value]
         reader = csv.DictReader(self.csv_file)
 
-        counter = 0
-        for row in reader:
+        for count, row in enumerate(reader):
 
             get_row_headers = {header: row[header] for header in update_headers}
             update_allergens = {transform_csv_headers[key]: value for key, value in get_row_headers.items()}
-            counter += 1
 
             try:
                 product_object = Product.objects.get(id=int(row['import_product_id']),
@@ -73,7 +71,7 @@ class AllergensImport(ImportBase):
                 log_dict = {
                     'import_type': 'Allergens',
                     'file_name': self.csv_file.__str__,
-                    'row_data': 'Row ' + str(counter) + ': ' + ', '.join(row),
+                    'row_data': 'Row ' + str(count) + ': ' + ', '.join(row),
                     'error_field': 'allergens foreign key field',
                     'error_message': 'Product ' + str(row['gtin']) + ' does not exist.'
                 }
@@ -85,7 +83,7 @@ class AllergensImport(ImportBase):
                 log_dict = {
                     'file_name': self.csv_file.__str__,
                     'import_type': 'Allergens',
-                    'row_data': 'Row ' + str(counter) + ': ' + ', '.join(row),
+                    'row_data': 'Row ' + str(count) + ': ' + ', '.join(row),
                     'error_field': 'allergens foreign key field',
                     'error_message': 'Multiple products with ' + str(row['gtin']) + ' found.'
                 }
@@ -110,13 +108,11 @@ class NutrientsImport(ImportBase):
 
         update_headers = [transform_form_headers[key] for key, value in self.form_params.items() if value]
         reader = csv.DictReader(self.csv_file)
-        counter = 0
 
-        for row in reader:
+        for count, row in enumerate(reader):
 
             get_row_headers = {header: row[header] for header in update_headers}
             update_nutrients = {transform_csv_headers[key]: value for key, value in get_row_headers.items()}
-            counter += 1
 
             try:
                 product_object = Product.objects.get(id=int(row['import_product_id']),
@@ -132,7 +128,7 @@ class NutrientsImport(ImportBase):
                 log_dict = {
                     'import_type': 'Nutrients',
                     'file_name': self.csv_file.__str__,
-                    'row_data': 'Row ' + str(counter) + ': ' + ', '.join(row),
+                    'row_data': 'Row ' + str(count) + ': ' + ', '.join(row),
                     'error_field': 'nutrients foreign key field',
                     'error_message': 'Product ' + str(row['gtin']) + ' does not exist.'
                 }
@@ -143,7 +139,7 @@ class NutrientsImport(ImportBase):
                 log_dict = {
                     'import_type': 'Nutrients',
                     'file_name': self.csv_file.__str__,
-                    'row_data': 'Row ' + str(counter) + ': ' + ', '.join(row),
+                    'row_data': 'Row ' + str(count) + ': ' + ', '.join(row),
                     'error_field': 'nutrients foreign key field',
                     'error_message': 'Multiple products with GTIN: ' + str(row['gtin']) + ' found.'
                 }
@@ -228,11 +224,10 @@ class ProductsImport(ImportBase):
 
         update_headers = [transform_form_headers[key] for key, value in self.form_params.items() if value]
         reader = csv.DictReader(self.csv_file)
-        counter = 0
 
-        for row in reader:
+        for count, row in enumerate(reader):
 
-            row.update({'counter': counter})
+            row.update({'counter': count})
             get_row_headers = {header: row[header] for header in update_headers}
             update_products = {transform_csv_headers[key]: value for key, value in get_row_headers.items()}
             safe_update_products = {key: value for key, value in update_products.items() if
@@ -263,4 +258,3 @@ class ProductsImport(ImportBase):
                 self.update_minor_category(product_object, row)
 
             product_object.save()
-            counter += 1
