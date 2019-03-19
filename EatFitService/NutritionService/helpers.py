@@ -36,7 +36,6 @@ def prepare_image_buffered(image):
 
 
 def calculate_image_ssim(original_image, new_image, original_buffered=True, new_buffered=False):
-
     if original_buffered:
         original_image = prepare_image_buffered(original_image)
     else:
@@ -50,7 +49,10 @@ def calculate_image_ssim(original_image, new_image, original_buffered=True, new_
     original_image_processed = cv2.cvtColor(original_image, cv2.COLOR_BGR2GRAY)
     new_image_processed = cv2.cvtColor(new_image, cv2.COLOR_BGR2GRAY)
 
-    ssim = compare_ssim(original_image_processed, new_image_processed)
+    try:
+        ssim = compare_ssim(original_image_processed, new_image_processed)
+    except ValueError:
+        ssim = None
 
     return ssim
 
@@ -68,7 +70,7 @@ def store_image_optim(url, product):
 
             ssim = calculate_image_ssim(product.image, temp)
 
-            if ssim <= 0.75:  # Structural similarity: 1 = perfect similarity, -1 = perfect dissimilarity
+            if ssim is not None and ssim <= 0.75:  # Structural similarity: 1 = perfect similarity, -1 = perfect dissimilarity
                 if product.original_image_url:
                     new_image = {'image': product.image, 'image_url': product.original_image_url}
                     product.additional_image.create(**new_image)

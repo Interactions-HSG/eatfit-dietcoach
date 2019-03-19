@@ -17,7 +17,6 @@ from request_data import generate_request_long
 
 @pytest.mark.django_db
 def test_category_logging():
-
     r2n_partner = mommy.make(ReceiptToNutritionPartner)
     r2n_user = mommy.make(ReceiptToNutritionUser,
                           r2n_partner=r2n_partner)
@@ -53,15 +52,16 @@ def test_matching_duplicate():
     minor_category = mommy.make(MinorCategory, category_major=major_category)
 
     product = mommy.make(Product,
-               major_category=major_category,
-               minor_category=minor_category)
+                         major_category=major_category,
+                         minor_category=minor_category)
 
     digital_receipt = mommy.make(DigitalReceipt,
                                  r2n_user=r2n_user,
                                  business_unit='Migros')
 
     # Test product is attached to matching
-    matching1 = mommy.make(Matching, article_id=digital_receipt.article_id, article_type=digital_receipt.article_type, eatfit_product=product)
+    matching1 = mommy.make(Matching, article_id=digital_receipt.article_id, article_type=digital_receipt.article_type,
+                           eatfit_product=product)
     assert matching1.eatfit_product == product
     assert Matching.objects.all().count() == 1
 
@@ -70,7 +70,8 @@ def test_matching_duplicate():
     assert matched_product == matching1.eatfit_product
 
     # Test duplicate matching
-    matching2 = mommy.make(Matching, article_id=digital_receipt.article_id, article_type=digital_receipt.article_type, eatfit_product=product)
+    matching2 = mommy.make(Matching, article_id=digital_receipt.article_id, article_type=digital_receipt.article_type,
+                           eatfit_product=product)
     assert Matching.objects.all().count() == 2
     matched_product = views.match_receipt(digital_receipt)
 
@@ -80,7 +81,6 @@ def test_matching_duplicate():
 
 @pytest.mark.django_db
 def test_digital_receipt_creation():
-
     settings.USE_TZ = True
 
     r2n_partner = mommy.make(ReceiptToNutritionPartner)
@@ -162,8 +162,8 @@ def test_calculate_nutriscore_from_ofcom():
     minor_category = mommy.make(MinorCategory, category_major=major_category, id=40)
 
     product_none = mommy.make(Product,
-               major_category=major_category,
-               minor_category=minor_category, ofcom_value=None)
+                              major_category=major_category,
+                              minor_category=minor_category, ofcom_value=None)
 
     nutri_score = views.nutri_score_from_ofcom(product_none)
 
@@ -181,7 +181,6 @@ def test_calculate_nutriscore_from_ofcom():
 
 @pytest.mark.django_db
 def test_product_size_of_measurement():
-
     user = User.objects.create_user(username='test', password='test')
 
     api_client = APIClient()
@@ -198,10 +197,10 @@ def test_product_size_of_measurement():
     # Catch TypeError
 
     product = mommy.make(Product,
-               major_category=major_category,
-               minor_category=minor_category,
-               product_size=None,
-               product_size_unit_of_measure=None)
+                         major_category=major_category,
+                         minor_category=minor_category,
+                         product_size=None,
+                         product_size_unit_of_measure=None)
 
     mommy.make(Matching, article_id='Apfel Braeburn', article_type='Migros_long_v1', eatfit_product=product)
 
