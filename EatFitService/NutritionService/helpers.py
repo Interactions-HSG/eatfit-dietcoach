@@ -34,6 +34,7 @@ def prepare_image_buffered(image):
 
     return image
 
+
 def calculate_image_ssim(original_image, new_image, original_buffered=True, new_buffered=False):
     if original_buffered:
         original_image = prepare_image_buffered(original_image)
