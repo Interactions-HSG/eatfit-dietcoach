@@ -1,7 +1,8 @@
 import chardet
 import csv
 
-from NutritionService.models import Product, Allergen
+from NutritionService.helpers import detect_language, store_image_optim
+from NutritionService.models import Product, MajorCategory, MinorCategory
 
 ALLERGEN_HEADERS = ['import_product_id', 'gtin', 'allergen_name', 'certainity', 'major', 'minor']
 NUTRIENTS_HEADERS = ['import_product_id', 'gtin', 'nutrient_name', 'amount', 'unit_of_measure']
@@ -21,7 +22,7 @@ class ImportBase:
         self.csv_file.seek(0)
         encoding_detector = chardet.detect(self.csv_file.read())
         encoding = encoding_detector['encoding']
-        check_encoding = True if encoding.find('UTF-8') == 0 or encoding.find('ascii') == 0 else False
+        check_encoding = True if encoding.find('utf-8') == 0 or encoding.find('ascii') == 0 else False
         self.csv_file.seek(0)
         return check_encoding
 
@@ -116,5 +117,97 @@ class NutrientsImport(ImportBase):
 class ProductsImport(ImportBase):
     HEADERS = PRODUCT_HEADERS
 
+    def update_or_create_ingredient(self, product, datum):
+
+        ingredients_dict = {'text': datum,
+                            'lang': detect_language(datum)}
+
+        if product.ingredients.filter(text=datum).exists():
+            product.ingredients.update(**ingredients_dict)
+        else:
+            product.ingredients.create(**ingredients_dict)
+
+    def save_image(self, product, datum):
+
+        store_image_optim(datum, product)
+
+    def update_major_category(self, product, datum):
+
+        try:
+            major_object = MajorCategory.objects.get(id=int(datum))
+
+            if product.major_category != major_object:
+                product.major_category = major_object
+
+        except MajorCategory.DoesNotExist:
+            pass
+            # Log wrong major category
+
+    def update_minor_category(self, product, datum):
+
+        try:
+            minor_object = MinorCategory.objects.get(id=int(datum))
+
+            if product.minor_category != minor_object:
+                product.minor_category = minor_object
+
+        except MinorCategory.DoesNotExist:
+            pass
+            # Log wrong minor category
+
     def import_csv(self):
-        pass
+        transform_form_headers = {
+            'product_name_de': 'product_name_de',
+            'product_image': 'imageLink',
+            'product_ingredients': 'ingredients',
+            'product_major': 'major',
+            'product_minor': 'minor',
+            'product_weight_unit': 'weight_unit',
+            'product_weight_integer': 'weight_integer'
+        }
+        transform_csv_headers = {
+            'product_name_de': 'product_name_de',
+            'imageLink': 'original_image_url',
+            'ingredients': 'ingredients',
+            'major': 'major',
+            'minor': 'minor',
+            'weight_unit': 'product_size_unit_of_measure',
+            'weight_integer': 'product_size'
+        }
+        safe_update_headers = ['product_name_de', 'product_size_unit_of_measure', 'product_size']
+
+        update_headers = [transform_form_headers[key] for key, value in self.form_params.items() if value]
+        reader = csv.DictReader(self.csv_file)
+
+        for row in reader:
+
+            get_row_headers = {header: row[header] for header in update_headers}
+            update_products = {transform_csv_headers[key]: value for key, value in get_row_headers.items()}
+            safe_update_products = {key: value for key, value in update_products.items() if
+                                    key in safe_update_headers}
+
+            ingredients_update_or_create_condition = row['ingredients'] and 'ingredients' in update_products.keys()
+            save_image_condition = row['imageLink'] and 'original_image_url' in update_products.keys()
+            major_category_create_condition = row['major'] and row['major'] != 'null'
+            minor_category_create_condition = row['minor'] and row['minor'] != 'null'
+            major_category_update_condition = major_category_create_condition and 'major' in update_products.keys()
+            minor_category_update_condition = minor_category_create_condition and 'minor' in update_products.keys()
+
+            product_object, created = Product.objects.get_or_create(id=int(row['import_product_id']),
+                                                                    gtin=int(row['gtin']))
+
+            product_object.__dict__.update(safe_update_products)
+
+            if ingredients_update_or_create_condition:
+                self.update_or_create_ingredient(product_object, row['ingredients'])
+
+            if save_image_condition:
+                self.save_image(product_object, row['imageLink'])
+
+            if (created and major_category_create_condition) or major_category_update_condition:
+                self.update_major_category(product_object, row['major'])
+
+            if (created and minor_category_create_condition) or minor_category_update_condition:
+                self.update_minor_category(product_object, row['minor'])
+
+            product_object.save()

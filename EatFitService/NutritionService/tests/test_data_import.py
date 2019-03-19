@@ -1,17 +1,16 @@
+# -*- coding: utf-8 -*-
+
 from __future__ import print_function
-import pytest
-import csv
 from model_mommy import mommy
-from textblob import TextBlob
+import pytest
 
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import RequestFactory
 
 from NutritionService.data_import import AllergensImport
 from NutritionService.forms import AllergensForm, NutrientsForm, ProductsForm
-from NutritionService.helpers import store_image_optim, calculate_image_ssim
 from NutritionService.models import Product, Allergen, NutritionFact, MajorCategory, MinorCategory, Ingredient, AdditionalImage
-from NutritionService.views.utils_view import AllergensView, NutrientsView
+from NutritionService.views.utils_view import AllergensView, NutrientsView, ProductsView
 
 
 def test_allergens_form():
@@ -132,75 +131,169 @@ def test_nutrient_import():
     assert response.status_code == 302
     assert NutritionFact.objects.count() == 2
 
+
 @pytest.mark.django_db
-def test_product():
+def test_product_import_safe_update():
 
-    Product.objects.create(id=455362, gtin=4008088917148)
+    mommy.make(Product, id=543070, gtin=4009233003433, product_name_de='Erster Fall',
+               product_size_unit_of_measure='stone', product_size='17')
 
-    with open('NutritionService/tests/products_test.csv', 'r') as infile:
-        reader = csv.DictReader(infile)
+    factory = RequestFactory()
 
-        for row in reader:
-            if not Product.objects.filter(gtin=int(row['gtin'])).exists():
+    with open('NutritionService/tests/products_test.csv') as infile:
+        product_csv_file = SimpleUploadedFile(infile.name, infile.read())
 
-                # Add location, ingredient
+    form_data = {
+        'product_name_de': 'on',
+        'product_weight_unit': 'on',
+        'product_weight_integer': 'on',
+        'file': product_csv_file
+    }
 
-                product_kwargs = {'id': int(row['import_product_id']),
-                                  'gtin': int(row['gtin']),
-                                  'product_name_de': row['product_name_de'],
-                                  'original_image_url': row['imageLink'],
-                                  'product_size_unit_of_measure': row['weight_unit'],
-                                  'product_size': row['weight_integer']}
+    request = factory.post('/tools/import-products/', form_data)
+    view = ProductsView.as_view()
+    response = view(request)
 
-                obj_product = Product.objects.create(**product_kwargs)
+    assert response.status_code == 302
+    assert Product.objects.count() == 30
+    assert Product.objects.filter(id=543070, gtin=4009233003433, product_name_de='Original Wagner Steinofen Vegetaria',
+                                  product_size_unit_of_measure='g', product_size='370').exists()
 
-                if row['imageLink']:
-                    store_image_optim(row['imageLink'], obj_product)
-                    print(obj_product.image)
 
-                if row['ingredients']:
-                    blob = TextBlob(row['ingredients'].decode('utf-8'))
-                    lang = blob.detect_language()
-                    obj_ingredient = Ingredient.objects.create(product=obj_product, text=row['ingredients'], lang=lang)
-                    obj_product.ingredients.add(obj_ingredient)
+@pytest.mark.django_db
+def test_product_import_ingredients():
 
-            else:
-                obj_product = Product.objects.filter(gtin=int(row['gtin']))
+    test_prod = mommy.make(Product, id=522726, gtin=4018852104216)
+    test_ingredients = {'text': 'alles', 'lang': 'FI'}
+    test_prod.ingredients.update(**test_ingredients)
 
-                update_kwargs = {}
+    factory = RequestFactory()
 
-                if obj_product.filter(product_name_de__isnull=True).exists() and row['product_name_de']:
-                    update_kwargs.update({'product_name_de': row['product_name_de']})
+    with open('NutritionService/tests/products_test.csv') as infile:
+        product_csv_file = SimpleUploadedFile(infile.name, infile.read())
 
-                if obj_product.filter(original_image_url__isnull=True).exists() and row['imageLink']:
-                    update_kwargs.update({'original_image_url': row['imageLink']})
+    form_data = {
+        'product_ingredients': 'on',
+        'file': product_csv_file
+    }
 
-                if obj_product.filter(product_size_unit_of_measure__isnull=True).exists() and row['weight_unit']:
-                    update_kwargs.update({'product_size_unit_of_measure': row['weight_unit']})
+    request = factory.post('/tools/import-products/', form_data)
+    view = ProductsView.as_view()
+    response = view(request)
 
-                if obj_product.filter(product_size__isnull=True).exists() and row['weight_integer']:
-                    update_kwargs.update({'product_size': row['weight_integer']})
+    test_string = 'WEIZENMEHL, Paprika, Zucchini, Zwiebeln, Oliven, Peperonischoten, Branntweinessig, Speisesalz, Citronensäure, Ascorbinsäure, Tomaten (23%), schnittfester Mozzarella (13%), Wasser, pflanzliches Öl (Raps), Wasser, Olivenöl, Hefe, jodiertes Speisesalz, Zucker, VOLLMILCHPULVER, Zwiebeln, Kräuter und Gewürze, Knoblauch, Pflanzenmargarine (Palmfett, Kokosfett), Mono-und Diglyceride von Speisefettsäuren, Citronensäure, weißer Balsamico Essig (Weißweinessig, Traubenmost) Die Inhaltsstoffe sind gemäß Deklarationspflicht absteigend nach der Menge zu ordnen.'
 
-                # Check ingredient
+    assert response.status_code == 302
+    assert Product.objects.count() == 30
+    assert Ingredient.objects.filter(text=test_string, lang='de').exists()
 
-                if not Ingredient.objects.filter(product=obj_product).exists() and row['ingredients']:
-                    blob = TextBlob(row['ingredients'])
-                    lang = blob.detect_language()
-                    obj_ingredient = Ingredient.objects.create(product=obj_product, text=row['ingredients'], lang=lang)
-                    obj_product.ingredients.add(obj_ingredient)
 
-                # Check if image exists
+@pytest.mark.django_db
+def test_product_import_load_main_image():
 
-                if obj_product.filter(image__isnull=True).exists() and row['imageLink']:
-                    additional_img = store_image_optim(row['imageLink'], obj_product)
-                    AdditionalImage(**additional_img).save()
-                    if additional_img is not None:
-                        additional_img.save()
+    factory = RequestFactory()
 
-                obj_product.update(**update_kwargs)
+    with open('NutritionService/tests/products_test.csv') as infile:
+        product_csv_file = SimpleUploadedFile(infile.name, infile.read())
 
-                print(obj_product.values('product_name_de', 'original_image_url',
-                                         'product_size_unit_of_measure',
-                                         'product_size'))
+    form_data = {
+        'product_image': 'on',
+        'file': product_csv_file
+    }
 
-        assert True
+    request = factory.post('/tools/import-products/', form_data)
+    view = ProductsView.as_view()
+    response = view(request)
+
+    assert response.status_code == 302
+    assert Product.objects.count() == 30
+    assert Product.objects.filter(image__isnull=False).count() == 30
+
+
+@pytest.mark.django_db
+def test_product_import_main_image_exists():
+
+    test_prod = mommy.make(Product, id=522726, gtin=4018852104216, original_image_url='https://www.example.com/')
+
+    with open('NutritionService/tests/product_image.jpg') as infile:
+        product_main_image = SimpleUploadedFile(infile.name, infile.read())
+
+    test_prod.image = product_main_image
+    test_prod.save()
+
+    factory = RequestFactory()
+
+    with open('NutritionService/tests/products_test.csv') as infile:
+        product_csv_file = SimpleUploadedFile(infile.name, infile.read())
+
+    form_data = {
+        'product_image': 'on',
+        'file': product_csv_file
+    }
+
+    request = factory.post('/tools/import-products/', form_data)
+    view = ProductsView.as_view()
+    response = view(request)
+
+    assert response.status_code == 302
+    assert Product.objects.count() == 30
+    assert Product.objects.filter(image__isnull=False).count() == 30
+    assert AdditionalImage.objects.count() == 1
+
+
+@pytest.mark.django_db
+def test_product_import_major_category():
+
+    test_cat = MajorCategory.objects.create(id=10, name_de='Hallo')
+    test_prod = mommy.make(Product, id=543070, gtin=4009233003433, major_category=test_cat)
+
+    assert test_prod.major_category is not None
+
+    new_cat = MajorCategory.objects.create(id=12, name_de='Welt')
+
+    factory = RequestFactory()
+
+    with open('NutritionService/tests/products_test.csv') as infile:
+        product_csv_file = SimpleUploadedFile(infile.name, infile.read())
+
+    form_data = {
+        'product_major': 'on',
+        'file': product_csv_file
+    }
+
+    request = factory.post('/tools/import-products/', form_data)
+    view = ProductsView.as_view()
+    response = view(request)
+
+    assert response.status_code == 302
+    assert Product.objects.count() == 30
+    assert Product.objects.filter(id=543070, gtin=4009233003433, major_category=new_cat).exists()
+
+
+@pytest.mark.django_db
+def test_product_import_minor_category():
+
+    test_cat = MinorCategory.objects.create(id=50, name_de='Freundlicher Gruss')
+    test_prod = mommy.make(Product, id=543070, gtin=4009233003433, minor_category=test_cat)
+
+    assert test_prod.minor_category is not None
+
+    new_cat = MinorCategory.objects.create(id=56, name_de='Umher')
+
+    factory = RequestFactory()
+
+    with open('NutritionService/tests/products_test.csv') as infile:
+        product_csv_file = SimpleUploadedFile(infile.name, infile.read())
+
+    form_data = {
+        'product_minor': 'on',
+        'file': product_csv_file
+    }
+
+    request = factory.post('/tools/import-products/', form_data)
+    view = ProductsView.as_view()
+    response = view(request)
+
+    assert response.status_code == 302
+    assert Product.objects.count() == 30
+    assert Product.objects.filter(id=543070, gtin=4009233003433, minor_category=new_cat).exists()
