@@ -5,17 +5,34 @@ from model_mommy import mommy
 import pytest
 import requests_mock
 
+from rest_framework.reverse import reverse
+from rest_framework.test import APIClient
+
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import RequestFactory
 
 from NutritionService.data_import import AllergensImport
 from NutritionService.forms import AllergensForm, NutrientsForm, ProductsForm
-from NutritionService.models import Product, Allergen, NutritionFact, MajorCategory, MinorCategory, ImportErrorLog, Ingredient, AdditionalImage
+from NutritionService.models import Product, Allergen, NutritionFact, MajorCategory, MinorCategory, ImportErrorLog, \
+    Ingredient, AdditionalImage
 from NutritionService.views.utils_view import AllergensView, NutrientsView, ProductsView
 
 
-def test_allergens_form():
+@pytest.mark.parametrize('url', [
+    reverse('tools'),
+    reverse('import-allergens'),
+    reverse('import-nutrients'),
+    reverse('import-products'),
+])
+def test_is_authenticated(url):
+    client = APIClient()
+    response = client.post(url, {})
 
+    assert '/accounts/login' in response.url
+    assert response.status_code == 302
+
+
+def test_allergens_form():
     with open('NutritionService/tests/allergens_test.csv') as infile:
         allergens_csv_file = SimpleUploadedFile(infile.name, infile.read())
 
@@ -27,7 +44,6 @@ def test_allergens_form():
 
 
 def test_nutrients_form():
-
     with open('NutritionService/tests/nutrients_test.csv') as infile:
         nutrients_csv_file = SimpleUploadedFile(infile.name, infile.read())
 
@@ -39,7 +55,6 @@ def test_nutrients_form():
 
 
 def test_products_form():
-
     with open('NutritionService/tests/products_test.csv') as infile:
         products_csv_file = SimpleUploadedFile(infile.name, infile.read())
 
@@ -51,7 +66,6 @@ def test_products_form():
 
 
 def test_encoding():
-
     form_data = {'allergen_name': 'on'}
 
     bad_file = open('NutritionService/tests/badfile_test.csv')
@@ -65,7 +79,6 @@ def test_encoding():
 
 
 def test_headers():
-
     allergen_data = {'allergen_name': 'on'}
 
     bad_file = open('NutritionService/tests/nutrients_test.csv')
@@ -80,7 +93,6 @@ def test_headers():
 
 @pytest.mark.django_db
 def test_allergen_import():
-
     assert Allergen.objects.count() == 0
 
     mommy.make(Product, id=466560, gtin=5000159431668)
@@ -107,7 +119,6 @@ def test_allergen_import():
 
 @pytest.mark.django_db
 def test_allergen_import_error_logging():
-
     assert ImportErrorLog.objects.count() == 0
     assert Allergen.objects.count() == 0
 
@@ -133,7 +144,6 @@ def test_allergen_import_error_logging():
 
 @pytest.mark.django_db
 def test_nutrient_import():
-
     assert NutritionFact.objects.count() == 0
 
     mommy.make(Product, id=494802, gtin=9011900196084)
@@ -161,7 +171,6 @@ def test_nutrient_import():
 
 @pytest.mark.django_db
 def test_nutrient_import_error_logging():
-
     assert ImportErrorLog.objects.count() == 0
     assert NutritionFact.objects.count() == 0
 
@@ -188,7 +197,6 @@ def test_nutrient_import_error_logging():
 
 @pytest.mark.django_db
 def test_product_import_safe_update():
-
     mommy.make(Product, id=543070, gtin=4009233003433, product_name_de='Erster Fall',
                product_size_unit_of_measure='stone', product_size='17')
 
@@ -216,7 +224,6 @@ def test_product_import_safe_update():
 
 @pytest.mark.django_db
 def test_product_import_ingredients():
-
     test_prod = mommy.make(Product, id=522726, gtin=4018852104216)
     test_ingredients = {'text': 'alles', 'lang': 'FI'}
     test_prod.ingredients.update(**test_ingredients)
@@ -245,7 +252,6 @@ def test_product_import_ingredients():
 @pytest.mark.django_db
 @requests_mock.Mocker()
 def test_product_import_load_main_image(mock):
-
     with open('NutritionService/tests/product_image.jpg') as infile:
         test_img = infile.read()
 
@@ -273,7 +279,6 @@ def test_product_import_load_main_image(mock):
 @pytest.mark.django_db
 @requests_mock.Mocker()
 def test_product_import_main_image_exists(mock):
-
     with open('NutritionService/tests/product_image.jpg') as infile:
         test_img = infile.read()
 
@@ -309,7 +314,6 @@ def test_product_import_main_image_exists(mock):
 
 @pytest.mark.django_db
 def test_product_import_major_category():
-
     test_cat = MajorCategory.objects.create(id=10, name_de='Hallo')
     test_prod = mommy.make(Product, id=543070, gtin=4009233003433, major_category=test_cat)
 
@@ -338,7 +342,6 @@ def test_product_import_major_category():
 
 @pytest.mark.django_db
 def test_product_import_minor_category():
-
     test_cat = MinorCategory.objects.create(id=50, name_de='Freundlicher Gruss')
     test_prod = mommy.make(Product, id=543070, gtin=4009233003433, minor_category=test_cat)
 
@@ -367,7 +370,6 @@ def test_product_import_minor_category():
 
 @pytest.mark.django_db
 def test_product_import_error_logging():
-
     assert ImportErrorLog.objects.count() == 0
     assert Product.objects.count() == 0
 
