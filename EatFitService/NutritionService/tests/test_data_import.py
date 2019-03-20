@@ -8,6 +8,7 @@ import requests_mock
 from rest_framework.reverse import reverse
 from rest_framework.test import APIClient
 
+from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import RequestFactory
 
@@ -92,6 +93,12 @@ def test_headers():
 
 
 @pytest.mark.django_db
+def test_user():
+    user = User.objects.create_user(username='test', password='test')
+    return user
+
+
+@pytest.mark.django_db
 def test_allergen_import():
     assert Allergen.objects.count() == 0
 
@@ -110,6 +117,7 @@ def test_allergen_import():
                  'file': allergens_csv_file}
 
     request = factory.post('/tools/import-allergens/', form_data)
+    request.user = test_user()
     view = AllergensView.as_view()
     response = view(request)
 
@@ -134,6 +142,7 @@ def test_allergen_import_error_logging():
                  'file': allergens_csv_file}
 
     request = factory.post('/tools/import-allergens/', form_data)
+    request.user = test_user()
     view = AllergensView.as_view()
     response = view(request)
 
@@ -162,6 +171,7 @@ def test_nutrient_import():
                  'file': nutrients_csv_file}
 
     request = factory.post('/tools/import-nutrients/', form_data)
+    request.user = test_user()
     view = NutrientsView.as_view()
     response = view(request)
 
@@ -187,6 +197,7 @@ def test_nutrient_import_error_logging():
                  'file': nutrients_csv_file}
 
     request = factory.post('/tools/import-nutrients/', form_data)
+    request.user = test_user()
     view = NutrientsView.as_view()
     response = view(request)
 
@@ -213,6 +224,7 @@ def test_product_import_safe_update():
     }
 
     request = factory.post('/tools/import-products/', form_data)
+    request.user = test_user()
     view = ProductsView.as_view()
     response = view(request)
 
@@ -239,6 +251,7 @@ def test_product_import_ingredients():
     }
 
     request = factory.post('/tools/import-products/', form_data)
+    request.user = test_user()
     view = ProductsView.as_view()
     response = view(request)
 
@@ -252,6 +265,7 @@ def test_product_import_ingredients():
 @pytest.mark.django_db
 @requests_mock.Mocker()
 def test_product_import_load_main_image(mock):
+
     with open('NutritionService/tests/product_image.jpg') as infile:
         test_img = infile.read()
 
@@ -268,6 +282,7 @@ def test_product_import_load_main_image(mock):
     }
 
     request = factory.post('/tools/import-products/', form_data)
+    request.user = test_user()
     view = ProductsView.as_view()
     response = view(request)
 
@@ -303,6 +318,7 @@ def test_product_import_main_image_exists(mock):
     }
 
     request = factory.post('/tools/import-products/', form_data)
+    request.user = test_user()
     view = ProductsView.as_view()
     response = view(request)
 
@@ -332,6 +348,7 @@ def test_product_import_major_category():
     }
 
     request = factory.post('/tools/import-products/', form_data)
+    request.user = test_user()
     view = ProductsView.as_view()
     response = view(request)
 
@@ -360,6 +377,7 @@ def test_product_import_minor_category():
     }
 
     request = factory.post('/tools/import-products/', form_data)
+    request.user = test_user()
     view = ProductsView.as_view()
     response = view(request)
 
@@ -387,6 +405,7 @@ def test_product_import_error_logging():
                  'file': product_csv_file}
 
     request = factory.post('/tools/import-products/', form_data)
+    request.user = test_user()
     view = ProductsView.as_view()
     response = view(request)
 
