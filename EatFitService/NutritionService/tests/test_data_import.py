@@ -3,6 +3,7 @@
 from __future__ import print_function
 from model_mommy import mommy
 import pytest
+import requests_mock
 
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import RequestFactory
@@ -242,7 +243,13 @@ def test_product_import_ingredients():
 
 
 @pytest.mark.django_db
-def test_product_import_load_main_image():
+@requests_mock.Mocker()
+def test_product_import_load_main_image(mock):
+
+    with open('NutritionService/tests/product_image.jpg') as infile:
+        test_img = infile.read()
+
+    mock.get(requests_mock.ANY, content=test_img)
 
     factory = RequestFactory()
 
@@ -264,7 +271,13 @@ def test_product_import_load_main_image():
 
 
 @pytest.mark.django_db
-def test_product_import_main_image_exists():
+@requests_mock.Mocker()
+def test_product_import_main_image_exists(mock):
+
+    with open('NutritionService/tests/product_image.jpg') as infile:
+        test_img = infile.read()
+
+    mock.get(requests_mock.ANY, content=test_img)
 
     test_prod = mommy.make(Product, id=522726, gtin=4018852104216, original_image_url='https://www.example.com/')
 

@@ -44,7 +44,7 @@ LOGGING = {
          # Log all exceptions in logfile
         '': {
             'handlers': ['file'],
-            'level': 'ERROR',
+            'level': 'DEBUG',
             'propagate': True
         }
     },
