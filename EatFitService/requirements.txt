@@ -25,6 +25,7 @@ pytest==4.2.0
 pytest-django==3.4.7
 pytz==2016.4
 requests>=2.20.0
+requests-mock==1.5.2
 scikit-image==0.14.2
 setuptools>=18.0.0
 suds==0.4
@@ -37,4 +38,5 @@ xlutils==1.7.1
 xlwt==1.0.0
 pytest==4.2.0
 pytest-django==3.4.7
+pytest-sugar==0.9.2
 model_mommy==1.6.0

@@ -36,6 +36,7 @@ def prepare_image_buffered(image):
 
 
 def calculate_image_ssim(original_image, new_image, original_buffered=True, new_buffered=False):
+
     if original_buffered:
         original_image = prepare_image_buffered(original_image)
     else:
@@ -76,7 +77,8 @@ def store_image_optim(url, product):
                     product.additional_image.create(**new_image)
                 product.image.save(file_name, files.File(temp))
             else:
-                new_image = {'image': files.File(temp), 'image_url': url}
+                temp.name = file_name
+                new_image = {'image': files.File(temp.name), 'image_url': url}
                 product.additional_image.create(**new_image)
         else:
             product.image.save(file_name, files.File(temp))
