@@ -9,10 +9,11 @@ from rest_framework.reverse import reverse
 from rest_framework.test import APIClient
 
 from django.contrib.auth.models import User
+from django.core import mail
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import RequestFactory
 
-from NutritionService.data_import import AllergensImport
+from NutritionService.data_import import ImportBase, AllergensImport
 from NutritionService.forms import AllergensForm, NutrientsForm, ProductsForm
 from NutritionService.models import Product, Allergen, NutritionFact, MajorCategory, MinorCategory, ImportErrorLog, \
     Ingredient, AdditionalImage
@@ -92,6 +93,16 @@ def test_headers():
     assert good_test.check_headers()
 
 
+def test_emails_sent():
+
+    assert len(mail.outbox) == 0
+
+    importer = ImportBase(None, None)
+    importer.execute_import()
+
+    assert len(mail.outbox) == 2
+
+
 @pytest.mark.django_db
 def test_user():
     user = User.objects.create_user(username='test', password='test')
@@ -100,6 +111,7 @@ def test_user():
 
 @pytest.mark.django_db
 def test_allergen_import():
+
     assert Allergen.objects.count() == 0
 
     mommy.make(Product, id=466560, gtin=5000159431668)
