@@ -1,6 +1,9 @@
 import chardet
 import csv
 
+from django.conf import settings
+from django.core.mail import send_mail
+
 from NutritionService.helpers import detect_language, store_image_optim
 from NutritionService.models import MajorCategory, MinorCategory,  Product, ImportErrorLog
 
@@ -8,6 +11,12 @@ ALLERGEN_HEADERS = ['import_product_id', 'gtin', 'allergen_name', 'certainity', 
 NUTRIENTS_HEADERS = ['import_product_id', 'gtin', 'nutrient_name', 'amount', 'unit_of_measure']
 PRODUCT_HEADERS = ['import_product_id', 'gtin', 'product_name_de', 'weight', 'imageLink', 'ingredients', 'brand',
                    'description', 'origin', 'category', 'major', 'minor', 'weight_unit', 'weight_integer']
+
+START_SUBJECT = 'Import has started'
+START_MESSAGE = 'This message has been automatically generated'
+
+END_SUBJECT = 'Import completed'
+END_MESSAGE = 'This message has been automatically generated'
 
 
 # Base interface for imports
@@ -33,6 +42,19 @@ class ImportBase:
         check_headers = set(header) == set(self.HEADERS)
         self.csv_file.seek(0)
         return check_headers
+
+    def import_csv(self):
+        pass
+
+    def execute_import(self):
+
+        send_mail(subject=START_SUBJECT, message=START_MESSAGE, from_email=settings.DEFAULT_FROM_EMAIL,
+                  recipient_list=['timo.klingler@adnexo.ch'], fail_silently=False, )
+
+        self.import_csv()
+
+        send_mail(subject=END_SUBJECT, message=END_MESSAGE, from_email=settings.DEFAULT_FROM_EMAIL,
+                  recipient_list=['timo.klingler@adnexo.ch'], fail_silently=False, )
 
 
 class AllergensImport(ImportBase):
