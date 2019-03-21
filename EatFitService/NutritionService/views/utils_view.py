@@ -6,7 +6,6 @@ from django.urls import reverse_lazy
 from django.views.generic import TemplateView
 from django.views.generic.edit import FormView
 
-
 from NutritionService.data_import import AllergensImport, NutrientsImport, ProductsImport
 from NutritionService.forms import AllergensForm, NutrientsForm, ProductsForm
 
@@ -28,7 +27,8 @@ class AllergensView(LoginRequiredMixin, FormView):
         importer = AllergensImport(csv_file, form_data)
 
         if importer.check_encoding() and importer.check_headers():
-            importer.import_csv()
+
+            importer.execute_import()
             return super(AllergensView, self).form_valid(form)  # Python 3: super()
         else:
             return self.form_invalid(form)
@@ -47,7 +47,7 @@ class NutrientsView(LoginRequiredMixin, FormView):
         importer = NutrientsImport(csv_file, form_data)
 
         if importer.check_encoding() and importer.check_headers():
-            importer.import_csv()
+            importer.execute_import()
             return super(NutrientsView, self).form_valid(form)  # Python 3: super()
         else:
             return self.form_invalid(form)
@@ -66,7 +66,7 @@ class ProductsView(LoginRequiredMixin, FormView):
         importer = ProductsImport(csv_file, form_data)
 
         if importer.check_encoding() and importer.check_headers():
-            importer.import_csv()
+            importer.execute_import()
             return super(ProductsView, self).form_valid(form)  # Python 3: super()
         else:
             return self.form_invalid(form)
