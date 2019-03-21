@@ -1,19 +1,21 @@
 from __future__ import print_function
 import copy
 
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
 from django.views.generic import TemplateView
 from django.views.generic.edit import FormView
+
 
 from NutritionService.data_import import AllergensImport, NutrientsImport, ProductsImport
 from NutritionService.forms import AllergensForm, NutrientsForm, ProductsForm
 
 
-class UtilsList(TemplateView):
+class UtilsList(LoginRequiredMixin, TemplateView):
     template_name = 'utils/utils_list.html'
 
 
-class AllergensView(FormView):
+class AllergensView(LoginRequiredMixin, FormView):
     template_name = 'utils/import_allergens.html'
     form_class = AllergensForm
     success_url = reverse_lazy('tools')
@@ -32,7 +34,7 @@ class AllergensView(FormView):
             return self.form_invalid(form)
 
 
-class NutrientsView(FormView):
+class NutrientsView(LoginRequiredMixin, FormView):
     template_name = 'utils/import_nutrients.html'
     form_class = NutrientsForm
     success_url = reverse_lazy('tools')
@@ -51,7 +53,7 @@ class NutrientsView(FormView):
             return self.form_invalid(form)
 
 
-class ProductsView(FormView):
+class ProductsView(LoginRequiredMixin, FormView):
     template_name = 'utils/import_products.html'
     form_class = ProductsForm
     success_url = reverse_lazy('tools')
