@@ -6,7 +6,7 @@ celery==4.1.0
 certifi==2017.11.5
 chardet==3.0.4
 Django==1.11.8
-django-celery==3.2.2
+django-celery==3.1.17
 django-cleanup==1.0.1
 django-pyodbc-azure==1.11.0.0
 django-storages[azure]==1.7.1
