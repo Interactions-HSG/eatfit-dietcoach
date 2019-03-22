@@ -1,7 +1,7 @@
 FROM python:2.7-jessie
 RUN echo "deb http://ftp.debian.org/debian jessie-backports main" >> /etc/apt/sources.list
 RUN apt-get update
-RUN apt-get install -y apt-utils python-dev libmysqlclient-dev build-essential unixodbc unixodbc-dev apache2 apache2-utils libapache2-mod-wsgi letsencrypt -t jessie-backports
+RUN apt-get install -y apt-utils python-dev libmysqlclient-dev build-essential unixodbc unixodbc-dev apache2 apache2-utils libapache2-mod-wsgi letsencrypt -t jessie-backports supervisor
 RUN apt-get clean
 RUN rm -rf /var/lib/apt/lists/*
 RUN mkdir -p /etc/letsencrypt/live/localhost
@@ -22,4 +22,4 @@ RUN chown -R www-data:www-data /home/eatfit/eatfitrepo/EatFitService
 RUN chmod 775 -R /home/eatfit/eatfitrepo/EatFitService
 RUN touch /var/log/nutrition-service.log
 RUN chmod 777 /var/log/nutrition-service.log
-CMD sh worker.sh
+CMD sh api-worker.sh
