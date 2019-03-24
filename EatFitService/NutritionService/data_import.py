@@ -1,5 +1,7 @@
+from celery.decorators import task
 import chardet
 import csv
+import tempfile
 
 from django.conf import settings
 from django.core.mail import send_mail
@@ -12,41 +14,52 @@ NUTRIENTS_HEADERS = ['import_product_id', 'gtin', 'nutrient_name', 'amount', 'un
 PRODUCT_HEADERS = ['import_product_id', 'gtin', 'product_name_de', 'weight', 'imageLink', 'ingredients', 'brand',
                    'description', 'origin', 'category', 'major', 'minor', 'weight_unit', 'weight_integer']
 
-START_SUBJECT = 'Import has started'
+START_SUBJECT = 'Import of %s has started'
 START_MESSAGE = 'This message has been automatically generated'
 
 END_SUBJECT = 'Import completed'
 END_MESSAGE = 'This message has been automatically generated'
+
+@task(name='allergen-import', bind=True)
+def execute_allergen_import_task(self, csv_file_path, form_data):
+
+    importer = AllergensImport(csv_file_path, form_data)
+    importer.execute_import()
 
 
 # Base interface for imports
 class ImportBase:
     HEADERS = None
 
-    def __init__(self, csv_file, form_params):
-        self.csv_file = csv_file
+    def __init__(self, csv_file_path, form_params):
+        self.csv_file_path = csv_file_path
         self.form_params = form_params
 
     def check_encoding(self):
-        self.csv_file.seek(0)
-        encoding_detector = chardet.detect(self.csv_file.read())
+
+        with open(self.csv_file_path) as csv_file:
+            encoding_detector = chardet.detect(csv_file.read())
+
         encoding = encoding_detector['encoding']
         check_encoding = True if encoding.find('utf-8') == 0 or encoding.find('ascii') == 0 else False
-        self.csv_file.seek(0)
+
         return check_encoding
 
     def check_headers(self):
-        self.csv_file.seek(0)
-        reader = csv.reader(self.csv_file)
-        header = next(reader, None)
+
+        with open(self.csv_file_path) as csv_file:
+            reader = csv.reader(csv_file)
+            header = next(reader, None)
+
         check_headers = set(header) == set(self.HEADERS)
-        self.csv_file.seek(0)
+
         return check_headers
 
     def import_csv(self):
         pass
 
-    def execute_import(self):
+
+    def execute_import(self, id='UNKNOWN'):
 
         send_mail(subject=START_SUBJECT, message=START_MESSAGE, from_email=settings.DEFAULT_FROM_EMAIL,
                   recipient_list=['timo.klingler@adnexo.ch'], fail_silently=False, )
@@ -72,7 +85,9 @@ class AllergensImport(ImportBase):
         }
 
         update_headers = [transform_form_headers[key] for key, value in self.form_params.items() if value]
-        reader = csv.DictReader(self.csv_file)
+
+        csv_file = open(self.csv_file_path)
+        reader = csv.DictReader(csv_file)
 
         for count, row in enumerate(reader):
 
@@ -92,7 +107,7 @@ class AllergensImport(ImportBase):
 
                 log_dict = {
                     'import_type': 'Allergens',
-                    'file_name': self.csv_file.__str__,
+                    'file_name': self.csv_file_path,
                     'row_data': 'Row ' + str(count) + ': ' + ', '.join(row),
                     'error_field': 'allergens foreign key field',
                     'error_message': 'Product ' + str(row['gtin']) + ' does not exist.'
@@ -103,7 +118,7 @@ class AllergensImport(ImportBase):
             except Product.MultipleObjectsReturned:
 
                 log_dict = {
-                    'file_name': self.csv_file.__str__,
+                    'file_name': self.csv_file_path,
                     'import_type': 'Allergens',
                     'row_data': 'Row ' + str(count) + ': ' + ', '.join(row),
                     'error_field': 'allergens foreign key field',

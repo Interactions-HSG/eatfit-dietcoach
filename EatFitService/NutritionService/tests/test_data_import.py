@@ -70,11 +70,11 @@ def test_products_form():
 def test_encoding():
     form_data = {'allergen_name': 'on'}
 
-    bad_file = open('NutritionService/tests/badfile_test.csv')
-    bad_test = AllergensImport(bad_file, form_data)
+    bad_file_path ='NutritionService/tests/badfile_test.csv'
+    bad_test = AllergensImport(bad_file_path, form_data)
 
-    good_file = open('NutritionService/tests/allergens_test.csv')
-    good_test = AllergensImport(good_file, form_data)
+    good_file_path = 'NutritionService/tests/allergens_test.csv'
+    good_test = AllergensImport(good_file_path, form_data)
 
     assert not bad_test.check_encoding()
     assert good_test.check_encoding()
@@ -83,11 +83,11 @@ def test_encoding():
 def test_headers():
     allergen_data = {'allergen_name': 'on'}
 
-    bad_file = open('NutritionService/tests/nutrients_test.csv')
-    bad_test = AllergensImport(bad_file, allergen_data)
+    bad_file_path = 'NutritionService/tests/nutrients_test.csv'
+    bad_test = AllergensImport(bad_file_path, allergen_data)
 
-    good_file = open('NutritionService/tests/allergens_test.csv')
-    good_test = AllergensImport(good_file, allergen_data)
+    good_file_path = 'NutritionService/tests/allergens_test.csv'
+    good_test = AllergensImport(good_file_path, allergen_data)
 
     assert not bad_test.check_headers()
     assert good_test.check_headers()
@@ -110,6 +110,7 @@ def test_user():
 
 
 @pytest.mark.django_db
+@pytest.mark.celery(broker_url='amqp://localhost')
 def test_allergen_import():
 
     assert Allergen.objects.count() == 0
@@ -138,6 +139,7 @@ def test_allergen_import():
 
 
 @pytest.mark.django_db
+@pytest.mark.celery(broker_url='amqp://localhost')
 def test_allergen_import_error_logging():
     assert ImportErrorLog.objects.count() == 0
     assert Allergen.objects.count() == 0

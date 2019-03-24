@@ -1,12 +1,13 @@
 from __future__ import print_function
 import copy
+import tempfile
 
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
 from django.views.generic import TemplateView
 from django.views.generic.edit import FormView
 
-from NutritionService.data_import import AllergensImport, NutrientsImport, ProductsImport
+from NutritionService.data_import import AllergensImport, NutrientsImport, ProductsImport, execute_allergen_import_task
 from NutritionService.forms import AllergensForm, NutrientsForm, ProductsForm
 
 
@@ -20,15 +21,18 @@ class AllergensView(LoginRequiredMixin, FormView):
     success_url = reverse_lazy('tools')
 
     def form_valid(self, form):
-        csv_file = form.cleaned_data['file']
+
+        with tempfile.NamedTemporaryFile(delete=False) as csv_file:
+            for chunk in form.cleaned_data['file']:
+                csv_file.write(chunk)
+
         form_data = copy.copy(form.cleaned_data)
         del form_data['file']
 
-        importer = AllergensImport(csv_file, form_data)
+        importer = AllergensImport(csv_file.name, form_data)
 
         if importer.check_encoding() and importer.check_headers():
-
-            importer.execute_import()
+            execute_allergen_import_task.delay(csv_file.name, form_data)
             return super(AllergensView, self).form_valid(form)  # Python 3: super()
         else:
             return self.form_invalid(form)
@@ -47,7 +51,7 @@ class NutrientsView(LoginRequiredMixin, FormView):
         importer = NutrientsImport(csv_file, form_data)
 
         if importer.check_encoding() and importer.check_headers():
-            importer.execute_import()
+            execute_import_task.delay(importer)
             return super(NutrientsView, self).form_valid(form)  # Python 3: super()
         else:
             return self.form_invalid(form)
@@ -66,7 +70,7 @@ class ProductsView(LoginRequiredMixin, FormView):
         importer = ProductsImport(csv_file, form_data)
 
         if importer.check_encoding() and importer.check_headers():
-            importer.execute_import()
+            execute_import_task.delay(importer)
             return super(ProductsView, self).form_valid(form)  # Python 3: super()
         else:
             return self.form_invalid(form)
