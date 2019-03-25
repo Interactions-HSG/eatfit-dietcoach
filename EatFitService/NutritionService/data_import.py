@@ -1,7 +1,5 @@
-from celery.decorators import task
 import chardet
 import csv
-import tempfile
 
 from django.conf import settings
 from django.core.mail import send_mail
@@ -19,13 +17,6 @@ START_MESSAGE = 'This message has been automatically generated'
 
 END_SUBJECT = 'Import completed'
 END_MESSAGE = 'This message has been automatically generated'
-
-@task(name='allergen-import', bind=True)
-def execute_allergen_import_task(self, csv_file_path, form_data):
-
-    importer = AllergensImport(csv_file_path, form_data)
-    importer.execute_import()
-
 
 # Base interface for imports
 class ImportBase:
@@ -61,12 +52,12 @@ class ImportBase:
 
     def execute_import(self, id='UNKNOWN'):
 
-        send_mail(subject=START_SUBJECT, message=START_MESSAGE, from_email=settings.DEFAULT_FROM_EMAIL,
+        send_mail(subject=START_SUBJECT, message=START_MESSAGE %id, from_email=settings.DEFAULT_FROM_EMAIL,
                   recipient_list=['timo.klingler@adnexo.ch'], fail_silently=False, )
 
         self.import_csv()
 
-        send_mail(subject=END_SUBJECT, message=END_MESSAGE, from_email=settings.DEFAULT_FROM_EMAIL,
+        send_mail(subject=END_SUBJECT, message=END_MESSAGE %id, from_email=settings.DEFAULT_FROM_EMAIL,
                   recipient_list=['timo.klingler@adnexo.ch'], fail_silently=False, )
 
 
