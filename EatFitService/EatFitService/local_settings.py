@@ -20,6 +20,8 @@ STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
 STATIC_URL = '/static/'
 MEDIA_URL = '/media/'
 
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -30,6 +32,9 @@ LOGGING = {
         },
     },
     'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
         'file': {
             'level': 'WARNING',
             'class': 'logging.FileHandler',
@@ -43,9 +48,9 @@ LOGGING = {
             'level': 'WARNING',
             'propagate': True,
         },
-         # Log all exceptions in logfile
+        # Log all exceptions in logfile
         '': {
-            'handlers': ['file'],
+            'handlers': ['console'],
             'level': 'DEBUG',
             'propagate': True
         }
