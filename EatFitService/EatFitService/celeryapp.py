@@ -3,6 +3,6 @@ from celery import Celery
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'EatFitService.settings')
 
-app = Celery('EatFitService')
+app = Celery('EatFitService', broker_url='amqp://rabbitmq')
 app.config_from_object('django.conf:settings', namespace='CELERY')
 app.autodiscover_tasks()
