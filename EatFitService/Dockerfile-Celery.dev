@@ -1,7 +1,6 @@
 FROM python:2.7-jessie
-RUN echo "deb http://ftp.debian.org/debian jessie-backports main" >> /etc/apt/sources.list
 RUN apt-get update
-RUN apt-get install -y apt-utils python-dev supervisor libmysqlclient-dev build-essential unixodbc unixodbc-dev apache2 apache2-utils libapache2-mod-wsgi letsencrypt -t jessie-backports
+RUN apt-get install -y apt-utils python-dev supervisor libmysqlclient-dev build-essential unixodbc unixodbc-dev apache2 apache2-utils libapache2-mod-wsgi
 RUN apt-get clean
 RUN rm -rf /var/lib/apt/lists/*
 RUN mkdir -p /etc/letsencrypt/live/localhost
