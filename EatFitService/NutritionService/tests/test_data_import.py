@@ -115,7 +115,6 @@ def create_test_user():
 
 
 @pytest.mark.django_db
-@pytest.mark.celery(broker_url='amqp://localhost')
 def test_allergen_import():
     assert Allergen.objects.count() == 0
 
@@ -143,7 +142,6 @@ def test_allergen_import():
 
 
 @pytest.mark.django_db
-@pytest.mark.celery(broker_url='amqp://localhost')
 def test_allergen_import_error_logging():
     assert ImportErrorLog.objects.count() == 0
     assert Allergen.objects.count() == 0
