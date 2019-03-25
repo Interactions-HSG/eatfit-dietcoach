@@ -1,5 +1,7 @@
 from EatFitService.settings import *
 
+CELERY_BROKER_URL = 'amqp://rabbitmq'
+
 DEBUG = True
 
 DATABASES = {
