@@ -36,3 +36,4 @@ EatFitService/localenv/
 EatFitService/static/
 EatFitService/nutritiondb.json
 EatFitService/logs/
+**/logs
