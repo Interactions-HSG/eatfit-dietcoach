@@ -7,8 +7,9 @@ from django.urls import reverse_lazy
 from django.views.generic import TemplateView
 from django.views.generic.edit import FormView
 
-from NutritionService.data_import import AllergensImport, NutrientsImport, ProductsImport, execute_allergen_import_task
+from NutritionService.data_import import AllergensImport, NutrientsImport, ProductsImport
 from NutritionService.forms import AllergensForm, NutrientsForm, ProductsForm
+from NutritionService.tasks import execute_allergen_import_task
 
 
 class UtilsList(LoginRequiredMixin, TemplateView):
@@ -22,9 +23,10 @@ class AllergensView(LoginRequiredMixin, FormView):
 
     def form_valid(self, form):
 
-        with tempfile.NamedTemporaryFile(delete=False) as csv_file:
+        with tempfile.NamedTemporaryFile(delete=False, prefix='allergens_',suffix='.csv') as csv_file:
             for chunk in form.cleaned_data['file']:
                 csv_file.write(chunk)
+                csv_file.seek(0)
 
         form_data = copy.copy(form.cleaned_data)
         del form_data['file']
@@ -70,7 +72,7 @@ class ProductsView(LoginRequiredMixin, FormView):
         importer = ProductsImport(csv_file, form_data)
 
         if importer.check_encoding() and importer.check_headers():
-            execute_import_task.delay(importer)
+            execute_allergen_import_task.delay(importer)
             return super(ProductsView, self).form_valid(form)  # Python 3: super()
         else:
             return self.form_invalid(form)
