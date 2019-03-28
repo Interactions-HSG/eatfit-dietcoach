@@ -1,6 +1,8 @@
 FROM python:2.7-stretch
 RUN apt-get update
-RUN apt-get install -y apt-utils supervisor python-dev python-pip default-libmysqlclient-dev build-essential unixodbc unixodbc-dev apache2 apache2-utils libapache2-mod-wsgi
+RUN apt-get install -y wget apt-utils supervisor python-dev default-libmysqlclient-dev python-pip build-essential unixodbc unixodbc-dev apache2 apache2-utils libapache2-mod-wsgi.
+RUN wget http://repo.mysql.com/apt/debian/pool/mysql-5.6/m/mysql-community/libmysqlclient18_5.6.43-1debian9_amd64.debRUN dpkg -i libmysqlclient18_5.6.43-1debian9_amd64.deb
+RUN dpkg -i libmysqlclient18_5.6.43-1debian9_amd64.deb
 RUN apt-get clean
 RUN rm -rf /var/lib/apt/lists/*
 RUN mkdir -p /etc/letsencrypt/live/localhost
