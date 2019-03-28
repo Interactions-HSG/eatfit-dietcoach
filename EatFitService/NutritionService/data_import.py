@@ -12,10 +12,10 @@ NUTRIENTS_HEADERS = ['import_product_id', 'gtin', 'nutrient_name', 'amount', 'un
 PRODUCT_HEADERS = ['import_product_id', 'gtin', 'product_name_de', 'weight', 'imageLink', 'ingredients', 'brand',
                    'description', 'origin', 'category', 'major', 'minor', 'weight_unit', 'weight_integer']
 
-START_SUBJECT = 'Import of %s has started'
+START_SUBJECT = 'Import of {0} has started'  # Change {0} -> {} for python 3
 START_MESSAGE = 'This message has been automatically generated'
 
-END_SUBJECT = 'Import completed'
+END_SUBJECT = 'Import of {0} completed'  # Change {0} -> {} for python 3
 END_MESSAGE = 'This message has been automatically generated'
 
 # Base interface for imports
@@ -39,8 +39,8 @@ class ImportBase:
     def check_headers(self):
 
         with open(self.csv_file_path) as csv_file:
-            reader = csv.reader(csv_file)
-            header = next(reader, None)
+            reader = csv.DictReader(csv_file)
+            header = reader.fieldnames
 
         check_headers = set(header) == set(self.HEADERS)
 
@@ -52,12 +52,12 @@ class ImportBase:
 
     def execute_import(self, id='UNKNOWN'):
 
-        send_mail(subject=START_SUBJECT, message=START_MESSAGE %id, from_email=settings.DEFAULT_FROM_EMAIL,
+        send_mail(subject=START_SUBJECT, message=START_MESSAGE.format(id), from_email=settings.DEFAULT_FROM_EMAIL,
                   recipient_list=['timo.klingler@adnexo.ch'], fail_silently=False, )
 
         self.import_csv()
 
-        send_mail(subject=END_SUBJECT, message=END_MESSAGE %id, from_email=settings.DEFAULT_FROM_EMAIL,
+        send_mail(subject=END_SUBJECT, message=END_MESSAGE.format(id), from_email=settings.DEFAULT_FROM_EMAIL,
                   recipient_list=['timo.klingler@adnexo.ch'], fail_silently=False, )
 
 
