@@ -218,6 +218,9 @@ def test_product_import_safe_update():
 
     form_data = {
         'product_name_de': 'on',
+        'product_name_en': 'on',
+        'product_name_fr': 'on',
+        'product_name_it': 'on',
         'product_weight_unit': 'on',
         'product_weight_integer': 'on',
         'file': product_csv_file
@@ -236,7 +239,7 @@ def test_product_import_safe_update():
 
 @pytest.mark.django_db
 def test_product_import_ingredients():
-    test_prod = mommy.make(Product, id=522726, gtin=4018852104216)
+    test_prod = mommy.make(Product, id=543070, gtin=4009233003433)
     test_ingredients = {'text': 'alles', 'lang': 'FI'}
     test_prod.ingredients.update(**test_ingredients)
 
