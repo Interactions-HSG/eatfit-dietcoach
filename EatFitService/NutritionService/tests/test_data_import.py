@@ -109,7 +109,7 @@ def test_emails_sent():
     assert len(mail.outbox) == 2
 
 
-def create_test_user():
+def create_user():
     user = User.objects.create_user(username='test', password='test')
     return user
 
@@ -133,7 +133,7 @@ def test_allergen_import():
                  'file': allergens_csv_file}
 
     request = factory.post('/tools/import-allergens/', form_data)
-    request.user = create_test_user()
+    request.user = create_user()
     view = AllergensView.as_view()
     response = view(request)
 
@@ -158,7 +158,7 @@ def test_allergen_import_error_logging():
                  'file': allergens_csv_file}
 
     request = factory.post('/tools/import-allergens/', form_data)
-    request.user = create_test_user()
+    request.user = create_user()
     view = AllergensView.as_view()
     response = view(request)
 
@@ -187,7 +187,7 @@ def test_nutrient_import():
                  'file': nutrients_csv_file}
 
     request = factory.post('/tools/import-nutrients/', form_data)
-    request.user = create_test_user()
+    request.user = create_user()
     view = NutrientsView.as_view()
     response = view(request)
 
@@ -213,7 +213,7 @@ def test_nutrient_import_error_logging():
                  'file': nutrients_csv_file}
 
     request = factory.post('/tools/import-nutrients/', form_data)
-    request.user = create_test_user()
+    request.user = create_user()
     view = NutrientsView.as_view()
     response = view(request)
 
@@ -243,7 +243,7 @@ def test_product_import_safe_update():
     }
 
     request = factory.post('/tools/import-products/', form_data)
-    request.user = create_test_user()
+    request.user = create_user()
     view = ProductsView.as_view()
     response = view(request)
 
@@ -270,7 +270,7 @@ def test_product_import_ingredients():
     }
 
     request = factory.post('/tools/import-products/', form_data)
-    request.user = create_test_user()
+    request.user = create_user()
     view = ProductsView.as_view()
     response = view(request)
 
@@ -300,7 +300,7 @@ def test_product_import_load_main_image(mock):
     }
 
     request = factory.post('/tools/import-products/', form_data)
-    request.user = create_test_user()
+    request.user = create_user()
     view = ProductsView.as_view()
     response = view(request)
 
@@ -336,7 +336,7 @@ def test_product_import_main_image_exists(mock):
     }
 
     request = factory.post('/tools/import-products/', form_data)
-    request.user = create_test_user()
+    request.user = create_user()
     view = ProductsView.as_view()
     response = view(request)
 
@@ -366,7 +366,7 @@ def test_product_import_major_category():
     }
 
     request = factory.post('/tools/import-products/', form_data)
-    request.user = create_test_user()
+    request.user = create_user()
     view = ProductsView.as_view()
     response = view(request)
 
@@ -395,7 +395,7 @@ def test_product_import_minor_category():
     }
 
     request = factory.post('/tools/import-products/', form_data)
-    request.user = create_test_user()
+    request.user = create_user()
     view = ProductsView.as_view()
     response = view(request)
 
@@ -423,7 +423,7 @@ def test_product_import_error_logging():
                  'file': product_csv_file}
 
     request = factory.post('/tools/import-products/', form_data)
-    request.user = create_test_user()
+    request.user = create_user()
     view = ProductsView.as_view()
     response = view(request)
 
