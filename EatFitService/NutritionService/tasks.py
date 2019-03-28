@@ -3,7 +3,6 @@ from celery.task.schedules import crontab
 from datetime import datetime
 import requests
 
-from EatFitService.celeryapp import app
 from NutritionService.data_import import AllergensImport
 from NutritionService.helpers import store_image
 from NutritionService.models import Ingredient, NutritionFact, Product, NotFoundLog, calculate_ofcom_value
@@ -14,11 +13,10 @@ NUTRIENTS_MAPPING_OPENFOOD = {"energyKJ": "energy", "protein": "protein", "salt"
                               "saturatedFat": "saturated_fat", "sugars": "sugars", "totalCarbohydrate": "carbohydrates",
                               "totalFat": "fat"}
 
-@app.task(name='allergen_import', bind=True)
+@task(name='tasks.execute_allergen_import_task', bind=True)
 def execute_allergen_import_task(self, csv_file_path, form_data):
-
     importer = AllergensImport(csv_file_path, form_data)
-    importer.execute_import()
+    importer.execute_import(id=csv_file_path)
 
 @periodic_task(
     run_every=(crontab(hour=0, minute=10)),
