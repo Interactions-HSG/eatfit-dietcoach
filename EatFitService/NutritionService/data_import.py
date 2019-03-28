@@ -80,8 +80,7 @@ class AllergensImport(ImportBase):
             update_allergens = {transform_csv_headers[key]: value for key, value in get_row_headers.items()}
 
             try:
-                product_object = Product.objects.get(id=int(row['import_product_id']),
-                                                     gtin=int(row['gtin']))
+                product_object = Product.objects.get(gtin=int(row['gtin']))
 
                 if product_object.allergens.filter(name=row['allergen_name']).exists():
                     product_object.allergens.update(**update_allergens)
@@ -137,8 +136,7 @@ class NutrientsImport(ImportBase):
             update_nutrients = {transform_csv_headers[key]: value for key, value in get_row_headers.items()}
 
             try:
-                product_object = Product.objects.get(id=int(row['import_product_id']),
-                                                     gtin=int(row['gtin']))
+                product_object = Product.objects.get(gtin=int(row['gtin']))
 
                 if product_object.nutrients.filter(name=row['nutrient_name']).exists():
                     product_object.nutrients.update(**update_nutrients)
