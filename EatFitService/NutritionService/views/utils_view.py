@@ -1,6 +1,7 @@
 from __future__ import print_function
 import copy
 import tempfile
+import os
 
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
@@ -16,6 +17,16 @@ class UtilsList(LoginRequiredMixin, TemplateView):
     template_name = 'utils/utils_list.html'
 
 
+def save_uploaded_file(file):
+    # Persist file to disk
+    file_path = tempfile.mktemp()
+    fd = open(file_path, "w")
+    fd.write(file.read())
+    fd.flush()
+    fd.close()
+    return file_path
+
+
 class AllergensView(LoginRequiredMixin, FormView):
     template_name = 'utils/import_allergens.html'
     form_class = AllergensForm
@@ -23,15 +34,14 @@ class AllergensView(LoginRequiredMixin, FormView):
 
     def form_valid(self, form):
 
-        with tempfile.NamedTemporaryFile(delete=False, prefix='allergens_',suffix='.csv') as csv_file:
-            for chunk in form.cleaned_data['file'].chunks():
-                csv_file.write(chunk)
-                csv_file.seek(0)
-
+        csv_file = self.request.FILES['file']
         form_data = copy.copy(form.cleaned_data)
         del form_data['file']
 
-        importer = AllergensImport(csv_file.name, form_data)
+        # Persist file to disk
+        file_path = save_uploaded_file(csv_file)
+
+        importer = AllergensImport(file_path, form_data)
 
         if importer.check_encoding() and importer.check_headers():
             execute_allergen_import_task.delay(csv_file.name, form_data)
@@ -46,11 +56,14 @@ class NutrientsView(LoginRequiredMixin, FormView):
     success_url = reverse_lazy('tools')
 
     def form_valid(self, form):
-        csv_file = form.cleaned_data['file']
+        csv_file = self.request.FILES['file']
         form_data = copy.copy(form.cleaned_data)
         del form_data['file']
 
-        importer = NutrientsImport(csv_file, form_data)
+        # Persist file to disk
+        file_path = save_uploaded_file(csv_file)
+
+        importer = NutrientsImport(file_path, form_data)
 
         if importer.check_encoding() and importer.check_headers():
             importer.execute_import()
@@ -69,7 +82,10 @@ class ProductsView(LoginRequiredMixin, FormView):
         form_data = copy.copy(form.cleaned_data)
         del form_data['file']
 
-        importer = ProductsImport(csv_file, form_data)
+        # Persist file to disk
+        file_path = save_uploaded_file(csv_file)
+
+        importer = ProductsImport(file_path, form_data)
 
         if importer.check_encoding() and importer.check_headers():
             importer.execute_import()
