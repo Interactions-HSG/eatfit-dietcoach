@@ -24,7 +24,7 @@ class AllergensView(LoginRequiredMixin, FormView):
     def form_valid(self, form):
 
         with tempfile.NamedTemporaryFile(delete=False, prefix='allergens_',suffix='.csv') as csv_file:
-            for chunk in form.cleaned_data['file']:
+            for chunk in form.cleaned_data['file'].chunks():
                 csv_file.write(chunk)
                 csv_file.seek(0)
 
@@ -53,7 +53,7 @@ class NutrientsView(LoginRequiredMixin, FormView):
         importer = NutrientsImport(csv_file, form_data)
 
         if importer.check_encoding() and importer.check_headers():
-            execute_import_task.delay(importer)
+            importer.execute_import()
             return super(NutrientsView, self).form_valid(form)  # Python 3: super()
         else:
             return self.form_invalid(form)
@@ -72,7 +72,7 @@ class ProductsView(LoginRequiredMixin, FormView):
         importer = ProductsImport(csv_file, form_data)
 
         if importer.check_encoding() and importer.check_headers():
-            execute_allergen_import_task.delay(importer)
+            importer.execute_import()
             return super(ProductsView, self).form_valid(form)  # Python 3: super()
         else:
             return self.form_invalid(form)
