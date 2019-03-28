@@ -1,8 +1,10 @@
 FROM python:2.7-stretch
 RUN apt-get update
-RUN apt-get install -y apt-utils supervisor python-dev python-pip default-libmysqlclient-dev build-essential unixodbc unixodbc-dev apache2 apache2-utils libapache2-mod-wsgi
+RUN apt-get install -y wget apt-utils supervisor python-dev default-libmysqlclient-dev python-pip build-essential unixodbc unixodbc-dev apache2 apache2-utils libapache2-mod-wsgi
 RUN apt-get clean
 RUN rm -rf /var/lib/apt/lists/*
+RUN wget http://repo.mysql.com/apt/debian/pool/mysql-5.6/m/mysql-community/libmysqlclient18_5.6.43-1debian9_amd64.deb
+RUN dpkg -i libmysqlclient18_5.6.43-1debian9_amd64.deb
 RUN mkdir -p /etc/letsencrypt/live/localhost
 RUN openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
     -keyout /etc/letsencrypt/live/localhost/privkey.pem \
@@ -15,7 +17,7 @@ ADD ./000-default.conf /etc/apache2/sites-enabled/000-default.conf
 ADD ./options-ssl-apache.conf /etc/letsencrypt/options-ssl-apache.conf
 ADD ./modules.load /etc/apache2/mods-enabled/modules.load
 ADD ./EatFitService-celery.conf /etc/supervisor/conf.d/EatFitService-celery.conf
-RUN virtualenv env
+RUN virtualenv --clear env
 RUN . env/bin/activate
 RUN pip install -r requirements.txt
 RUN chown -R www-data:www-data /home/eatfit/eatfitrepo/EatFitService
