@@ -262,8 +262,7 @@ class ProductsImport(ImportBase):
             major_category_update_condition = major_category_create_condition and 'major' in update_products.keys()
             minor_category_update_condition = minor_category_create_condition and 'minor' in update_products.keys()
 
-            product_object, created = Product.objects.get_or_create(id=int(row['import_product_id']),
-                                                                    gtin=int(row['gtin']))
+            product_object, created = Product.objects.get_or_create(gtin=int(row['gtin']))
 
             product_object.__dict__.update(safe_update_products)
 
