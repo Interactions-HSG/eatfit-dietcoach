@@ -1,6 +1,6 @@
 FROM python:2.7-jessie
 RUN apt-get update
-RUN apt-get install -y wget apt-utils supervisor python-dev default-libmysqlclient-dev python-pip build-essential unixodbc unixodbc-dev apache2 apache2-utils libapache2-mod-wsgi
+RUN apt-get install -y apt-utils supervisor python-dev python-pip default-libmysqlclient-dev build-essential unixodbc unixodbc-dev apache2 apache2-utils libapache2-mod-wsgi
 RUN apt-get clean
 RUN rm -rf /var/lib/apt/lists/*
 RUN mkdir -p /etc/letsencrypt/live/localhost
