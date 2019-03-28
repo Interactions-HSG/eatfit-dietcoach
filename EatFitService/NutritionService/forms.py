@@ -17,6 +17,9 @@ class NutrientsForm(forms.Form):
 
 class ProductsForm(forms.Form):
     product_name_de = forms.BooleanField(label='Product Name (DE)', required=False)
+    product_name_en = forms.BooleanField(label='Product Name (EN)', required=False)
+    product_name_fr = forms.BooleanField(label='Product Name (FR)', required=False)
+    product_name_it = forms.BooleanField(label='Product Name (IT)', required=False)
     product_image = forms.BooleanField(label='Product Image', required=False)
     product_ingredients = forms.BooleanField(label='Product Ingredients', required=False)
     product_major = forms.BooleanField(label='Product Major Category', required=False)
