@@ -3,7 +3,7 @@ from celery.task.schedules import crontab
 from datetime import datetime
 import requests
 
-from NutritionService.data_import import AllergensImport
+from NutritionService.data_import import AllergensImport, ProductsImport
 from NutritionService.helpers import store_image
 from NutritionService.models import Ingredient, NutritionFact, Product, NotFoundLog, calculate_ofcom_value
 
@@ -16,6 +16,11 @@ NUTRIENTS_MAPPING_OPENFOOD = {"energyKJ": "energy", "protein": "protein", "salt"
 @task(name='tasks.execute_allergen_import_task', bind=True)
 def execute_allergen_import_task(self, csv_file_path, form_data):
     importer = AllergensImport(csv_file_path, form_data)
+    importer.execute_import(id=csv_file_path)
+
+@task(name='tasks.execute_product_import_task', bind=True)
+def execute_product_import_task(self, csv_file_path, form_data):
+    importer = ProductsImport(csv_file_path, form_data)
     importer.execute_import(id=csv_file_path)
 
 @periodic_task(
