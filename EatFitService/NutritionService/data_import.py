@@ -73,10 +73,6 @@ class AllergensImport(ImportBase):
 
         update_headers = [transform_form_headers[key] for key, value in self.form_params.items() if value]
 
-
-        import pdb
-        pdb.set_trace()
-
         with open(self.csv_file_path) as csv_file:
             reader = csv.DictReader(csv_file)
 
