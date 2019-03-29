@@ -11,7 +11,7 @@ from django.views.generic.edit import FormView
 
 from NutritionService.data_import import AllergensImport, NutrientsImport, ProductsImport
 from NutritionService.forms import AllergensForm, NutrientsForm, ProductsForm
-from NutritionService.tasks import execute_allergen_import_task, execute_nutrient_import_task
+from NutritionService.tasks import execute_allergen_import_task, execute_nutrient_import_task, execute_product_import_task
 
 
 class UtilsList(LoginRequiredMixin, TemplateView):
@@ -97,7 +97,7 @@ class ProductsView(LoginRequiredMixin, FormView):
         importer = ProductsImport(file_path, form_data)
 
         if importer.check_encoding() and importer.check_headers():
-            importer.execute_import()
+            execute_product_import_task.delay(file_path, form_data)
             return super(ProductsView, self).form_valid(form)  # Python 3: super()
         else:
             return self.form_invalid(form)
