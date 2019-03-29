@@ -245,7 +245,7 @@ def test_product_on_pk():
     }
 
     request = factory.post('/tools/import-products/', form_data)
-    request.user = test_user()
+    request.user = create_user()
     view = ProductsView.as_view()
     response = view(request)
 
