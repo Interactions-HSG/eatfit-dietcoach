@@ -118,9 +118,9 @@ def create_user():
 def test_allergen_import():
     assert Allergen.objects.count() == 0
 
-    mommy.make(Product, id=466560, gtin=5000159431668)
+    mommy.make(Product, gtin=5000159431668)
 
-    update_test = mommy.make(Product, id=1019349, gtin=7610807000375)
+    update_test = mommy.make(Product, gtin=7610807000375)
     mommy.make(Allergen, name='allergenMilk', certainity='false', product=update_test)
 
     factory = RequestFactory()
@@ -146,7 +146,7 @@ def test_allergen_import_error_logging():
     assert ImportErrorLog.objects.count() == 0
     assert Allergen.objects.count() == 0
 
-    mommy.make(Product, id=466560, gtin=5000159431668)
+    mommy.make(Product, gtin=5000159431668)
 
     factory = RequestFactory()
 
@@ -171,9 +171,9 @@ def test_allergen_import_error_logging():
 def test_nutrient_import():
     assert NutritionFact.objects.count() == 0
 
-    mommy.make(Product, id=494802, gtin=9011900196084)
+    mommy.make(Product, gtin=9011900196084)
 
-    update_test = mommy.make(Product, id=1018225, gtin=4335896269665)
+    update_test = mommy.make(Product, gtin=4335896269665)
     mommy.make(NutritionFact, name='saturated_fat', amount=12.4, unit_of_measure='hl', product=update_test)
 
     factory = RequestFactory()
@@ -200,7 +200,7 @@ def test_nutrient_import_error_logging():
     assert ImportErrorLog.objects.count() == 0
     assert NutritionFact.objects.count() == 0
 
-    mommy.make(Product, id=494802, gtin=9011900196084)
+    mommy.make(Product, gtin=9011900196084)
 
     factory = RequestFactory()
 
@@ -223,8 +223,41 @@ def test_nutrient_import_error_logging():
 
 
 @pytest.mark.django_db
+@pytest.mark.xfail(raises=Product.DoesNotExist)
+def test_product_on_pk():
+    """
+    We want to assert that the ID from the CSV-file is not being set as primary key
+        of the Product object in the database.
+    We test this by setting the ID from the first entry in the file as query parameter
+        and by trying to retrieve the object from the database with it.
+    """
+
+    factory = RequestFactory()
+
+    with open('NutritionService/tests/products_test.csv') as infile:
+        product_csv_file = SimpleUploadedFile(infile.name, infile.read())
+
+    form_data = {
+        'product_name_de': 'on',
+        'product_weight_unit': 'on',
+        'product_weight_integer': 'on',
+        'file': product_csv_file
+    }
+
+    request = factory.post('/tools/import-products/', form_data)
+    request.user = test_user()
+    view = ProductsView.as_view()
+    response = view(request)
+
+    assert response.status_code == 302
+    assert Product.objects.count() == 30
+
+    Product.objects.get(id=543070)
+
+
+@pytest.mark.django_db
 def test_product_import_safe_update():
-    mommy.make(Product, id=543070, gtin=4009233003433, product_name_de='Erster Fall',
+    mommy.make(Product, gtin=4009233003433, product_name_de='Erster Fall',
                product_size_unit_of_measure='stone', product_size='17')
 
     factory = RequestFactory()
@@ -249,13 +282,14 @@ def test_product_import_safe_update():
 
     assert response.status_code == 302
     assert Product.objects.count() == 30
-    assert Product.objects.filter(id=543070, gtin=4009233003433, product_name_de='Original Wagner Steinofen Vegetaria',
+    assert Product.objects.filter(gtin=4009233003433, product_name_de='Original Wagner Steinofen Vegetaria',
                                   product_size_unit_of_measure='g', product_size='370').exists()
 
 
 @pytest.mark.django_db
 def test_product_import_ingredients():
-    test_prod = mommy.make(Product, id=543070, gtin=4009233003433)
+
+    test_prod = mommy.make(Product, gtin=4018852104216)
     test_ingredients = {'text': 'alles', 'lang': 'FI'}
     test_prod.ingredients.update(**test_ingredients)
 
@@ -317,7 +351,7 @@ def test_product_import_main_image_exists(mock):
 
     mock.get(requests_mock.ANY, content=test_img)
 
-    test_prod = mommy.make(Product, id=522726, gtin=4018852104216, original_image_url='https://www.example.com/')
+    test_prod = mommy.make(Product, gtin=4018852104216, original_image_url='https://www.example.com/')
 
     with open('NutritionService/tests/product_image.jpg') as infile:
         product_main_image = SimpleUploadedFile(infile.name, infile.read())
@@ -349,7 +383,7 @@ def test_product_import_main_image_exists(mock):
 @pytest.mark.django_db
 def test_product_import_major_category():
     test_cat = MajorCategory.objects.create(id=10, name_de='Hallo')
-    test_prod = mommy.make(Product, id=543070, gtin=4009233003433, major_category=test_cat)
+    test_prod = mommy.make(Product, gtin=4009233003433, major_category=test_cat)
 
     assert test_prod.major_category is not None
 
@@ -372,13 +406,13 @@ def test_product_import_major_category():
 
     assert response.status_code == 302
     assert Product.objects.count() == 30
-    assert Product.objects.filter(id=543070, gtin=4009233003433, major_category=new_cat).exists()
+    assert Product.objects.filter(gtin=4009233003433, major_category=new_cat).exists()
 
 
 @pytest.mark.django_db
 def test_product_import_minor_category():
     test_cat = MinorCategory.objects.create(id=50, name_de='Freundlicher Gruss')
-    test_prod = mommy.make(Product, id=543070, gtin=4009233003433, minor_category=test_cat)
+    test_prod = mommy.make(Product, gtin=4009233003433, minor_category=test_cat)
 
     assert test_prod.minor_category is not None
 
@@ -401,7 +435,7 @@ def test_product_import_minor_category():
 
     assert response.status_code == 302
     assert Product.objects.count() == 30
-    assert Product.objects.filter(id=543070, gtin=4009233003433, minor_category=new_cat).exists()
+    assert Product.objects.filter(gtin=4009233003433, minor_category=new_cat).exists()
 
 
 @pytest.mark.django_db
