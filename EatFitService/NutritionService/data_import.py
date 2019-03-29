@@ -5,12 +5,11 @@ from django.conf import settings
 from django.core.mail import send_mail
 
 from NutritionService.helpers import detect_language, store_image_optim
-from NutritionService.models import MajorCategory, MinorCategory,  Product, ImportErrorLog
+from NutritionService.models import MajorCategory, MinorCategory, Product, ImportErrorLog
 
 ALLERGEN_HEADERS = ['import_product_id', 'gtin', 'allergen_name', 'certainity', 'major', 'minor']
 NUTRIENTS_HEADERS = ['import_product_id', 'gtin', 'nutrient_name', 'amount', 'unit_of_measure']
-PRODUCT_HEADERS = ['import_product_id', 'gtin', 'product_name_de', 'weight', 'imageLink', 'ingredients', 'brand',
-                   'description', 'origin', 'category', 'major', 'minor', 'weight_unit', 'weight_integer']
+PRODUCT_HEADERS = ['import_product_id', 'gtin', 'product_name_de', 'product_name_en', 'product_name_fr', 'product_name_it', 'weight', 'imageLink', 'ingredients', 'brand', 'description', 'origin', 'category', 'major', 'minor', 'weight_unit', 'weight_integer']
 
 START_SUBJECT = 'Import has started'
 START_MESSAGE = 'This message has been automatically generated'
@@ -47,7 +46,6 @@ class ImportBase:
         pass
 
     def execute_import(self):
-
         send_mail(subject=START_SUBJECT, message=START_MESSAGE, from_email=settings.DEFAULT_FROM_EMAIL,
                   recipient_list=['timo.klingler@adnexo.ch'], fail_silently=False, )
 
@@ -224,6 +222,9 @@ class ProductsImport(ImportBase):
     def import_csv(self):
         transform_form_headers = {
             'product_name_de': 'product_name_de',
+            'product_name_en': 'product_name_en',
+            'product_name_fr': 'product_name_fr',
+            'product_name_it': 'product_name_it',
             'product_image': 'imageLink',
             'product_ingredients': 'ingredients',
             'product_major': 'major',
@@ -233,6 +234,9 @@ class ProductsImport(ImportBase):
         }
         transform_csv_headers = {
             'product_name_de': 'product_name_de',
+            'product_name_en': 'product_name_en',
+            'product_name_fr': 'product_name_fr',
+            'product_name_it': 'product_name_it',
             'imageLink': 'original_image_url',
             'ingredients': 'ingredients',
             'major': 'major',
@@ -240,7 +244,8 @@ class ProductsImport(ImportBase):
             'weight_unit': 'product_size_unit_of_measure',
             'weight_integer': 'product_size'
         }
-        safe_update_headers = ['product_name_de', 'product_size_unit_of_measure', 'product_size']
+        safe_update_headers = ['product_name_de', 'product_name_en', 'product_name_fr', 'product_name_it',
+                               'product_size_unit_of_measure', 'product_size']
 
         update_headers = [transform_form_headers[key] for key, value in self.form_params.items() if value]
         reader = csv.DictReader(self.csv_file)
