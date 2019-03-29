@@ -82,8 +82,7 @@ class AllergensImport(ImportBase):
                 update_allergens = {transform_csv_headers[key]: value for key, value in get_row_headers.items()}
 
                 try:
-                    product_object = Product.objects.get(id=int(row['import_product_id']),
-                                                         gtin=int(row['gtin']))
+                    product_object = Product.objects.get(gtin=int(row['gtin']))
 
                     if product_object.allergens.filter(name=row['allergen_name']).exists():
                         product_object.allergens.update(**update_allergens)
@@ -152,7 +151,7 @@ class NutrientsImport(ImportBase):
 
                     log_dict = {
                         'import_type': 'Nutrients',
-                        'file_name': csv_file.__str__,
+                        'file_name': self.csv_file_path,
                         'row_data': 'Row ' + str(count) + ': ' + ', '.join(row),
                         'error_field': 'nutrients foreign key field',
                         'error_message': 'Product ' + str(row['gtin']) + ' does not exist.'
@@ -163,7 +162,7 @@ class NutrientsImport(ImportBase):
                 except Product.MultipleObjectsReturned:
                     log_dict = {
                         'import_type': 'Nutrients',
-                        'file_name': csv_file.__str__,
+                        'file_name': self.csv_file_path,
                         'row_data': 'Row ' + str(count) + ': ' + ', '.join(row),
                         'error_field': 'nutrients foreign key field',
                         'error_message': 'Multiple products with GTIN: ' + str(row['gtin']) + ' found.'
@@ -201,7 +200,7 @@ class ProductsImport(ImportBase):
 
             log_dict = {
                 'import_type': 'Products',
-                'file_name': csv_file.__str__,
+                'file_name': self.csv_file_path,
                 'row_data': 'Row ' + str(row['counter']) + ': ' + ', '.join(row),
                 'error_field': 'major_category',
                 'error_message': 'Major category with ID: ' + str(row['major']) + ' does not exist.'
@@ -219,7 +218,7 @@ class ProductsImport(ImportBase):
         except MinorCategory.DoesNotExist:
             log_dict = {
                 'import_type': 'Products',
-                'file_name': csv_file.__str__,
+                'file_name': self.csv_file_path <,
                 'row_data': 'Row ' + str(row['counter']) + ': ' + ', '.join(row),
                 'error_field': 'minor_category',
                 'error_message': 'Major category with ID: ' + str(row['minor']) + ' does not exist.'
