@@ -207,9 +207,14 @@ def test_nutrient_import_error_logging():
 
 
 @pytest.mark.django_db
+@pytest.mark.xfail(raises=Product.DoesNotExist)
 def test_product_on_pk():
-    mommy.make(Product, id=1, product_name_de='Erster Fall',
-               product_size_unit_of_measure='stone', product_size='17')
+    """
+    We want to assert that the ID from the CSV-file is not being set as primary key
+        of the Product object in the database.
+    We test this by setting the ID from the first entry in the file as query parameter
+        and by trying to retrieve the object from the database with it.
+    """
 
     factory = RequestFactory()
 
@@ -229,9 +234,10 @@ def test_product_on_pk():
     response = view(request)
 
     assert response.status_code == 302
-    assert Product.objects.count() == 31
-    assert not Product.objects.filter(id=1, product_name_de='Original Wagner Steinofen Vegetaria',
-                                      product_size_unit_of_measure='g', product_size='370').exists()
+    assert Product.objects.count() == 30
+
+    Product.objects.get(id=543070)
+
 
 @pytest.mark.django_db
 def test_product_import_safe_update():
