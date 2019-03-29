@@ -218,7 +218,7 @@ class ProductsImport(ImportBase):
         except MinorCategory.DoesNotExist:
             log_dict = {
                 'import_type': 'Products',
-                'file_name': self.csv_file_path <,
+                'file_name': self.csv_file_path,
                 'row_data': 'Row ' + str(row['counter']) + ': ' + ', '.join(row),
                 'error_field': 'minor_category',
                 'error_message': 'Major category with ID: ' + str(row['minor']) + ' does not exist.'
