@@ -117,7 +117,6 @@ class ReceiptToNutritionUserAdmin(admin.ModelAdmin):
     search_fields = ("r2n_partner", "r2n_username", "r2n_user_active")
 
 
-admin.site.register(Allergen)
 admin.site.register(Product, ProductAdmin)
 admin.site.register(MajorCategory)
 admin.site.register(MinorCategory)
