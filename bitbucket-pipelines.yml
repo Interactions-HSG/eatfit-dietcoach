@@ -1,8 +1,3 @@
-# This is a sample build configuration for Docker.
-# Check our guides at https://confluence.atlassian.com/x/O1toN for more examples.
-# Only use spaces to indent your .yml configuration.
-# -----
-# You can specify a custom docker image from Docker Hub as your build environment.
 image: atlassian/default-image:2
 
 pipelines:
@@ -10,7 +5,8 @@ pipelines:
     - step:
         services:
           - docker
-        script: # Modify the commands below to build your repository.
-          - export IMAGE_NAME=$BITBUCKET_COMMIT
-          # build the Docker image (this will use the Dockerfile in the root of the repo)
-          - docker build -t $IMAGE_NAME ./Dockerfile.dev
+        script:
+          - curl -L "https://github.com/docker/compose/releases/download/1.23.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+          - cd EatFitService
+          - cp EatFitService/settings_keys.template.py EatFitService/settings_keys.py
+          - docker-compose -f docker-compose.yml run api py.test
