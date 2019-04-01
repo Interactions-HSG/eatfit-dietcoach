@@ -36,6 +36,7 @@ EatFitService/localenv/
 EatFitService/static/
 EatFitService/nutritiondb.json
 EatFitService/logs/
+EatFitService/imports/
 **/logs
 **/celerybeat-schedule
 **/celerybeat.pid
