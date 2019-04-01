@@ -27,17 +27,18 @@ class ImportBase:
         self.form_params = form_params
 
     def check_encoding(self):
-
         with open(self.csv_file_path) as csv_file:
-            encoding_detector = chardet.detect(csv_file.read())
-
-        encoding = encoding_detector['encoding']
+            detector = chardet.universaldetector.UniversalDetector()
+            # check only first 30 lines for encoding
+            for line in csv_file.readlines()[:30]:
+                detector.feed(line)
+        detector.close()
+        encoding = detector.result['encoding']
         check_encoding = True if encoding.find('utf-8') == 0 or encoding.find('ascii') == 0 else False
 
         return check_encoding
 
     def check_headers(self):
-
         with open(self.csv_file_path) as csv_file:
             reader = csv.DictReader(csv_file)
             header = reader.fieldnames
