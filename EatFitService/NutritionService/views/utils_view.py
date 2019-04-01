@@ -1,10 +1,10 @@
 from __future__ import print_function
 import copy
-from datetime import datetime
-import tempfile
 import os
 
+from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.files.storage import FileSystemStorage
 from django.urls import reverse_lazy
 from django.views.generic import TemplateView
 from django.views.generic.edit import FormView
@@ -18,17 +18,13 @@ class UtilsList(LoginRequiredMixin, TemplateView):
     template_name = 'utils/utils_list.html'
 
 
-def save_uploaded_file(file, prefix):
-    # Persist file to disk
-    current_datetime = datetime.now().strftime('_%y-%m-%d_%H-%M_')
-    prefix = prefix + current_datetime
+def save_uploaded_file(file):
 
-    file_descriptor, file_path = tempfile.mkstemp(prefix=prefix, suffix='.csv')
+    location = os.path.join(settings.BASE_DIR, 'imports')
+    fs = FileSystemStorage(location=location, base_url=location)
 
-    with open(file_path, 'w') as tmp:
-        tmp.write(file.read())
-
-    os.close(file_descriptor)
+    filename = fs.save(file.name, file)
+    file_path = fs.url(filename)
 
     return file_path
 
@@ -45,8 +41,7 @@ class AllergensView(LoginRequiredMixin, FormView):
         del form_data['file']
 
         # Persist file to disk
-        prefix = 'allergens'
-        file_path = save_uploaded_file(csv_file, prefix)
+        file_path = save_uploaded_file(csv_file)
 
         importer = AllergensImport(file_path, form_data)
 
@@ -63,13 +58,12 @@ class NutrientsView(LoginRequiredMixin, FormView):
     success_url = reverse_lazy('tools')
 
     def form_valid(self, form):
-        csv_file = form.cleaned_data['file']
+        csv_file = self.request.FILES['file']
         form_data = copy.copy(form.cleaned_data)
         del form_data['file']
 
         # Persist file to disk
-        prefix = 'nutrients'
-        file_path = save_uploaded_file(csv_file, prefix)
+        file_path = save_uploaded_file(csv_file)
 
         importer = NutrientsImport(file_path, form_data)
 
@@ -86,13 +80,13 @@ class ProductsView(LoginRequiredMixin, FormView):
     success_url = reverse_lazy('tools')
 
     def form_valid(self, form):
-        csv_file = form.cleaned_data['file']
+        csv_file = self.request.FILES['file']
         form_data = copy.copy(form.cleaned_data)
         del form_data['file']
 
         # Persist file to disk
-        prefix = 'products'
-        file_path = save_uploaded_file(csv_file, prefix)
+
+        file_path = save_uploaded_file(csv_file)
 
         importer = ProductsImport(file_path, form_data)
 
