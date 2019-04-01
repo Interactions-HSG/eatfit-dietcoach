@@ -8,15 +8,38 @@ services:
       - MYSQL_ROOT_PASSWORD=123456
       - MYSQL_DATABASE=NutritionDB
       - MYSQL_ROOT_HOST=%
+  rabbitmq:
+    image: 'rabbitmq:3.5.7'
+  start-dependencies:
+    image: dadarek/wait-for-dependencies
+    depends_on:
+      - mysql
+      - rabbitmq
+    command: mysql:3306
   api:
     build:
       dockerfile: Dockerfile.dev
       context: .
+    command: sh api-worker.sh
     ports:
       - 80:80
       - 443:443
     depends_on:
       - mysql
+      - rabbitmq
+    volumes:
+      - .:/home/eatfit/eatfitrepo/EatFitService
+    environment:
+      - DJANGO_SETTINGS_MODULE=EatFitService.local_settings
+  celery-worker:
+    build:
+      dockerfile: Dockerfile.dev
+      context: .
+    command: sh celery-worker.sh
+    depends_on:
+      - mysql
+      - rabbitmq
+      - api
     volumes:
       - .:/home/eatfit/eatfitrepo/EatFitService
     environment:

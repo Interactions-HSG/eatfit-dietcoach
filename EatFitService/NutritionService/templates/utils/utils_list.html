@@ -1,0 +1,26 @@
+{% extends "utils/base.html" %}
+{% block title %}Overview{% endblock %}
+
+{% block content %}
+<h2>Database Admin</h2>
+<ul class="list-group">
+    <li class="list-group-item"><a href="{% url 'admin:index' %}">Django Admin</a></li>
+</ul>
+<br>
+<br>
+<h2>API</h2>
+<ul class="list-group">
+    <li class="list-group-item"><a href="/api/v1/">API Index</a></li>
+    <li class="list-group-item"><a href="/api/v1/docs/">API Docs</a></li>
+</ul>
+<br>
+<br>
+<h2>Utils</h2>
+<ul class="list-group">
+    <li class="list-group-item"><a href="/tools/import-allergens">Import Allergen Data</a></li>
+    <li class="list-group-item"><a href="/tools/import-nutrients">Import Nutrient Data</a></li>
+    <li class="list-group-item"><a href="/tools/import-products">Import Product Data</a></li>
+</ul>
+<br>
+<br>
+{% endblock %}
