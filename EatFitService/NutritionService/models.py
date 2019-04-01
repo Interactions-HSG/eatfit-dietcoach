@@ -12,8 +12,7 @@ from django.dispatch.dispatcher import receiver
 from rest_framework.authtoken.models import Token
 
 from NutritionService.helpers import is_number
-from NutritionService.validators import minimum_float_validator, maximum_float_validator, retailer_id_validator, \
-    market_region_id_validator
+from NutritionService.validators import minimum_float_validator, maximum_float_validator
 
 ENERGY_KJ = "energyKJ"
 ENERGY_KCAL = "energyKcal"
@@ -150,7 +149,6 @@ class Retailer(models.Model):
         (EDEKA, EDEKA),
     )
 
-    retailer_code = models.CharField(max_length=52, unique=True, null=False, blank=False, validators=[retailer_id_validator])
     retailer_name = models.CharField(max_length=20, choices=RETAILER_CHOICES)
     product = models.ForeignKey(Product, related_name='retailer')
 
@@ -179,7 +177,6 @@ class MarketRegion(models.Model):
         (ITALY, ITALY),
     )
 
-    market_region_code = models.CharField(max_length=2, unique=True, validators=[market_region_id_validator])
     market_region_name = models.CharField(max_length=52, choices=MARKET_REGIONS, null=True, blank=True)
     product = models.ForeignKey(Product, related_name='market_region')
 
@@ -190,12 +187,6 @@ class MarketRegion(models.Model):
 
     def __unicode__(self):
         return self.market_region_id
-
-
-class ProductInMarketRegionAtRetailer(models.Model):
-    product = models.ForeignKey(Product, to_field='id')
-    retailer = models.ForeignKey(Retailer, to_field='retailer_code', null=True, blank=True)
-    market_region = models.ForeignKey(MarketRegion, to_field='market_region_code', null=True, blank=True)
 
 
 class AdditionalImage(models.Model):
@@ -243,10 +234,21 @@ class ImportErrorLog(models.Model):
 
 
 class Allergen(models.Model):
+
+    TRUE = 'true'
+    FALSE = 'false'
+    MAY_CONTAIN = 'mayContain'
+
+    CERTAINTY_CHOICES = (
+        (TRUE, TRUE),
+        (FALSE, FALSE),
+        (MAY_CONTAIN, MAY_CONTAIN),
+    )
+
     id = models.BigAutoField(primary_key=True)
     product = models.ForeignKey(Product, related_name='allergens')
     name = models.CharField(max_length=64, null=True, blank=True)
-    certainity = models.TextField()
+    certainty = models.CharField(max_length=11, choices=CERTAINTY_CHOICES, default=FALSE)
 
     class Meta:
         verbose_name = 'Allergen'
