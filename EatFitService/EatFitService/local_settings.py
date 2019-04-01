@@ -4,7 +4,7 @@ import os
 CELERY_BROKER_URL = 'amqp://rabbitmq'
 
 # we need eager mode for testing, because logic is in tasks
-#CELERY_TASK_ALWAYS_EAGER = os.getenv('CELERY_DRY_RUN', False) in ['True', 'true']
+CELERY_TASK_ALWAYS_EAGER = os.getenv('CELERY_DRY_RUN', False) in ['True', 'true']
 
 DEBUG = True
 
