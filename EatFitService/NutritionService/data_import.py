@@ -11,10 +11,10 @@ ALLERGEN_HEADERS = ['import_product_id', 'gtin', 'allergen_name', 'certainity', 
 NUTRIENTS_HEADERS = ['import_product_id', 'gtin', 'nutrient_name', 'amount', 'unit_of_measure']
 PRODUCT_HEADERS = ['import_product_id', 'gtin', 'product_name_de', 'product_name_en', 'product_name_fr', 'product_name_it', 'weight', 'imageLink', 'ingredients', 'brand', 'description', 'origin', 'category', 'major', 'minor', 'weight_unit', 'weight_integer']
 
-START_SUBJECT = 'Import of {0} has started'  # Change {0} -> {} for python 3
+START_SUBJECT = 'Import has started: '  # Change {0} -> {} for python 3
 START_MESSAGE = 'This message has been automatically generated'
 
-END_SUBJECT = 'Import of {0} completed'  # Change {0} -> {} for python 3
+END_SUBJECT = 'Import complete: '  # Change {0} -> {} for python 3
 END_MESSAGE = 'This message has been automatically generated'
 
 
@@ -51,11 +51,11 @@ class ImportBase:
         pass
 
     def execute_import(self, id='UNKNOWN'):
-        send_mail(subject=START_SUBJECT, message=START_MESSAGE.format(id), from_email=settings.DEFAULT_FROM_EMAIL,
-                  recipient_list=['timo.klingler@adnexo.ch'], fail_silently=False, )
+        send_mail(subject=START_SUBJECT, message=START_MESSAGE + id, from_email=settings.DEFAULT_FROM_EMAIL,
+                  recipient_list=['klaus.fuchs@autoidlabs.ch'], fail_silently=False, )
         self.import_csv()
-        send_mail(subject=END_SUBJECT, message=END_MESSAGE.format(id), from_email=settings.DEFAULT_FROM_EMAIL,
-                  recipient_list=['timo.klingler@adnexo.ch'], fail_silently=False, )
+        send_mail(subject=END_SUBJECT, message=END_MESSAGE + id, from_email=settings.DEFAULT_FROM_EMAIL,
+                  recipient_list=['klaus.fuchs@autoidlabs.ch'], fail_silently=False, )
 
 
 class AllergensImport(ImportBase):
