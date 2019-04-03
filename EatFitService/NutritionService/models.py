@@ -135,6 +135,9 @@ class Product(models.Model):
 
 
 class Retailer(models.Model):
+
+    # Retailer
+
     MIGROS = 'Migros'
     COOP = 'Coop'
     FARMY = 'Farmy'
@@ -149,19 +152,7 @@ class Retailer(models.Model):
         (EDEKA, EDEKA),
     )
 
-    retailer_name = models.CharField(max_length=20, choices=RETAILER_CHOICES)
-    product = models.ForeignKey(Product, related_name='retailer')
-
-    class Meta:
-        verbose_name = 'Retailer'
-        verbose_name_plural = 'Retailers'
-        db_table = 'retailers'
-
-    def __unicode__(self):
-        return self.retailer_name
-
-
-class MarketRegion(models.Model):
+    # MarketRegion
 
     SWITZERLAND = 'Switzerland'
     GERMANY = 'Germany'
@@ -177,16 +168,19 @@ class MarketRegion(models.Model):
         (ITALY, ITALY),
     )
 
-    market_region_name = models.CharField(max_length=52, choices=MARKET_REGIONS, null=True, blank=True)
-    product = models.ForeignKey(Product, related_name='market_region')
+    # Fields
+
+    retailer_name = models.CharField(max_length=20, choices=RETAILER_CHOICES)
+    market_region_name = models.CharField(max_length=52, choices=MARKET_REGIONS)
+    product = models.ForeignKey(Product, related_name='retailer')
 
     class Meta:
-        verbose_name = 'Market Region'
-        verbose_name_plural = 'Market Regions'
-        db_table = 'market_regions'
+        verbose_name = 'Retailer'
+        verbose_name_plural = 'Retailers'
+        db_table = 'retailers'
 
     def __unicode__(self):
-        return self.market_region_id
+        return self.retailer_name
 
 
 class AdditionalImage(models.Model):
