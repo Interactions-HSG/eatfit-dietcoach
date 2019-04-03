@@ -7,7 +7,7 @@ from django.core.mail import send_mail
 from NutritionService.helpers import detect_language, store_image_optim
 from NutritionService.models import MajorCategory, MinorCategory, Product, ImportErrorLog
 
-ALLERGEN_HEADERS = ['import_product_id', 'gtin', 'allergen_name', 'certainity', 'major', 'minor']
+ALLERGEN_HEADERS = ['import_product_id', 'gtin', 'allergen_name', 'certainty', 'major', 'minor']
 NUTRIENTS_HEADERS = ['import_product_id', 'gtin', 'nutrient_name', 'amount', 'unit_of_measure']
 PRODUCT_HEADERS = ['import_product_id', 'gtin', 'product_name_de', 'product_name_en', 'product_name_fr', 'product_name_it', 'weight', 'imageLink', 'ingredients', 'brand', 'description', 'origin', 'category', 'major', 'minor', 'weight_unit', 'weight_integer']
 
@@ -65,11 +65,11 @@ class AllergensImport(ImportBase):
 
         transform_form_headers = {
             'allergen_name': 'allergen_name',
-            'allergen_certainty': 'certainity',
+            'allergen_certainty': 'certainty',
         }
         transform_csv_headers = {
             'allergen_name': 'name',
-            'certainity': 'certainity'
+            'certainty': 'certainty'
         }
 
         update_headers = [transform_form_headers[key] for key, value in self.form_params.items() if value]
@@ -81,7 +81,6 @@ class AllergensImport(ImportBase):
 
                 get_row_headers = {header: row[header] for header in update_headers}
                 update_allergens = {transform_csv_headers[key]: value for key, value in get_row_headers.items()}
-
 
                 try:
                     product_object = Product.objects.get(gtin=int(row['gtin']))

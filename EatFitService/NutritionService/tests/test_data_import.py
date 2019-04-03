@@ -121,7 +121,7 @@ def test_allergen_import():
     mommy.make(Product, gtin=5000159431668)
 
     update_test = mommy.make(Product, gtin=7610807000375)
-    mommy.make(Allergen, name='allergenMilk', certainity='false', product=update_test)
+    mommy.make(Allergen, name='allergenMilk', certainty='false', product=update_test)
 
     factory = RequestFactory()
 

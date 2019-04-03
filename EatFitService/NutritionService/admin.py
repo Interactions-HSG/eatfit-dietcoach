@@ -5,8 +5,7 @@ from NutritionService.views.crowdsource_views import __create_products_from_crow
 from NutritionService.models import MajorCategory, Product, MinorCategory, Allergen, NutritionFact, ErrorLog, \
                                     CrowdsourceProduct, NotFoundLog, HealthTipp, NutrientName, \
                                     ReceiptToNutritionPartner, ReceiptToNutritionUser, Matching, DigitalReceipt, \
-                                    Retailer, MarketRegion, ProductInMarketRegionAtRetailer, AdditionalImage, \
-                                    ImportErrorLog
+                                    Retailer, AdditionalImage, ImportErrorLog
 
 nutrients_to_prefill = ["energyKcal", "energyKJ", "protein", "salt", "sodium", "dietaryFiber", "saturatedFat", "sugars",
                         "totalCarbohydrate", "totalFat"]
@@ -61,12 +60,7 @@ class NutrientInline(admin.TabularInline):
 
 class RetailerInline(admin.TabularInline):
     model = Retailer
-    extra = 10
-
-
-class MarketRegionInline(admin.TabularInline):
-    model = MarketRegion
-    extra = 10
+    extra = 5
 
 
 class ProductAdmin(admin.ModelAdmin):
@@ -77,7 +71,6 @@ class ProductAdmin(admin.ModelAdmin):
         AllergenInline,
         NutrientInline,
         RetailerInline,
-        MarketRegionInline
     ]
 
 
@@ -131,8 +124,5 @@ admin.site.register(Matching, MatchingAdmin)
 admin.site.register(ReceiptToNutritionPartner)
 admin.site.register(ReceiptToNutritionUser, ReceiptToNutritionUserAdmin)
 admin.site.register(DigitalReceipt, DigitalReceiptAdmin)
-admin.site.register(Retailer)
-admin.site.register(MarketRegion)
-admin.site.register(ProductInMarketRegionAtRetailer)
 admin.site.register(AdditionalImage)
 admin.site.register(ImportErrorLog)
