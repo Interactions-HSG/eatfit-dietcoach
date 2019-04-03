@@ -5,7 +5,7 @@ from NutritionService.views.crowdsource_views import __create_products_from_crow
 from NutritionService.models import MajorCategory, Product, MinorCategory, Allergen, NutritionFact, ErrorLog, \
                                     CrowdsourceProduct, NotFoundLog, HealthTipp, NutrientName, \
                                     ReceiptToNutritionPartner, ReceiptToNutritionUser, Matching, DigitalReceipt, \
-                                    Retailer, MarketRegion, AdditionalImage, ImportErrorLog
+                                    Retailer, AdditionalImage, ImportErrorLog
 
 nutrients_to_prefill = ["energyKcal", "energyKJ", "protein", "salt", "sodium", "dietaryFiber", "saturatedFat", "sugars",
                         "totalCarbohydrate", "totalFat"]
@@ -63,10 +63,6 @@ class RetailerInline(admin.TabularInline):
     extra = 5
 
 
-class MarketRegionInline(admin.TabularInline):
-    model = MarketRegion
-    extra = 1
-
 class ProductAdmin(admin.ModelAdmin):
     list_display = ("product_name_de", "gtin")
     search_fields = ('product_name_de', 'gtin')
@@ -75,7 +71,6 @@ class ProductAdmin(admin.ModelAdmin):
         AllergenInline,
         NutrientInline,
         RetailerInline,
-        MarketRegionInline
     ]
 
 
