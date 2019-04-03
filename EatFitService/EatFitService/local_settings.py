@@ -1,4 +1,10 @@
 from EatFitService.settings import *
+import os
+
+CELERY_BROKER_URL = 'amqp://rabbitmq'
+
+# we need eager mode for testing, because logic is in tasks
+CELERY_TASK_ALWAYS_EAGER = os.getenv('CELERY_DRY_RUN', False) in ['True', 'true']
 
 DEBUG = True
 
@@ -18,6 +24,8 @@ STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
 STATIC_URL = '/static/'
 MEDIA_URL = '/media/'
 
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -28,6 +36,9 @@ LOGGING = {
         },
     },
     'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
         'file': {
             'level': 'WARNING',
             'class': 'logging.FileHandler',
@@ -41,11 +52,16 @@ LOGGING = {
             'level': 'WARNING',
             'propagate': True,
         },
-         # Log all exceptions in logfile
+        # Log all exceptions in logfile
         '': {
-            'handlers': ['file'],
-            'level': 'ERROR',
+            'handlers': ['console'],
+            'level': 'DEBUG',
             'propagate': True
+        },
+        'django.db.backends':{
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': True,
         }
     },
 }

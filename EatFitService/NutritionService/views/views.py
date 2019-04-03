@@ -7,6 +7,16 @@ Definition of views.
 from __future__ import print_function, division
 from datetime import datetime
 import logging
+from suds.client import Client
+from suds.sudsobject import asdict
+
+from django.http import HttpResponse
+from django.http.response import HttpResponseForbidden
+from django.shortcuts import get_object_or_404
+
+from rest_framework import permissions
+from rest_framework.decorators import permission_classes, api_view
+from rest_framework.response import Response
 
 from EatFitService.settings import TRUSTBOX_USERNAME, TRUSTBOX_PASSWORD, TRUSTBOX_URL
 from NutritionService import data_cleaning, reports
@@ -18,14 +28,6 @@ from NutritionService.models import DigitalReceipt, NonFoundMatching, Matching, 
 from NutritionService.serializers import MinorCategorySerializer, MajorCategorySerializer, HealthTippSerializer, \
     ProductSerializer, DigitalReceiptSerializer
 from NutritionService.tasks import import_from_openfood
-from django.http import HttpResponse
-from django.http.response import HttpResponseForbidden
-from django.shortcuts import get_object_or_404
-from rest_framework import permissions
-from rest_framework.decorators import permission_classes, api_view
-from rest_framework.response import Response
-from suds.client import Client
-from suds.sudsobject import asdict
 
 allowed_units_of_measure = ["g", "kg", "ml", "l"]
 
@@ -56,6 +58,7 @@ def send_receipts_experimental(request):
                             status=403)
 
         result = {"receipts": []}
+        digital_receipt_list = []
 
         for receipt in serializer.validated_data["receipts"][:10]:
 
@@ -71,6 +74,8 @@ def send_receipts_experimental(request):
                                                  quantity_unit=article["quantity_unit"],
                                                  price=article["price"],
                                                  price_currency=article["price_currency"])
+
+                digital_receipt_list.append(digital_receipt)
 
                 product = match_receipt(digital_receipt)
                 if product:
@@ -126,6 +131,19 @@ def send_receipts_experimental(request):
             result["receipts"].append(receipt_object)
 
         for receipt in serializer.validated_data["receipts"][10:]:
+            for article in receipt["items"]:
+                digital_receipt = DigitalReceipt(r2n_user=r2n_user,
+                                                 business_unit=receipt["business_unit"],
+                                                 receipt_id=receipt["receipt_id"],
+                                                 receipt_datetime=receipt["receipt_datetime"],
+                                                 article_id=article["article_id"],
+                                                 article_type=article["article_type"],
+                                                 quantity=article["quantity"],
+                                                 quantity_unit=article["quantity_unit"],
+                                                 price=article["price"],
+                                                 price_currency=article["price_currency"])
+
+                digital_receipt_list.append(digital_receipt)
 
             receipt_object = {
                 "receipt_id": receipt["receipt_id"],
@@ -137,6 +155,8 @@ def send_receipts_experimental(request):
             }
 
             result["receipts"].append(receipt_object)
+
+        DigitalReceipt.objects.bulk_create(digital_receipt_list)
 
         return Response(result, status=200)
 
