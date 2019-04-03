@@ -7,7 +7,7 @@ from django.core.mail import send_mail
 from NutritionService.helpers import detect_language, store_image_optim
 from NutritionService.models import MajorCategory, MinorCategory, Product, ImportErrorLog
 
-ALLERGEN_HEADERS = ['import_product_id', 'gtin', 'allergen_name', 'certainity', 'major', 'minor']
+ALLERGEN_HEADERS = ['import_product_id', 'gtin', 'allergen_name', 'certainty', 'major', 'minor']
 NUTRIENTS_HEADERS = ['import_product_id', 'gtin', 'nutrient_name', 'amount', 'unit_of_measure']
 PRODUCT_HEADERS = ['import_product_id', 'gtin', 'product_name_de', 'product_name_en', 'product_name_fr', 'product_name_it', 'weight', 'imageLink', 'ingredients', 'brand', 'description', 'origin', 'category', 'major', 'minor', 'weight_unit', 'weight_integer']
 
