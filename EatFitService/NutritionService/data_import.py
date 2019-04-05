@@ -9,7 +9,9 @@ from NutritionService.models import MajorCategory, MinorCategory, Product, Impor
 
 ALLERGEN_HEADERS = ['import_product_id', 'gtin', 'allergen_name', 'certainity', 'major', 'minor']
 NUTRIENTS_HEADERS = ['import_product_id', 'gtin', 'nutrient_name', 'amount', 'unit_of_measure']
-PRODUCT_HEADERS = ['import_product_id', 'gtin', 'product_name_de', 'product_name_en', 'product_name_fr', 'product_name_it', 'weight', 'imageLink', 'ingredients', 'brand', 'description', 'origin', 'category', 'major', 'minor', 'weight_unit', 'weight_integer']
+PRODUCT_HEADERS = ['import_product_id', 'gtin', 'product_name_de', 'product_name_en', 'product_name_fr',
+                   'product_name_it', 'weight', 'imageLink', 'ingredients', 'brand', 'description', 'origin',
+                   'category', 'major', 'minor', 'weight_unit', 'weight_integer', 'retailer', 'market_region']
 
 START_SUBJECT = 'Import has started: '  # Change {0} -> {} for python 3
 START_MESSAGE = 'This message has been automatically generated'
@@ -69,7 +71,7 @@ class AllergensImport(ImportBase):
         }
         transform_csv_headers = {
             'allergen_name': 'name',
-            'certainty': 'certainity'
+            'certainity': 'certainity'
         }
 
         update_headers = [transform_form_headers[key] for key, value in self.form_params.items() if value]
@@ -226,6 +228,23 @@ class ProductsImport(ImportBase):
             }
             ImportErrorLog.objects.create(**log_dict)
 
+    def update_or_create_retailer(self, product, row):
+
+        if product.retailer.filter(retailer_name=row['retailer']).exists():
+            product.retailer.update(retailer_name=row['retailer'])
+        else:
+            product.retailer.create(retailer_name=row['retailer'])
+
+    def update_or_create_market_region(self, product, row):
+
+        market_regions = ['Switzerland', 'Germany', 'Austria', 'France', 'Italy']
+        market_region_name = row['market_region'] if row['market_region'] in market_regions else 'Switzerland'
+
+        if product.market_region.filter(market_region_name=market_region_name).exists():
+            product.market_region.update(market_region_name=market_region_name)
+        else:
+            product.market_region.create(market_region_name=market_region_name)
+
     def import_csv(self):
         transform_form_headers = {
             'product_name_de': 'product_name_de',
@@ -237,7 +256,9 @@ class ProductsImport(ImportBase):
             'product_major': 'major',
             'product_minor': 'minor',
             'product_weight_unit': 'weight_unit',
-            'product_weight_integer': 'weight_integer'
+            'product_weight_integer': 'weight_integer',
+            'product_retailer': 'retailer',
+            'product_market_region': 'market_region'
         }
         transform_csv_headers = {
             'product_name_de': 'product_name_de',
@@ -249,7 +270,9 @@ class ProductsImport(ImportBase):
             'major': 'major',
             'minor': 'minor',
             'weight_unit': 'product_size_unit_of_measure',
-            'weight_integer': 'product_size'
+            'weight_integer': 'product_size',
+            'retailer': 'retailer',
+            'market_region': 'market_region'
         }
         safe_update_headers = ['product_name_de', 'product_name_en', 'product_name_fr', 'product_name_it',
                                'product_size_unit_of_measure', 'product_size']
@@ -272,6 +295,8 @@ class ProductsImport(ImportBase):
                 minor_category_create_condition = row['minor'] and row['minor'] != 'null'
                 major_category_update_condition = major_category_create_condition and 'major' in update_products.keys()
                 minor_category_update_condition = minor_category_create_condition and 'minor' in update_products.keys()
+                retailer_update_or_create_condition = row['retailer'] and 'retailer' in update_products.keys()
+                market_region_update_or_create_condition = row['market_region'] and 'market_region' in update_products.keys()
 
                 product_object, created = Product.objects.get_or_create(gtin=int(row['gtin']))
 
@@ -288,5 +313,11 @@ class ProductsImport(ImportBase):
 
                 if (created and minor_category_create_condition) or minor_category_update_condition:
                     self.update_minor_category(product_object, row)
+
+                if retailer_update_or_create_condition:
+                    self.update_or_create_retailer(product_object, row)
+
+                if market_region_update_or_create_condition:
+                    self.update_or_create_market_region(product_object, row)
 
                 product_object.save()

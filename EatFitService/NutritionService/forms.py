@@ -26,4 +26,6 @@ class ProductsForm(forms.Form):
     product_minor = forms.BooleanField(label='Product Minor Category', required=False)
     product_weight_unit = forms.BooleanField(label='Product Weight Unit', required=False)
     product_weight_integer = forms.BooleanField(label='Product Weight Value', required=False)
+    product_retailer = forms.BooleanField(label='Product Retailer', required=False)
+    product_market_region = forms.BooleanField(label='Product Market Region', required=False)
     file = forms.FileField(label="File", validators=[csv_validator])
