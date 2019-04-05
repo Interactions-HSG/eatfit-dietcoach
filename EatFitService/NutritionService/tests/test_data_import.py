@@ -16,7 +16,7 @@ from django.test import RequestFactory
 from NutritionService.data_import import ImportBase, AllergensImport
 from NutritionService.forms import AllergensForm, NutrientsForm, ProductsForm
 from NutritionService.models import Product, Allergen, NutritionFact, MajorCategory, MinorCategory, ImportErrorLog, \
-    Ingredient, AdditionalImage
+     Ingredient, AdditionalImage, Retailer, MarketRegion
 from NutritionService.views.utils_view import AllergensView, NutrientsView, ProductsView
 
 
@@ -436,6 +436,64 @@ def test_product_import_minor_category():
     assert response.status_code == 302
     assert Product.objects.count() == 30
     assert Product.objects.filter(gtin=4009233003433, minor_category=new_cat).exists()
+
+
+@pytest.mark.django_db
+def test_product_import_retailer():
+    update_retailer_prod = mommy.make(Product, gtin=4009233003433)
+    retailer = {'retailer_name': 'null'}
+    update_retailer_prod.retailer.update(**retailer)
+
+    create_retailer_prod = mommy.make(Product, gtin=9002233011953)
+
+    factory = RequestFactory()
+
+    with open('NutritionService/tests/products_test.csv') as infile:
+        product_csv_file = SimpleUploadedFile(infile.name, infile.read())
+
+    form_data = {
+        'product_retailer': True,
+        'file': product_csv_file
+    }
+
+    request = factory.post('/tools/import-products/', form_data)
+    request.user = create_user()
+    view = ProductsView.as_view()
+    response = view(request)
+
+    assert response.status_code == 302
+    assert Product.objects.count() == 30
+    assert update_retailer_prod.retailer.filter(retailer_name='Coop').exists()
+    assert create_retailer_prod.retailer.filter(retailer_name='Migros').exists()
+
+
+@pytest.mark.django_db
+def test_product_import_market_region():
+    update_market_region_prod = mommy.make(Product, gtin=4009233003433)
+    market_region = {'market_region_name': 'Equatorial Guinea'}
+    update_market_region_prod.market_region.update(**market_region)
+
+    create_market_region_prod = mommy.make(Product, gtin=9002233011953)
+
+    factory = RequestFactory()
+
+    with open('NutritionService/tests/products_test.csv') as infile:
+        product_csv_file = SimpleUploadedFile(infile.name, infile.read())
+
+    form_data = {
+        'product_market_region': True,
+        'file': product_csv_file
+    }
+
+    request = factory.post('/tools/import-products/', form_data)
+    request.user = create_user()
+    view = ProductsView.as_view()
+    response = view(request)
+
+    assert response.status_code == 302
+    assert Product.objects.count() == 30
+    assert update_market_region_prod.market_region.filter(market_region_name='Switzerland').exists()
+    assert create_market_region_prod.market_region.filter(market_region_name='Switzerland').exists()
 
 
 @pytest.mark.django_db
