@@ -1,4 +1,4 @@
-"import_product_id","gtin","allergen_name","certainty","major","minor"
+"import_product_id","gtin","allergen_name","certainity","major","minor"
 466560,"5000159431668","allergenMilk","true","undefined","undefined"
 1019349,"7610807000375","allergenMilk","true","undefined","undefined"
 1112039,"4260047762132","allergenCellery","true","undefined","undefined"
