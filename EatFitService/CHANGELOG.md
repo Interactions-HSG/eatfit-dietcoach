@@ -10,6 +10,11 @@ Possible log types:
 - `[security]` to invite users to upgrade in case of vulnerabilities.
 - `[chore]` for things like maintenance tasks
 
+### v6 (2019-04-05)
+
+- [changed] Rebuild Retailer and MarketRegion Models (EAT-50)
+- [added] Extend product import to retailers and market_regions (EAT-54)
+
 ### v5 (2019-04-03)
 
 - [changed] Rebuild Retailer and Allergen models (EAT-50)
