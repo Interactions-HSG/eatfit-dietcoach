@@ -21,8 +21,8 @@ def detect_language(text):
         blob = TextBlob(text.decode('utf-8'))
         lang = blob.detect_language()
         return lang
-    except AttributeError:
-        return None
+    except (AttributeError, Exception):
+        return 'de'
 
 
 def prepare_image_buffered(image):
