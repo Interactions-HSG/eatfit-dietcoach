@@ -3,8 +3,9 @@ import csv
 
 from django.conf import settings
 from django.core.mail import send_mail
+from django.db.models import Q
 
-from NutritionService.helpers import detect_language, store_image_optim
+from NutritionService.helpers import detect_language, store_image_optim, store_image
 from NutritionService.models import MajorCategory, MinorCategory, Product, ImportErrorLog
 
 ALLERGEN_HEADERS = ['import_product_id', 'gtin', 'allergen_name', 'certainity', 'major', 'minor']
@@ -63,6 +64,23 @@ class ImportBase:
 class AllergensImport(ImportBase):
     HEADERS = ALLERGEN_HEADERS
 
+    def update_or_create_fields(self, product, update_dict):
+
+        product.allergens.update_or_create(**update_dict)
+
+    def create_fields(self, product, create_dict):
+
+        try:
+            allergens = list(product.allergens.filter(name=create_dict['name']))
+
+            for allergen in allergens:
+                if allergens.certainity is None:
+                    allergen.certainity = create_dict['certainity']
+                    allergen.save()
+
+        except KeyError:
+            pass
+
     def import_csv(self):
 
         transform_form_headers = {
@@ -74,23 +92,28 @@ class AllergensImport(ImportBase):
             'certainity': 'certainity'
         }
 
-        update_headers = [transform_form_headers[key] for key, value in self.form_params.items() if value]
+        update_headers = [transform_form_headers[key] for key, value in self.form_params.items() if value == 'Update']
+        create_headers = [transform_form_headers[key] for key, value in self.form_params.items() if value == 'Create']
 
         with open(self.csv_file_path) as csv_file:
             reader = csv.DictReader(csv_file)
 
             for count, row in enumerate(reader):
 
-                get_row_headers = {header: row[header] for header in update_headers}
-                update_allergens = {transform_csv_headers[key]: value for key, value in get_row_headers.items()}
+                update_row_headers = {header: row[header] for header in update_headers}
+                update_allergens = {transform_csv_headers[key]: value for key, value in update_row_headers.items()}
+
+                create_row_headers = {header: row[header] for header in create_headers}
+                create_allergens = {transform_csv_headers[key]: value for key, value in create_row_headers.items()}
 
                 try:
                     product_object = Product.objects.get(gtin=int(row['gtin']))
 
-                    if product_object.allergens.filter(name=row['allergen_name']).exists():
-                        product_object.allergens.update(**update_allergens)
-                    else:
-                        product_object.allergens.create(**update_allergens)
+                    if update_allergens:
+                        self.update_or_create_fields(product_object, update_allergens)
+
+                    if create_allergens:
+                        self.create_fields(product_object, create_allergens)
 
                 except Product.DoesNotExist:
 
@@ -120,6 +143,26 @@ class AllergensImport(ImportBase):
 class NutrientsImport(ImportBase):
     HEADERS = NUTRIENTS_HEADERS
 
+    def update_or_create_fields(self, product, update_dict):
+
+        product.nutrients.update_or_create(**update_dict)
+
+    def create_fields(self, product, create_dict):
+
+        try:
+            nutrients = list(product.nutrients.filter(name=create_dict['name']))
+
+            for nutrient in nutrients:
+                if nutrient.amount is None:
+                    nutrient.amount = create_dict['amount']
+                    nutrient.save()
+                if nutrient.unit_of_measure is None:
+                    nutrient.amount = create_dict['unit_of_measure']
+                    nutrient.save()
+
+        except KeyError:
+            pass
+
     def import_csv(self):
         transform_form_headers = {
             'nutrients_name': 'nutrient_name',
@@ -132,23 +175,28 @@ class NutrientsImport(ImportBase):
             'unit_of_measure': 'unit_of_measure'
         }
 
-        update_headers = [transform_form_headers[key] for key, value in self.form_params.items() if value]
+        update_headers = [transform_form_headers[key] for key, value in self.form_params.items() if value == 'Update']
+        create_headers = [transform_form_headers[key] for key, value in self.form_params.items() if value == 'Create']
 
         with open(self.csv_file_path) as csv_file:
             reader = csv.DictReader(csv_file)
 
             for count, row in enumerate(reader):
 
-                get_row_headers = {header: row[header] for header in update_headers}
-                update_nutrients = {transform_csv_headers[key]: value for key, value in get_row_headers.items()}
+                update_row_headers = {header: row[header] for header in update_headers}
+                update_nutrients = {transform_csv_headers[key]: value for key, value in update_row_headers.items()}
+
+                create_row_headers = {header: row[header] for header in create_headers}
+                create_nutrients = {transform_csv_headers[key]: value for key, value in create_row_headers.items()}
 
                 try:
                     product_object = Product.objects.get(gtin=int(row['gtin']))
 
-                    if product_object.nutrients.filter(name=row['nutrient_name']).exists():
-                        product_object.nutrients.update(**update_nutrients)
-                    else:
-                        product_object.nutrients.create(**update_nutrients)
+                    if update_nutrients:
+                        self.update_or_create_fields(product_object, update_nutrients)
+
+                    if create_nutrients:
+                        self.create_fields(product_object, create_nutrients)
 
                 except Product.DoesNotExist:
 
@@ -182,12 +230,17 @@ class ProductsImport(ImportBase):
         ingredients_dict = {'text': row['ingredients'],
                             'lang': detect_language(row['ingredients'])}
 
-        if product.ingredients.filter(text=row['ingredients']).exists():
-            product.ingredients.update(**ingredients_dict)
-        else:
+        product.ingredients.update_or_create(**ingredients_dict)
+
+    def create_ingredient(self, product, row):
+
+        ingredients_dict = {'text': row['ingredients'],
+                            'lang': detect_language(row['ingredients'])}
+
+        if product.ingredients.filter(text__isnull=True, lang__isnull=True).exists():
             product.ingredients.create(**ingredients_dict)
 
-    def save_image(self, product, datum):
+    def update_or_create_image(self, product, datum):
 
         store_image_optim(datum, product)
 
@@ -230,9 +283,11 @@ class ProductsImport(ImportBase):
 
     def update_or_create_retailer(self, product, row):
 
-        if product.retailer.filter(retailer_name=row['retailer']).exists():
-            product.retailer.update(retailer_name=row['retailer'])
-        else:
+            product.retailer.update_or_create(retailer_name=row['retailer'])
+
+    def create_retailer(self, product, row):
+
+        if product.retailer.filter(retailer_name__isnull=True).exists():
             product.retailer.create(retailer_name=row['retailer'])
 
     def update_or_create_market_region(self, product, row):
@@ -240,9 +295,14 @@ class ProductsImport(ImportBase):
         market_regions = ['Switzerland', 'Germany', 'Austria', 'France', 'Italy']
         market_region_name = row['market_region'] if row['market_region'] in market_regions else 'Switzerland'
 
-        if product.market_region.filter(market_region_name=market_region_name).exists():
-            product.market_region.update(market_region_name=market_region_name)
-        else:
+        product.market_region.update_or_create(market_region_name=market_region_name)
+
+    def create_market_region(self, product, row):
+
+        market_regions = ['Switzerland', 'Germany', 'Austria', 'France', 'Italy']
+        market_region_name = row['market_region'] if row['market_region'] in market_regions else 'Switzerland'
+
+        if product.market_region.filter(market_region_name__isnull=True).exists():
             product.market_region.create(market_region_name=market_region_name)
 
     def import_csv(self):
@@ -274,50 +334,76 @@ class ProductsImport(ImportBase):
             'retailer': 'retailer',
             'market_region': 'market_region'
         }
-        safe_update_headers = ['product_name_de', 'product_name_en', 'product_name_fr', 'product_name_it',
-                               'product_size_unit_of_measure', 'product_size']
+        safe_headers = ['product_name_de', 'product_name_en', 'product_name_fr', 'product_name_it',
+                        'product_size_unit_of_measure', 'product_size']
 
-        update_headers = [transform_form_headers[key] for key, value in self.form_params.items() if value]
+        update_headers = [transform_form_headers[key] for key, value in self.form_params.items() if value == 'Update']
+        create_headers = [transform_form_headers[key] for key, value in self.form_params.items() if value == 'Create']
+
         with open(self.csv_file_path) as csv_file:
             reader = csv.DictReader(csv_file)
 
             for count, row in enumerate(reader):
 
                 row.update({'counter': count})
-                get_row_headers = {header: row[header] for header in update_headers}
-                update_products = {transform_csv_headers[key]: value for key, value in get_row_headers.items()}
-                safe_update_products = {key: value for key, value in update_products.items() if
-                                        key in safe_update_headers}
 
-                ingredients_update_or_create_condition = row['ingredients'] and 'ingredients' in update_products.keys()
-                save_image_condition = row['imageLink'] and 'original_image_url' in update_products.keys()
-                major_category_create_condition = row['major'] and row['major'] != 'null'
-                minor_category_create_condition = row['minor'] and row['minor'] != 'null'
-                major_category_update_condition = major_category_create_condition and 'major' in update_products.keys()
-                minor_category_update_condition = minor_category_create_condition and 'minor' in update_products.keys()
-                retailer_update_or_create_condition = row['retailer'] and 'retailer' in update_products.keys()
-                market_region_update_or_create_condition = row['market_region'] and 'market_region' in update_products.keys()
+                update_row_headers = {header: row[header] for header in update_headers}
+                update_products = {transform_csv_headers[key]: value for key, value in update_row_headers.items()}
+
+                create_row_headers = {header: row[header] for header in create_headers}
+                create_products = {transform_csv_headers[key]: value for key, value in create_row_headers.items()}
+
+                safe_update_products = {key: value for key, value in update_products.items() if key in safe_headers}
+                safe_create_products = {key: value for key, value in create_products.items() if key in safe_headers}
+
+                ingredients_update_condition = row['ingredients'] is not None and 'ingredients' in update_products.keys()
+                image_update_condition = row['imageLink'] is not None and 'original_image_url' in update_products.keys()
+                major_category_base_condition = row['major'] is not None and row['major'] != 'null'
+                minor_category_base_condition = row['minor'] is not None and row['minor'] != 'null'
+                major_category_update_condition = major_category_base_condition and 'major' in update_products.keys()
+                minor_category_update_condition = minor_category_base_condition and 'minor' in update_products.keys()
+                retailer_update_condition = row['retailer'] is not None and 'retailer' in update_products.keys()
+                market_region_update_condition = row['market_region'] is not None and 'market_region' in update_products.keys()
+
+                ingredients_create_condition = row['ingredients'] is not None and 'ingredients' in create_products.keys()
+                retailer_create_condition = row['retailer'] is not None and 'retailer' in create_products.keys()
+                market_region_create_condition = row['market_region'] is not None and 'market_region' in create_products.keys()
 
                 product_object, created = Product.objects.get_or_create(gtin=int(row['gtin']))
 
+                # Safe update
                 product_object.__dict__.update(safe_update_products)
 
-                if ingredients_update_or_create_condition:
+                # Safe create
+                for key, value in safe_create_products.items():
+                    if product_object.__dict__.get(key) is None:
+                        product_object.__dict__.update({key: value})
+
+                if ingredients_update_condition:
                     self.update_or_create_ingredient(product_object, row)
 
-                if save_image_condition:
-                    self.save_image(product_object, row['imageLink'])
+                if ingredients_create_condition:
+                    self.create_ingredient(product_object, row)
 
-                if (created and major_category_create_condition) or major_category_update_condition:
+                if image_update_condition:
+                    self.update_or_create_image(product_object, row['imageLink'])
+
+                if (created and major_category_base_condition) or major_category_update_condition:
                     self.update_major_category(product_object, row)
 
-                if (created and minor_category_create_condition) or minor_category_update_condition:
+                if (created and minor_category_base_condition) or minor_category_update_condition:
                     self.update_minor_category(product_object, row)
 
-                if retailer_update_or_create_condition:
+                if retailer_update_condition:
                     self.update_or_create_retailer(product_object, row)
 
-                if market_region_update_or_create_condition:
+                if retailer_create_condition:
+                    self.create_retailer(product_object, row)
+
+                if market_region_update_condition:
                     self.update_or_create_market_region(product_object, row)
+
+                if market_region_create_condition:
+                    self.create_market_region(product_object, row)
 
                 product_object.save()
