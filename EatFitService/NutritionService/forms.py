@@ -1,31 +1,48 @@
 from django import forms
 from NutritionService.validators import csv_validator
 
+UPDATE_CHOICES = (
+    ('Update', 'Update'),
+    ('Create', 'Create'),
+    ('None', 'None'),
+)
+
+UPDATE_CHOICES_LIMITED = (
+    ('Update', 'Update'),
+    ('None', 'None'),
+)
+
 
 class AllergensForm(forms.Form):
-    allergen_name = forms.BooleanField(label='Allergen Name', required=False)
-    allergen_certainty = forms.BooleanField(label='Allergen Certainty', required=False)
+    allergen_name = forms.ChoiceField(choices=UPDATE_CHOICES, label='Allergen Name', widget=forms.RadioSelect)
+    allergen_certainty = forms.ChoiceField(choices=UPDATE_CHOICES, label='Allergen Certainty', widget=forms.RadioSelect)
     file = forms.FileField(label="File", validators=[csv_validator])
 
 
 class NutrientsForm(forms.Form):
-    nutrients_name = forms.BooleanField(label='Nutrient Name', required=False)
-    nutrients_amount = forms.BooleanField(label='Nutrient Amount', required=False)
-    nutrients_unit_of_measure = forms.BooleanField(label='Nutrient Unit of Measure', required=False)
+    nutrients_name = forms.ChoiceField(choices=UPDATE_CHOICES, label='Nutrient Name', widget=forms.RadioSelect)
+    nutrients_amount = forms.ChoiceField(choices=UPDATE_CHOICES, label='Nutrient Amount', widget=forms.RadioSelect)
+    nutrients_unit_of_measure = forms.ChoiceField(choices=UPDATE_CHOICES, label='Nutrient Unit of Measure')
     file = forms.FileField(label="File", validators=[csv_validator])
 
 
 class ProductsForm(forms.Form):
-    product_name_de = forms.BooleanField(label='Product Name (DE)', required=False)
-    product_name_en = forms.BooleanField(label='Product Name (EN)', required=False)
-    product_name_fr = forms.BooleanField(label='Product Name (FR)', required=False)
-    product_name_it = forms.BooleanField(label='Product Name (IT)', required=False)
-    product_image = forms.BooleanField(label='Product Image', required=False)
-    product_ingredients = forms.BooleanField(label='Product Ingredients', required=False)
-    product_major = forms.BooleanField(label='Product Major Category', required=False)
-    product_minor = forms.BooleanField(label='Product Minor Category', required=False)
-    product_weight_unit = forms.BooleanField(label='Product Weight Unit', required=False)
-    product_weight_integer = forms.BooleanField(label='Product Weight Value', required=False)
-    product_retailer = forms.BooleanField(label='Product Retailer', required=False)
-    product_market_region = forms.BooleanField(label='Product Market Region', required=False)
+    product_name_de = forms.ChoiceField(choices=UPDATE_CHOICES, label='Product Name (DE)', widget=forms.RadioSelect)
+    product_name_en = forms.ChoiceField(choices=UPDATE_CHOICES, label='Product Name (EN)', widget=forms.RadioSelect)
+    product_name_fr = forms.ChoiceField(choices=UPDATE_CHOICES, label='Product Name (FR)', widget=forms.RadioSelect)
+    product_name_it = forms.ChoiceField(choices=UPDATE_CHOICES, label='Product Name (IT)', widget=forms.RadioSelect)
+    product_image = forms.ChoiceField(choices=UPDATE_CHOICES_LIMITED, label='Product Image', widget=forms.RadioSelect)
+    product_ingredients = forms.ChoiceField(choices=UPDATE_CHOICES, label='Product Ingredients',
+                                            widget=forms.RadioSelect)
+    product_major = forms.ChoiceField(choices=UPDATE_CHOICES_LIMITED, label='Product Major Category',
+                                      widget=forms.RadioSelect)
+    product_minor = forms.ChoiceField(choices=UPDATE_CHOICES_LIMITED, label='Product Minor Category',
+                                      widget=forms.RadioSelect)
+    product_weight_unit = forms.ChoiceField(choices=UPDATE_CHOICES, label='Product Weight Unit',
+                                            widget=forms.RadioSelect)
+    product_weight_integer = forms.ChoiceField(choices=UPDATE_CHOICES, label='Product Weight Value',
+                                               widget=forms.RadioSelect)
+    product_retailer = forms.ChoiceField(choices=UPDATE_CHOICES, label='Product Retailer', widget=forms.RadioSelect)
+    product_market_region = forms.ChoiceField(choices=UPDATE_CHOICES, label='Product Market Region',
+                                              widget=forms.RadioSelect)
     file = forms.FileField(label="File", validators=[csv_validator])
