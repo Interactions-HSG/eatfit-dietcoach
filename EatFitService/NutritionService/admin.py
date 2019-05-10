@@ -33,7 +33,8 @@ class AllergenInline(admin.TabularInline):
         initial = []
         if not obj and request.method == "GET":
             for allergen in allergens_to_fill:
-                initial.append({'name': allergen })
+                initial.append({'name': allergen,
+                                'certainity': None})
         formset = super(AllergenInline, self).get_formset(request, obj, **kwargs)
         formset.__init__ = curry(formset.__init__, initial=initial)
         return formset

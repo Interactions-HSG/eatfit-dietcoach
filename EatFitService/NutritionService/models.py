@@ -251,7 +251,7 @@ class Allergen(models.Model):
     id = models.BigAutoField(primary_key=True)
     product = models.ForeignKey(Product, related_name='allergens')
     name = models.CharField(max_length=64, null=True, blank=True)
-    certainity = models.CharField(max_length=11, choices=CERTAINTY_CHOICES, default=FALSE)
+    certainity = models.CharField(max_length=11, choices=CERTAINTY_CHOICES, null=True, blank=True)
 
     class Meta:
         verbose_name = 'Allergen'
