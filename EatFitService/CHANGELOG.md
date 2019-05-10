@@ -10,6 +10,12 @@ Possible log types:
 - `[security]` to invite users to upgrade in case of vulnerabilities.
 - `[chore]` for things like maintenance tasks
 
+### v7 (2019-05-10)
+
+- [changed] Change default behavior of Allergen Model (EAT-55)
+- [added] Backup data from DB (EAT-55)
+- [fixed] Fix Allergens in production database (EAT-55)
+
 ### v6 (2019-04-05)
 
 - [changed] Rebuild Retailer and MarketRegion Models (EAT-50)
