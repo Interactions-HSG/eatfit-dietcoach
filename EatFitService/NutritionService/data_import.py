@@ -99,46 +99,47 @@ class AllergensImport(ImportBase):
             reader = csv.DictReader(csv_file)
 
             for count, row in enumerate(reader):
-
-                update_row_headers = {header: row[header] for header in update_headers}
-                update_allergens = {transform_csv_headers[key]: value for key, value in update_row_headers.items()}
-
-                create_row_headers = {header: row[header] for header in create_headers}
-                create_allergens = {transform_csv_headers[key]: value for key, value in create_row_headers.items()}
-
                 try:
-                    product_object = Product.objects.get(gtin=int(row['gtin']))
+                    update_row_headers = {header: row[header] for header in update_headers}
+                    update_allergens = {transform_csv_headers[key]: value for key, value in update_row_headers.items()}
 
-                    if update_allergens:
-                        self.update_or_create_fields(product_object, update_allergens)
+                    create_row_headers = {header: row[header] for header in create_headers}
+                    create_allergens = {transform_csv_headers[key]: value for key, value in create_row_headers.items()}
 
-                    if create_allergens:
-                        self.create_fields(product_object, create_allergens)
+                    try:
+                        product_object = Product.objects.get(gtin=int(row['gtin']))
 
-                except Product.DoesNotExist:
+                        if update_allergens:
+                            self.update_or_create_fields(product_object, update_allergens)
 
-                    log_dict = {
-                        'import_type': 'Allergens',
-                        'file_name': self.csv_file_path,
-                        'row_data': 'Row ' + str(count) + ': ' + ', '.join(row),
-                        'error_field': 'allergens foreign key field',
-                        'error_message': 'Product ' + str(row['gtin']) + ' does not exist.'
-                    }
-                    ImportErrorLog.objects.create(**log_dict)
+                        if create_allergens:
+                            self.create_fields(product_object, create_allergens)
+
+                    except Product.DoesNotExist:
+
+                        log_dict = {
+                            'import_type': 'Allergens',
+                            'file_name': self.csv_file_path,
+                            'row_data': 'Row ' + str(count) + ': ' + ', '.join(row),
+                            'error_field': 'allergens foreign key field',
+                            'error_message': 'Product ' + str(row['gtin']) + ' does not exist.'
+                        }
+                        ImportErrorLog.objects.create(**log_dict)
+                        continue
+
+                    except Product.MultipleObjectsReturned:
+
+                        log_dict = {
+                            'file_name': self.csv_file_path,
+                            'import_type': 'Allergens',
+                            'row_data': 'Row ' + str(count) + ': ' + ', '.join(row),
+                            'error_field': 'allergens foreign key field',
+                            'error_message': 'Multiple products with ' + str(row['gtin']) + ' found.'
+                        }
+                        ImportErrorLog.objects.create(**log_dict)
+                        continue
+                except:
                     continue
-
-                except Product.MultipleObjectsReturned:
-
-                    log_dict = {
-                        'file_name': self.csv_file_path,
-                        'import_type': 'Allergens',
-                        'row_data': 'Row ' + str(count) + ': ' + ', '.join(row),
-                        'error_field': 'allergens foreign key field',
-                        'error_message': 'Multiple products with ' + str(row['gtin']) + ' found.'
-                    }
-                    ImportErrorLog.objects.create(**log_dict)
-                    continue
-
 
 class NutrientsImport(ImportBase):
     HEADERS = NUTRIENTS_HEADERS
@@ -182,45 +183,46 @@ class NutrientsImport(ImportBase):
             reader = csv.DictReader(csv_file)
 
             for count, row in enumerate(reader):
-
-                update_row_headers = {header: row[header] for header in update_headers}
-                update_nutrients = {transform_csv_headers[key]: value for key, value in update_row_headers.items()}
-
-                create_row_headers = {header: row[header] for header in create_headers}
-                create_nutrients = {transform_csv_headers[key]: value for key, value in create_row_headers.items()}
-
                 try:
-                    product_object = Product.objects.get(gtin=int(row['gtin']))
+                    update_row_headers = {header: row[header] for header in update_headers}
+                    update_nutrients = {transform_csv_headers[key]: value for key, value in update_row_headers.items()}
 
-                    if update_nutrients:
-                        self.update_or_create_fields(product_object, update_nutrients)
+                    create_row_headers = {header: row[header] for header in create_headers}
+                    create_nutrients = {transform_csv_headers[key]: value for key, value in create_row_headers.items()}
 
-                    if create_nutrients:
-                        self.create_fields(product_object, create_nutrients)
+                    try:
+                        product_object = Product.objects.get(gtin=int(row['gtin']))
 
-                except Product.DoesNotExist:
+                        if update_nutrients:
+                            self.update_or_create_fields(product_object, update_nutrients)
 
-                    log_dict = {
-                        'import_type': 'Nutrients',
-                        'file_name': self.csv_file_path,
-                        'row_data': 'Row ' + str(count) + ': ' + ', '.join(row),
-                        'error_field': 'nutrients foreign key field',
-                        'error_message': 'Product ' + str(row['gtin']) + ' does not exist.'
-                    }
-                    ImportErrorLog.objects.create(**log_dict)
+                        if create_nutrients:
+                            self.create_fields(product_object, create_nutrients)
+
+                    except Product.DoesNotExist:
+
+                        log_dict = {
+                            'import_type': 'Nutrients',
+                            'file_name': self.csv_file_path,
+                            'row_data': 'Row ' + str(count) + ': ' + ', '.join(row),
+                            'error_field': 'nutrients foreign key field',
+                            'error_message': 'Product ' + str(row['gtin']) + ' does not exist.'
+                        }
+                        ImportErrorLog.objects.create(**log_dict)
+                        continue
+
+                    except Product.MultipleObjectsReturned:
+                        log_dict = {
+                            'import_type': 'Nutrients',
+                            'file_name': self.csv_file_path,
+                            'row_data': 'Row ' + str(count) + ': ' + ', '.join(row),
+                            'error_field': 'nutrients foreign key field',
+                            'error_message': 'Multiple products with GTIN: ' + str(row['gtin']) + ' found.'
+                        }
+                        ImportErrorLog.objects.create(**log_dict)
+                        continue
+                except:
                     continue
-
-                except Product.MultipleObjectsReturned:
-                    log_dict = {
-                        'import_type': 'Nutrients',
-                        'file_name': self.csv_file_path,
-                        'row_data': 'Row ' + str(count) + ': ' + ', '.join(row),
-                        'error_field': 'nutrients foreign key field',
-                        'error_message': 'Multiple products with GTIN: ' + str(row['gtin']) + ' found.'
-                    }
-                    ImportErrorLog.objects.create(**log_dict)
-                    continue
-
 
 class ProductsImport(ImportBase):
     HEADERS = PRODUCT_HEADERS
