@@ -247,12 +247,7 @@ class ProductsImport(ImportBase):
     def update_major_category(self, product, row):
 
         try:
-            datum = int(row['major'])
-        except ValueError:
-            datum = None
-
-        try:
-            major_object = MajorCategory.objects.get(id=datum)
+            major_object = MajorCategory.objects.get(id=int(row['major']))
 
             if product.major_category != major_object:
                 product.major_category = major_object
@@ -271,12 +266,7 @@ class ProductsImport(ImportBase):
     def update_minor_category(self, product, row):
 
         try:
-            datum = int(row['major'])
-        except ValueError:
-            datum = None
-
-        try:
-            minor_object = MinorCategory.objects.get(id=datum)
+            minor_object = MinorCategory.objects.get(id=int(row['minor']))
 
             if product.minor_category != minor_object:
                 product.minor_category = minor_object
@@ -352,69 +342,70 @@ class ProductsImport(ImportBase):
 
         with open(self.csv_file_path) as csv_file:
             reader = csv.DictReader(csv_file)
-                for count, row in enumerate(reader):
-                    try:
-                        row.update({'counter': count})
 
-                        update_row_headers = {header: row[header] for header in update_headers}
-                        update_products = {transform_csv_headers[key]: value for key, value in update_row_headers.items()}
+            for count, row in enumerate(reader):
+                try:
+                    row.update({'counter': count})
 
-                        create_row_headers = {header: row[header] for header in create_headers}
-                        create_products = {transform_csv_headers[key]: value for key, value in create_row_headers.items()}
+                    update_row_headers = {header: row[header] for header in update_headers}
+                    update_products = {transform_csv_headers[key]: value for key, value in update_row_headers.items()}
 
-                        safe_update_products = {key: value for key, value in update_products.items() if key in safe_headers}
-                        safe_create_products = {key: value for key, value in create_products.items() if key in safe_headers}
+                    create_row_headers = {header: row[header] for header in create_headers}
+                    create_products = {transform_csv_headers[key]: value for key, value in create_row_headers.items()}
 
-                        ingredients_update_condition = row['ingredients'] is not None and 'ingredients' in update_products.keys()
-                        image_update_condition = row['imageLink'] is not None and 'original_image_url' in update_products.keys()
-                        major_category_base_condition = row['major'] is not None and row['major'] != 'null'
-                        minor_category_base_condition = row['minor'] is not None and row['minor'] != 'null'
-                        major_category_update_condition = major_category_base_condition and 'major' in update_products.keys()
-                        minor_category_update_condition = minor_category_base_condition and 'minor' in update_products.keys()
-                        retailer_update_condition = row['retailer'] is not None and 'retailer' in update_products.keys()
-                        market_region_update_condition = row['market_region'] is not None and 'market_region' in update_products.keys()
+                    safe_update_products = {key: value for key, value in update_products.items() if key in safe_headers}
+                    safe_create_products = {key: value for key, value in create_products.items() if key in safe_headers}
 
-                        ingredients_create_condition = row['ingredients'] is not None and 'ingredients' in create_products.keys()
-                        retailer_create_condition = row['retailer'] is not None and 'retailer' in create_products.keys()
-                        market_region_create_condition = row['market_region'] is not None and 'market_region' in create_products.keys()
+                    ingredients_update_condition = row['ingredients'] is not None and 'ingredients' in update_products.keys()
+                    image_update_condition = row['imageLink'] is not None and 'original_image_url' in update_products.keys()
+                    major_category_base_condition = row['major'] is not None and row['major'] != 'null'
+                    minor_category_base_condition = row['minor'] is not None and row['minor'] != 'null'
+                    major_category_update_condition = major_category_base_condition and 'major' in update_products.keys()
+                    minor_category_update_condition = minor_category_base_condition and 'minor' in update_products.keys()
+                    retailer_update_condition = row['retailer'] is not None and 'retailer' in update_products.keys()
+                    market_region_update_condition = row['market_region'] is not None and 'market_region' in update_products.keys()
 
-                        product_object, created = Product.objects.get_or_create(gtin=int(row['gtin']))
+                    ingredients_create_condition = row['ingredients'] is not None and 'ingredients' in create_products.keys()
+                    retailer_create_condition = row['retailer'] is not None and 'retailer' in create_products.keys()
+                    market_region_create_condition = row['market_region'] is not None and 'market_region' in create_products.keys()
 
-                        # Safe update
-                        product_object.__dict__.update(safe_update_products)
+                    product_object, created = Product.objects.get_or_create(gtin=int(row['gtin']))
 
-                        # Safe create
-                        for key, value in safe_create_products.items():
-                            if product_object.__dict__.get(key) is None:
-                                product_object.__dict__.update({key: value})
+                    # Safe update
+                    product_object.__dict__.update(safe_update_products)
 
-                        if ingredients_update_condition:
-                            self.update_or_create_ingredient(product_object, row)
+                    # Safe create
+                    for key, value in safe_create_products.items():
+                        if product_object.__dict__.get(key) is None:
+                            product_object.__dict__.update({key: value})
 
-                        if ingredients_create_condition:
-                            self.create_ingredient(product_object, row)
+                    if ingredients_update_condition:
+                        self.update_or_create_ingredient(product_object, row)
 
-                        if image_update_condition:
-                            self.update_or_create_image(product_object, row['imageLink'])
+                    if ingredients_create_condition:
+                        self.create_ingredient(product_object, row)
 
-                        if (created and major_category_base_condition) or major_category_update_condition:
-                            self.update_major_category(product_object, row)
+                    if image_update_condition:
+                        self.update_or_create_image(product_object, row['imageLink'])
 
-                        if (created and minor_category_base_condition) or minor_category_update_condition:
-                            self.update_minor_category(product_object, row)
+                    if (created and major_category_base_condition) or major_category_update_condition:
+                        self.update_major_category(product_object, row)
 
-                        if retailer_update_condition:
-                            self.update_or_create_retailer(product_object, row)
+                    if (created and minor_category_base_condition) or minor_category_update_condition:
+                        self.update_minor_category(product_object, row)
 
-                        if retailer_create_condition:
-                            self.create_retailer(product_object, row)
+                    if retailer_update_condition:
+                        self.update_or_create_retailer(product_object, row)
 
-                        if market_region_update_condition:
-                            self.update_or_create_market_region(product_object, row)
+                    if retailer_create_condition:
+                        self.create_retailer(product_object, row)
 
-                        if market_region_create_condition:
-                            self.create_market_region(product_object, row)
+                    if market_region_update_condition:
+                        self.update_or_create_market_region(product_object, row)
 
-                        product_object.save()
-                    except:
-                        continue
+                    if market_region_create_condition:
+                        self.create_market_region(product_object, row)
+
+                    product_object.save()
+                except:
+                    continue
