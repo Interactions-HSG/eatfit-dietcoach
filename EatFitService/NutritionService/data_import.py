@@ -371,7 +371,8 @@ class ProductsImport(ImportBase):
                     retailer_create_condition = row['retailer'] is not None and 'retailer' in create_products.keys()
                     market_region_create_condition = row['market_region'] is not None and 'market_region' in create_products.keys()
 
-                    product_object, created = Product.objects.get_or_create(gtin=int(row['gtin']))
+                    minor_category = MinorCategory.objects.get(id=int(row['minor']))
+                    product_object, created = Product.objects.get_or_create(gtin=int(row['gtin']), minor_category=minor_category)
 
                     # Safe update
                     product_object.__dict__.update(safe_update_products)
