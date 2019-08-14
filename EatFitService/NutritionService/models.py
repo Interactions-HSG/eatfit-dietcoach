@@ -265,6 +265,7 @@ class NutritionFact(models.Model):
     name = models.CharField(max_length=64, null=True, blank=True)
     amount = models.FloatField(null=True, blank=True)
     unit_of_measure = models.CharField(max_length=8, null=True, blank=True)
+    is_mixed = models.BooleanField(default=False)
 
     class Meta:
         verbose_name = 'NutritionFact'
