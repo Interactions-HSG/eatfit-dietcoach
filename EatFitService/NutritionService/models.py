@@ -2,6 +2,7 @@
 
 import os
 from uuid import uuid4
+import toolz
 
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -504,7 +505,17 @@ def calculate_data_score(product):
 
 
 def calculate_ofcom_value(product):
-    nutrition_facts = NutritionFact.objects.filter(product=product)
+    all_nutrition_facts = NutritionFact.objects.filter(product=product)
+
+    nutrition_facts = []
+    nf_grouped_name = toolz.itertoolz.groupby(lambda x: x.name, all_nutrition_facts)
+    for key, value in nf_grouped_name.items():
+        name_grouped_mixed = toolz.itertoolz.groupby(lambda x: x.is_mixed, value)
+        if True in name_grouped_mixed:
+            nutrition_facts.append(name_grouped_mixed[True][0])
+        else:
+            nutrition_facts.append(name_grouped_mixed[False][0])
+
     data_quality_sufficient = True
     ofcom_value = 0
     for fact in nutrition_facts:
