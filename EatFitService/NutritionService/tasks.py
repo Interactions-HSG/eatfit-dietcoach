@@ -3,9 +3,11 @@ from celery.task.schedules import crontab
 from datetime import datetime
 import requests
 
+from django.db import transaction
+
 from NutritionService.data_import import AllergensImport, NutrientsImport, ProductsImport
 from NutritionService.helpers import store_image
-from NutritionService.models import Ingredient, NutritionFact, Product, NotFoundLog, calculate_ofcom_value
+from NutritionService.models import Ingredient, NutritionFact, Product, NotFoundLog, calculate_ofcom_value, ErrorLog
 
 NUTRIENTS = ["energyKcal", "energyKJ", "protein", "salt", "sodium", "dietaryFiber", "saturatedFat", "sugars",
              "totalCarbohydrate", "totalFat"]
@@ -60,9 +62,20 @@ def import_from_openfood():
                 if "it" in p["name_translations"]:
                     product.product_name_it = unicode(p["name_translations"]["it"])
                 if "en" in p["name_translations"]:
+
                     product.product_name_en = unicode(p["name_translations"]["en"])
 
-            product.save()
+            try:
+                with transaction.atomic():
+                    product.save()
+            except Exception as error_message:
+                error_data = {
+                    'gtin': p["barcode"],
+                    'reporting_app': 'import_from_openfood',
+                    'error_description': error_message
+                }
+                ErrorLog.objects.create(**error_data)
+                continue
 
             image_url = None
             front_image_found = False
