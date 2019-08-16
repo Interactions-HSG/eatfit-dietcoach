@@ -2,7 +2,7 @@
 
 import os
 from uuid import uuid4
-import toolz
+from toolz import itertoolz
 
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -508,9 +508,9 @@ def calculate_ofcom_value(product):
     all_nutrition_facts = NutritionFact.objects.filter(product=product)
 
     nutrition_facts = []
-    nf_grouped_name = toolz.itertoolz.groupby(lambda x: x.name, all_nutrition_facts)
+    nf_grouped_name = itertoolz.groupby(lambda x: x.name, all_nutrition_facts)
     for key, value in nf_grouped_name.items():
-        name_grouped_mixed = toolz.itertoolz.groupby(lambda x: x.is_mixed, value)
+        name_grouped_mixed = itertoolz.groupby(lambda x: x.is_mixed, value)
         if True in name_grouped_mixed:
             nutrition_facts.append(name_grouped_mixed[True][0])
         else:
