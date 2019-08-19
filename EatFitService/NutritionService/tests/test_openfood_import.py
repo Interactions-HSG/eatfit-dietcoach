@@ -8,9 +8,7 @@ from rest_framework.test import force_authenticate
 
 from NutritionService.models import ErrorLog, Product, NotFoundLog
 from NutritionService.views.views import get_products_from_openfood
-from request_data import example_openfood_request
-
-CONTENT = example_openfood_request()
+from openfood_data import OPENFOOD_DATA as CONTENT
 
 
 def create_user():
@@ -55,3 +53,6 @@ def test_import_openfood_failure(mock):
     assert NotFoundLog.objects.count() == 0
     assert Product.objects.count() == 1
     assert ErrorLog.objects.count() == 1
+
+
+
