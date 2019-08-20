@@ -61,7 +61,6 @@ def import_from_openfood():
                 if "it" in p["name_translations"]:
                     product.product_name_it = unicode(p["name_translations"]["it"])
                 if "en" in p["name_translations"]:
-
                     product.product_name_en = unicode(p["name_translations"]["en"])
 
             try:

@@ -36,15 +36,25 @@ def test_import_openfood_success(mock):
     assert Product.objects.count() == 1
     assert ErrorLog.objects.count() == 0
 
+    test_product = Product.objects.get()
+
+    assert test_product.gtin == 7610827921858
+    assert test_product.source == 'Openfood'
+    assert test_product.product_size == '150.0'
+    assert test_product.product_size_unit_of_measure == 'g'
+    assert test_product.serving_size == '0.0'
+    assert test_product.product_name_de == u'coop FINE FOOD Erdn\xfcsse ger\xf6stet, mit Wasabi'
+    assert test_product.product_name_fr == u'coop FINE FOOD Cacahu\xe8tes grill\xe9es au wasabi'
+    assert test_product.product_name_it == u'coop FINE FOOD Arachidi tostate al wasabi'
+
 
 @pytest.mark.django_db
 @requests_mock.Mocker()
 def test_import_openfood_failure(mock):
     mommy.make(NotFoundLog, gtin=7610827921858)
-    test_product = mommy.make(Product, gtin=7610827921858, source='TRUSTBOX', product_size=9,
-                              product_size_unit_of_measure='kg', serving_size=2.5, product_name_de='Testprodukt',
-                              product_name_fr='Produit de test', product_name_it='Prodotto di prova',
-                              product_name_en='Test product')
+    test_product = mommy.make(Product, gtin=7610827921858, source='TRUSTBOX', product_size='9',
+                              product_size_unit_of_measure='kg', serving_size='2.5', product_name_de=u'Testprodukt',
+                              product_name_fr=u'Produit de test', product_name_it=u'Prodotto di prova')
 
     assert NotFoundLog.objects.count() == 1
     assert Product.objects.count() == 1
@@ -64,10 +74,9 @@ def test_import_openfood_failure(mock):
     assert ErrorLog.objects.count() == 1
     assert test_product.gtin == 7610827921858
     assert test_product.source == 'TRUSTBOX'
-    assert test_product.product_size == 9
+    assert test_product.product_size == '9'
     assert test_product.product_size_unit_of_measure == 'kg'
-    assert test_product.serving_size == 2.5
-    assert test_product.product_name_de == 'Testprodukt'
-    assert test_product.product_name_fr == 'Produit de test'
-    assert test_product.product_name_it == 'Prodotto di prova'
-    assert test_product.product_name_en == 'Test product'
+    assert test_product.serving_size == '2.5'
+    assert test_product.product_name_de == u'Testprodukt'
+    assert test_product.product_name_fr == u'Produit de test'
+    assert test_product.product_name_it == u'Prodotto di prova'
