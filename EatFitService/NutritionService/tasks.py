@@ -3,7 +3,6 @@ from celery.task.schedules import crontab
 from datetime import datetime
 import requests
 
-from django.db import transaction
 
 from NutritionService.data_import import AllergensImport, NutrientsImport, ProductsImport
 from NutritionService.helpers import store_image
@@ -66,8 +65,8 @@ def import_from_openfood():
                     product.product_name_en = unicode(p["name_translations"]["en"])
 
             try:
-                with transaction.atomic():
-                    product.save()
+                product.full_clean()
+                product.save()
             except Exception as error_message:
                 error_data = {
                     'gtin': p["barcode"],
