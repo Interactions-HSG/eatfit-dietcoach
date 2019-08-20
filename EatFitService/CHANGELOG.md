@@ -10,6 +10,14 @@ Possible log types:
 - `[security]` to invite users to upgrade in case of vulnerabilities.
 - `[chore]` for things like maintenance tasks
 
+### v8 (2019-08-20)
+
+- [added] Display Ingredients models in Product model admin view (EAT-67)
+- [added] Display Additional Images in Product model admin view (EAT-68)
+- [added] Add new fields to NutritionFact model to indicate pre -vs. post-processing of food item (EAT-69)
+- [fixed] Fix TrustBox importer (EAT-70)
+- [fixed] Fix OpenFood importer to handle duplicate GTIN cases (EAT-71)
+
 ### v7 (2019-05-10)
 
 - [changed] Change default behavior of Allergen Model (EAT-55)

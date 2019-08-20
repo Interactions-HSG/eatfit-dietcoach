@@ -1,4 +1,3 @@
-
 def generate_request_long(r2n_partner, r2n_user):
 
     request = {

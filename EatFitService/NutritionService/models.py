@@ -2,6 +2,7 @@
 
 import os
 from uuid import uuid4
+from toolz import itertoolz
 
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -100,7 +101,7 @@ class Product(models.Model):
     product_name_it = models.TextField(null=True, blank=True)
     producer = models.TextField(null=True, blank=True)
     major_category = models.ForeignKey(MajorCategory, on_delete=models.DO_NOTHING, null=True, editable=False)
-    minor_category = models.ForeignKey(MinorCategory, on_delete=models.DO_NOTHING, null=True)
+    minor_category = models.ForeignKey(MinorCategory, on_delete=models.DO_NOTHING, null=True, blank=True)
     product_size = models.CharField(max_length=255, null=True, blank=True)
     product_size_unit_of_measure = models.CharField(max_length=255, null=True, blank=True)
     serving_size = models.CharField(max_length=255, null=True, blank=True)
@@ -265,6 +266,7 @@ class NutritionFact(models.Model):
     name = models.CharField(max_length=64, null=True, blank=True)
     amount = models.FloatField(null=True, blank=True)
     unit_of_measure = models.CharField(max_length=8, null=True, blank=True)
+    is_mixed = models.BooleanField(default=False)
 
     class Meta:
         verbose_name = 'NutritionFact'
@@ -503,7 +505,17 @@ def calculate_data_score(product):
 
 
 def calculate_ofcom_value(product):
-    nutrition_facts = NutritionFact.objects.filter(product=product)
+    all_nutrition_facts = NutritionFact.objects.filter(product=product)
+
+    nutrition_facts = []
+    nf_grouped_name = itertoolz.groupby(lambda x: x.name, list(all_nutrition_facts))
+    for key, value in nf_grouped_name.items():
+        name_grouped_mixed = itertoolz.groupby(lambda x: x.is_mixed, value)
+        if True in name_grouped_mixed:
+            nutrition_facts.append(name_grouped_mixed[True][0])
+        else:
+            nutrition_facts.append(name_grouped_mixed[False][0])
+
     data_quality_sufficient = True
     ofcom_value = 0
     for fact in nutrition_facts:
