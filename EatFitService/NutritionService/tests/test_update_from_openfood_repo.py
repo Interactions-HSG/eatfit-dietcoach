@@ -115,7 +115,7 @@ def test_openfood_repo_update_failure(mock):
     assert updated_product.data_score == test_product.data_score
 
     assert updated_product.quality_checked
-    assert updated_product.quality_checked == test_product.quality_checked
+    assert updated_product.quality_checked.replace(tzinfo=None) == test_product.quality_checked.replace(tzinfo=None)
 
     assert NutritionFact.objects.filter(product=test_product, name='protein', amount=4.1, unit_of_measure='g').exists()
     assert NutritionFact.objects.count() == 1
