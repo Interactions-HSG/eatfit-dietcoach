@@ -713,6 +713,12 @@ def __recursive_translation(d):
 
 def create_product(p):
     try:
+        # Check if product is flagged for automatic updates
+        automated_update_flag_off = Product.objects.filter(gtin=p["_gtin"],
+                                                           automatic_update=False).exists()
+        if automated_update_flag_off:
+            return
+
         default_arguments = {}
         temp_image_url = None
         for n in p['productNames']:
