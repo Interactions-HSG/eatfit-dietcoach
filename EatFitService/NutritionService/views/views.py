@@ -520,17 +520,16 @@ def __get_better_products(request, minor_category, major_category):
     retailer = request.GET.get("retailer", None)
     number_of_results = 20
     results_found = 0
-    market_region_retailer_kwargs = {}
+
+    better_products_query = Product.objects.prefetch_related('nutrients', 'market_region', 'retailer')
 
     if market_region:
+        market_region = market_region.lower()
         market_region_value = market_region_map.get(market_region, market_region)
-        market_region_retailer_kwargs.update({'market_region__market_region_name': market_region_value})
+        better_products_query = better_products_query.filter(market_region__market_region_name=market_region_value)
 
     if retailer:
-        market_region_retailer_kwargs.update({'retailer__retailer_name__iexact': retailer})
-
-    better_products_query = Product.objects.prefetch_related('nutrients', 'market_region', 'retailer').\
-        filter(**market_region_retailer_kwargs)
+        better_products_query = better_products_query.filter(retailer__retailer_name__iexact=retailer)
 
     if minor_category:
         better_products_query = better_products_query.filter(minor_category=minor_category)
@@ -547,7 +546,7 @@ def __get_better_products(request, minor_category, major_category):
     else:
         better_products_query = better_products_query.filter(nutrients__name=sort_by).order_by('nutrients__amount')
 
-    products = list(better_products_query)[:number_of_results]
+    products = list(better_products_query[:number_of_results])
 
     if results_found > 0:
         serializer = ProductSerializer(products, many=True)
