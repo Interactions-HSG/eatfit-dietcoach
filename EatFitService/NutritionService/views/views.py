@@ -545,7 +545,7 @@ def __get_better_products(request, minor_category, major_category):
                                                            **market_region_retailer_kwargs).order_by(
                 "health_percentage")[:number_of_results]
         else:
-            better_products_minor = Product.objects.prefetch_related('nutrients').filter(
+            better_products_minor = Product.objects.prefetch_related('nutrients', 'market_region', 'retailer').filter(
                 minor_category=minor_category.pk, nutrients__name=sort_by,
                 **market_region_retailer_kwargs).order_by(
                 "nutrients__amount")[:number_of_results]
@@ -563,7 +563,7 @@ def __get_better_products(request, minor_category, major_category):
                                                            **market_region_retailer_kwargs).order_by(
                 "health_percentage").exclude(**minor_category_kwargs)[:(number_of_results - results_found)]
         else:
-            better_products_major = Product.objects.prefetch_related('nutrients').filter(
+            better_products_major = Product.objects.prefetch_related('nutrients', 'market_region', 'retailer').filter(
                 major_category=major_category.pk, nutrients__name=sort_by,
                 **market_region_retailer_kwargs).order_by(
                 "nutrients__amount").exclude(**minor_category_kwargs)[:(number_of_results - results_found)]
