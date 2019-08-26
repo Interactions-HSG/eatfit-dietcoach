@@ -532,10 +532,12 @@ def __get_better_products(request, minor_category, major_category):
     if retailer:
         market_region_retailer_kwargs.update({'retailer__retailer_name__iexact': retailer})
 
+    better_products_query = Product.objects.prefetch_related('nutrients', 'market_region', 'retailer').\
+        filter(**market_region_retailer_kwargs)
+
     if minor_category:
         minor_category_kwargs.update({'minor_category': minor_category.pk})
-        better_products_minor = Product.objects.prefetch_related('nutrients', 'market_region', 'retailer').\
-            filter(minor_category=minor_category, **market_region_retailer_kwargs)
+        better_products_minor = better_products_query.filter(minor_category=minor_category)
         if sort_by == 'ofcomValue':
             better_products_minor = better_products_minor.order_by('ofcom_value')[:number_of_results]
         elif sort_by == 'healthPercentage':
@@ -547,8 +549,8 @@ def __get_better_products(request, minor_category, major_category):
         better_products_minor = list(better_products_minor)
 
     if results_found < number_of_results and major_category:
-        better_products_major = Product.objects.prefetch_related('nutrients', 'market_region', 'retailer').filter(
-            major_category=major_category.pk, **market_region_retailer_kwargs).exclude(**minor_category_kwargs)
+        better_products_major = better_products_query.filter(major_category=major_category.pk)\
+            .exclude(**minor_category_kwargs)
         if sort_by == 'ofcomValue':
             better_products_major = better_products_major.order_by('ofcom_value')[:(number_of_results - results_found)]
         elif sort_by == 'healthPercentage':
