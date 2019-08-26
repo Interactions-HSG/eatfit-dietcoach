@@ -503,8 +503,8 @@ def get_better_products_gtin(request, gtin):
                                  'totalCarbohydrate', 'dietaryFiber', 'healthPercentage' - this is the fruit and veg %,
                                  'sodium'
     query param: resultType, values: 'array', 'dictionary'
-    query param: marketRegion, values: 'all', 'ch', 'de', 'au', 'fr', 'it'
-    query param: retailer, values: 'all', 'migros', 'coop', 'denner', 'farmy', 'volg', 'edeka'
+    query param: marketRegion, values: 'ch', 'de', 'au', 'fr', 'it'
+    query param: retailer, values: 'migros', 'coop', 'denner', 'farmy', 'volg', 'edeka'
     """
     product = get_object_or_404(Product.objects.all(), gtin=gtin)
     return __get_better_products(request, product.minor_category, product.major_category)
@@ -517,8 +517,8 @@ def __get_better_products(request, minor_category, major_category):
 
     sort_by = request.GET.get("sortBy", "ofcomValue")
     result_type = request.GET.get("resultType", "array")
-    market_region = request.GET.get("marketRegion", "all")
-    retailer = request.GET.get("retailer", "all")
+    market_region = request.GET.get("marketRegion", None)
+    retailer = request.GET.get("retailer", None)
     number_of_results = 20
     results_found = 0
     better_products_minor = []
@@ -526,17 +526,11 @@ def __get_better_products(request, minor_category, major_category):
     market_region_retailer_kwargs = {}
     minor_category_kwargs = {}
 
-    if not market_region:
-        market_region = 'all'
-
-    if not retailer:
-        retailer = 'all'
-
-    if market_region != "all":
+    if market_region:
         market_region_value = market_region_map.get(market_region, market_region)
         market_region_retailer_kwargs.update({'market_region__market_region_name': market_region_value})
 
-    if retailer != "all":
+    if retailer:
         retailer_value = retailer_map.get(retailer, retailer)
         market_region_retailer_kwargs.update({'retailer__retailer_name': retailer_value})
 
@@ -551,8 +545,9 @@ def __get_better_products(request, minor_category, major_category):
                                                            **market_region_retailer_kwargs).order_by(
                 "health_percentage")[:number_of_results]
         else:
-            better_products_minor = Product.objects.filter(minor_category=minor_category.pk, nutrients__name=sort_by,
-                                                           **market_region_retailer_kwargs).order_by(
+            better_products_minor = Product.objects.prefetch_related('nutrients').filter(
+                minor_category=minor_category.pk, nutrients__name=sort_by,
+                **market_region_retailer_kwargs).order_by(
                 "nutrients__amount")[:number_of_results]
         results_found += better_products_minor.count()
         better_products_minor = list(better_products_minor)
@@ -568,8 +563,9 @@ def __get_better_products(request, minor_category, major_category):
                                                            **market_region_retailer_kwargs).order_by(
                 "health_percentage").exclude(**minor_category_kwargs)[:(number_of_results - results_found)]
         else:
-            better_products_major = Product.objects.filter(major_category=major_category.pk, nutrients__name=sort_by,
-                                                           **market_region_retailer_kwargs).order_by(
+            better_products_major = Product.objects.prefetch_related('nutrients').filter(
+                major_category=major_category.pk, nutrients__name=sort_by,
+                **market_region_retailer_kwargs).order_by(
                 "nutrients__amount").exclude(**minor_category_kwargs)[:(number_of_results - results_found)]
         results_found += better_products_major.count()
         better_products_major = list(better_products_major)
