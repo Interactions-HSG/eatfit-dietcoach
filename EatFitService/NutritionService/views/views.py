@@ -511,9 +511,7 @@ def get_better_products_gtin(request, gtin):
 
 
 def __get_better_products(request, minor_category, major_category):
-
     market_region_map = MarketRegion.MARKET_REGION_QUERY_MAP
-
     sort_by = request.GET.get("sortBy", "ofcomValue")
     result_type = request.GET.get("resultType", "array")
     market_region = request.GET.get("marketRegion", None)
@@ -533,11 +531,11 @@ def __get_better_products(request, minor_category, major_category):
 
     if minor_category:
         better_products_query = better_products_query.filter(minor_category=minor_category)
-        results_found += better_products_query.count()
+        results_found = better_products_query.count()
 
     if results_found < number_of_results and major_category:
-        better_products_query = better_products_query.filter(major_category=major_category.pk)
-        results_found += better_products_query.count()
+        better_products_query = better_products_query.filter(major_category=major_category)
+        results_found = better_products_query.count()
 
     if sort_by == 'ofcomValue':
         better_products_query = better_products_query.order_by('ofcom_value')
