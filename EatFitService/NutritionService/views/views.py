@@ -526,6 +526,12 @@ def __get_better_products(request, minor_category, major_category):
     market_region_retailer_kwargs = {}
     minor_category_kwargs = {}
 
+    if not market_region:
+        market_region = 'all'
+
+    if not retailer:
+        retailer = 'all'
+
     if market_region != "all":
         market_region_value = market_region_map.get(market_region, market_region)
         market_region_retailer_kwargs.update({'market_region__market_region_name': market_region_value})
