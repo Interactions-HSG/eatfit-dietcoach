@@ -153,6 +153,9 @@ class Retailer(models.Model):
         (EDEKA, EDEKA),
     )
 
+    RETAILER_QUERY_MAP = {'migros': MIGROS, 'coop': COOP, 'denner': DENNER, 'farmy': FARMY, 'volg': VOLG,
+                    'edeka': EDEKA}
+
     retailer_name = models.CharField(max_length=20, choices=RETAILER_CHOICES)
     product = models.ForeignKey(Product, related_name='retailer')
 
@@ -180,6 +183,8 @@ class MarketRegion(models.Model):
         (FRANCE, FRANCE),
         (ITALY, ITALY),
     )
+
+    MARKET_REGION_QUERY_MAP = {'ch': SWITZERLAND, 'de': GERMANY, 'au': AUSTRIA, 'fr': FRANCE, 'it': ITALY}
 
     market_region_name = models.CharField(max_length=52, choices=MARKET_REGIONS)
     product = models.ForeignKey(Product, related_name='market_region')

@@ -24,7 +24,7 @@ from NutritionService.codecheck_integration.codecheck import import_from_codeche
 from NutritionService.helpers import store_image, download_csv
 from NutritionService.models import DigitalReceipt, NonFoundMatching, Matching, MajorCategory, MinorCategory, \
     HealthTipp, ImportLog, Product, Allergen, NutritionFact, Ingredient, NotFoundLog, ErrorLog, \
-    ReceiptToNutritionUser, calculate_ofcom_value
+    ReceiptToNutritionUser, calculate_ofcom_value, MarketRegion, Retailer
 from NutritionService.serializers import MinorCategorySerializer, MajorCategorySerializer, HealthTippSerializer, \
     ProductSerializer, DigitalReceiptSerializer
 from NutritionService.tasks import import_from_openfood
@@ -512,9 +512,8 @@ def get_better_products_gtin(request, gtin):
 
 def __get_better_products(request, minor_category, major_category):
 
-    market_region_map = {'ch': 'Switzerland', 'de': 'Germany', 'au': 'Austria', 'fr': 'France', 'it': 'Italy'}
-    retailer_map = {'migros': 'Migros', 'coop': 'Coop', 'denner': 'Denner', 'farmy': 'Farmy', 'volg': 'Volg',
-                    'edeka': 'Edeka'}
+    market_region_map = MarketRegion.MARKET_REGION_QUERY_MAP
+    retailer_map = Retailer.RETAILER_QUERY_MAP
 
     sort_by = request.GET.get("sortBy", "ofcomValue")
     result_type = request.GET.get("resultType", "array")
