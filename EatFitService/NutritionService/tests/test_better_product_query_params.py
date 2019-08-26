@@ -232,7 +232,7 @@ def test_get_better_products_market_regions():
     view = get_better_products_gtin
     user = create_user()
 
-    request = factory.get('/products/better-products/{}/?marketRegion=all')
+    request = factory.get('/products/better-products/{}'.format(first_product.gtin))
     force_authenticate(request, user=user)
     response = view(request, first_product.gtin)
     response_data = json.loads(response.rendered_content)
@@ -306,7 +306,7 @@ def test_get_better_products_retailers():
     view = get_better_products_gtin
     user = create_user()
 
-    request = factory.get('/products/better-products/{}/?retailer=all'.format(first_product.gtin))
+    request = factory.get('/products/better-products/{}'.format(first_product.gtin))
     force_authenticate(request, user=user)
     response = view(request, first_product.gtin)
     response_data = json.loads(response.rendered_content)
