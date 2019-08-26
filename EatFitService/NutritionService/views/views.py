@@ -534,37 +534,28 @@ def __get_better_products(request, minor_category, major_category):
 
     if minor_category:
         minor_category_kwargs.update({'minor_category': minor_category.pk})
-        if sort_by == "ofcomValue":
-            better_products_minor = Product.objects.filter(minor_category=minor_category,
-                                                           **market_region_retailer_kwargs).order_by("ofcom_value")[
-                                    :number_of_results]
+        better_products_minor = Product.objects.prefetch_related('nutrients', 'market_region', 'retailer').\
+            filter(minor_category=minor_category, **market_region_retailer_kwargs)
+        if sort_by == 'ofcomValue':
+            better_products_minor = better_products_minor.order_by('ofcom_value')[:number_of_results]
         elif sort_by == 'healthPercentage':
-            better_products_minor = Product.objects.filter(minor_category=minor_category,
-                                                           **market_region_retailer_kwargs).order_by(
-                "health_percentage")[:number_of_results]
+            better_products_minor = better_products_minor.order_by('health_percentage')[:number_of_results]
         else:
-            better_products_minor = Product.objects.prefetch_related('nutrients', 'market_region', 'retailer').filter(
-                minor_category=minor_category.pk, nutrients__name=sort_by,
-                **market_region_retailer_kwargs).order_by(
-                "nutrients__amount")[:number_of_results]
+            better_products_minor = better_products_minor.filter(nutrients__name=sort_by).order_by("nutrients__amount")[
+                                    :number_of_results]
         results_found += better_products_minor.count()
         better_products_minor = list(better_products_minor)
 
     if results_found < number_of_results and major_category:
-        if sort_by == "ofcomValue":
-            better_products_major = Product.objects.filter(major_category=major_category,
-                                                           **market_region_retailer_kwargs).order_by(
-                "ofcom_value").exclude(**minor_category_kwargs)[
-                                    :(number_of_results - results_found)]
+        better_products_major = Product.objects.prefetch_related('nutrients', 'market_region', 'retailer').filter(
+            major_category=major_category.pk, **market_region_retailer_kwargs).exclude(**minor_category_kwargs)
+        if sort_by == 'ofcomValue':
+            better_products_major = better_products_major.order_by('ofcom_value')[:(number_of_results - results_found)]
         elif sort_by == 'healthPercentage':
-            better_products_major = Product.objects.filter(major_category=major_category,
-                                                           **market_region_retailer_kwargs).order_by(
-                "health_percentage").exclude(**minor_category_kwargs)[:(number_of_results - results_found)]
+            better_products_major = better_products_major.order_by('ofcom_value')[:(number_of_results - results_found)]
         else:
-            better_products_major = Product.objects.prefetch_related('nutrients', 'market_region', 'retailer').filter(
-                major_category=major_category.pk, nutrients__name=sort_by,
-                **market_region_retailer_kwargs).order_by(
-                "nutrients__amount").exclude(**minor_category_kwargs)[:(number_of_results - results_found)]
+            better_products_major = better_products_major.filter(nutrients__name=sort_by).order_by(
+                "nutrients__amount")[:(number_of_results - results_found)]
         results_found += better_products_major.count()
         better_products_major = list(better_products_major)
 
