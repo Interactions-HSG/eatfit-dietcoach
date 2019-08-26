@@ -9,9 +9,6 @@ from datetime import datetime
 import logging
 from suds.client import Client
 from suds.sudsobject import asdict
-from operator import attrgetter
-from itertools import chain
-
 
 from django.http import HttpResponse
 from django.http.response import HttpResponseForbidden
