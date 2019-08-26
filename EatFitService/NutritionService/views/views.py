@@ -9,6 +9,9 @@ from datetime import datetime
 import logging
 from suds.client import Client
 from suds.sudsobject import asdict
+from operator import attrgetter
+from itertools import chain
+
 
 from django.http import HttpResponse
 from django.http.response import HttpResponseForbidden
@@ -520,10 +523,7 @@ def __get_better_products(request, minor_category, major_category):
     retailer = request.GET.get("retailer", None)
     number_of_results = 20
     results_found = 0
-    better_products_minor = []
-    better_products_major = []
     market_region_retailer_kwargs = {}
-    minor_category_kwargs = {}
 
     if market_region:
         market_region_value = market_region_map.get(market_region, market_region)
@@ -536,32 +536,21 @@ def __get_better_products(request, minor_category, major_category):
         filter(**market_region_retailer_kwargs)
 
     if minor_category:
-        minor_category_kwargs.update({'minor_category': minor_category.pk})
-        better_products_minor = better_products_query.filter(minor_category=minor_category)
-        if sort_by == 'ofcomValue':
-            better_products_minor = better_products_minor.order_by('ofcom_value')[:number_of_results]
-        elif sort_by == 'healthPercentage':
-            better_products_minor = better_products_minor.order_by('health_percentage')[:number_of_results]
-        else:
-            better_products_minor = better_products_minor.filter(nutrients__name=sort_by).order_by("nutrients__amount")[
-                                    :number_of_results]
-        results_found += better_products_minor.count()
-        better_products_minor = list(better_products_minor)
+        better_products_query = better_products_query.filter(minor_category=minor_category)
+        results_found += better_products_query.count()
 
     if results_found < number_of_results and major_category:
-        better_products_major = better_products_query.filter(major_category=major_category.pk)\
-            .exclude(**minor_category_kwargs)
-        if sort_by == 'ofcomValue':
-            better_products_major = better_products_major.order_by('ofcom_value')[:(number_of_results - results_found)]
-        elif sort_by == 'healthPercentage':
-            better_products_major = better_products_major.order_by('ofcom_value')[:(number_of_results - results_found)]
-        else:
-            better_products_major = better_products_major.filter(nutrients__name=sort_by).order_by(
-                "nutrients__amount")[:(number_of_results - results_found)]
-        results_found += better_products_major.count()
-        better_products_major = list(better_products_major)
+        better_products_query = better_products_query.filter(major_category=major_category.pk)
+        results_found += better_products_query.count()
 
-    products = better_products_minor + better_products_major
+    if sort_by == 'ofcomValue':
+        better_products_query = better_products_query.order_by('ofcom_value')
+    elif sort_by == 'healthPercentage':
+        better_products_query = better_products_query.order_by('health_percentage')
+    else:
+        better_products_query = better_products_query.filter(nutrients__name=sort_by).order_by('nutrients__amount')
+
+    products = list(better_products_query)[:number_of_results]
 
     if results_found > 0:
         serializer = ProductSerializer(products, many=True)
