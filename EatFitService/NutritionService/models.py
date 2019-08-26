@@ -153,9 +153,6 @@ class Retailer(models.Model):
         (EDEKA, EDEKA),
     )
 
-    RETAILER_QUERY_MAP = {'migros': MIGROS, 'coop': COOP, 'denner': DENNER, 'farmy': FARMY, 'volg': VOLG,
-                    'edeka': EDEKA}
-
     retailer_name = models.CharField(max_length=20, choices=RETAILER_CHOICES)
     product = models.ForeignKey(Product, related_name='retailer')
 

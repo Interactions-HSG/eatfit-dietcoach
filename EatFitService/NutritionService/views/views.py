@@ -513,7 +513,6 @@ def get_better_products_gtin(request, gtin):
 def __get_better_products(request, minor_category, major_category):
 
     market_region_map = MarketRegion.MARKET_REGION_QUERY_MAP
-    retailer_map = Retailer.RETAILER_QUERY_MAP
 
     sort_by = request.GET.get("sortBy", "ofcomValue")
     result_type = request.GET.get("resultType", "array")
@@ -531,8 +530,7 @@ def __get_better_products(request, minor_category, major_category):
         market_region_retailer_kwargs.update({'market_region__market_region_name': market_region_value})
 
     if retailer:
-        retailer_value = retailer_map.get(retailer, retailer)
-        market_region_retailer_kwargs.update({'retailer__retailer_name': retailer_value})
+        market_region_retailer_kwargs.update({'retailer__retailer_name__iexact': retailer})
 
     if minor_category:
         minor_category_kwargs.update({'minor_category': minor_category.pk})

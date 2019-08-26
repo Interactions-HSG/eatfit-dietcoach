@@ -314,7 +314,7 @@ def test_get_better_products_retailers():
     assert response.status_code == 200
     assert len(response_data['products']) == 2
 
-    request = factory.get('/products/better-products/{}/?retailer=migros'.format(first_product.gtin))
+    request = factory.get('/products/better-products/{}/?retailer=Migros'.format(first_product.gtin))
     force_authenticate(request, user=user)
     response = view(request, first_product.gtin)
     response_data = json.loads(response.rendered_content)
@@ -322,7 +322,7 @@ def test_get_better_products_retailers():
     assert response.status_code == 200
     assert len(response_data['products']) == 1
 
-    request = factory.get('/products/better-products/{}/?retailer=edeka'.format(first_product.gtin))
+    request = factory.get('/products/better-products/{}/?retailer=edEka'.format(first_product.gtin))
     force_authenticate(request, user=user)
     response = view(request, first_product.gtin)
     response_data = json.loads(response.rendered_content)
