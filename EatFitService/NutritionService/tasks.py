@@ -3,7 +3,6 @@ from celery.task.schedules import crontab
 from datetime import datetime
 import requests
 
-
 from NutritionService.data_import import AllergensImport, NutrientsImport, ProductsImport
 from NutritionService.helpers import store_image
 from NutritionService.models import Ingredient, NutritionFact, Product, NotFoundLog, calculate_ofcom_value, ErrorLog
@@ -188,7 +187,8 @@ def update_from_openfood(product, fields_to_update):
                 try:
                     nutrients_openfood = p["nutrients"]
                     nutrition_facts_to_create = []
-                    existing_nutrients = set(NutritionFact.objects.filter(product=product).values_list("name"))
+                    existing_nutrients = set(
+                        NutritionFact.objects.filter(product=product).values_list("name", flat=True))
                     for n in NUTRIENTS:
                         if n not in existing_nutrients and n in NUTRIENTS_MAPPING_OPENFOOD and \
                                 NUTRIENTS_MAPPING_OPENFOOD[n] in nutrients_openfood:
@@ -202,6 +202,7 @@ def update_from_openfood(product, fields_to_update):
                         NutritionFact.objects.bulk_create(nutrition_facts_to_create)
                 except Exception as e:
                     print(e)
+
     product.quality_checked = datetime.now()
     product.save()
 

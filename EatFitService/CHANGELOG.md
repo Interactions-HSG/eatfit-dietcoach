@@ -10,6 +10,13 @@ Possible log types:
 - `[security]` to invite users to upgrade in case of vulnerabilities.
 - `[chore]` for things like maintenance tasks
 
+### v9 (2019-08-27)
+
+- [changed] Make Openfood updater more strict by enforcing a higher data quality score (EAT-73)
+- [changed] Trustbox importer should only update Products which allow automatic updates (EAT-74)
+- [added] Add parameters for market region and retailer to better products endpoint (EAT-75)
+- [fixed] Fix duplicate error when also querying for major categories in better products endpoint (EAT-75)
+
 ### v8 (2019-08-20)
 
 - [added] Display Ingredients models in Product model admin view (EAT-67)

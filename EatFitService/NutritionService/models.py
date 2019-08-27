@@ -181,6 +181,8 @@ class MarketRegion(models.Model):
         (ITALY, ITALY),
     )
 
+    MARKET_REGION_QUERY_MAP = {'ch': SWITZERLAND, 'de': GERMANY, 'au': AUSTRIA, 'fr': FRANCE, 'it': ITALY}
+
     market_region_name = models.CharField(max_length=52, choices=MARKET_REGIONS)
     product = models.ForeignKey(Product, related_name='market_region')
 

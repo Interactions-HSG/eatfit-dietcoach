@@ -24,7 +24,7 @@ from NutritionService.codecheck_integration.codecheck import import_from_codeche
 from NutritionService.helpers import store_image, download_csv
 from NutritionService.models import DigitalReceipt, NonFoundMatching, Matching, MajorCategory, MinorCategory, \
     HealthTipp, ImportLog, Product, Allergen, NutritionFact, Ingredient, NotFoundLog, ErrorLog, \
-    ReceiptToNutritionUser, calculate_ofcom_value
+    ReceiptToNutritionUser, calculate_ofcom_value, MarketRegion, Retailer
 from NutritionService.serializers import MinorCategorySerializer, MajorCategorySerializer, HealthTippSerializer, \
     ProductSerializer, DigitalReceiptSerializer
 from NutritionService.tasks import import_from_openfood
@@ -503,48 +503,55 @@ def get_better_products_gtin(request, gtin):
                                  'totalCarbohydrate', 'dietaryFiber', 'healthPercentage' - this is the fruit and veg %,
                                  'sodium'
     query param: resultType, values: 'array', 'dictionary'
+    query param: marketRegion, values: 'ch', 'de', 'au', 'fr', 'it'
+    query param: retailer, values: 'migros', 'coop', 'denner', 'farmy', 'volg', 'edeka'
     """
-    product = get_object_or_404(Product.objects.all(), gtin = gtin)
+    product = get_object_or_404(Product.objects.all(), gtin=gtin)
     return __get_better_products(request, product.minor_category, product.major_category)
 
 
 def __get_better_products(request, minor_category, major_category):
+    market_region_map = MarketRegion.MARKET_REGION_QUERY_MAP
     sort_by = request.GET.get("sortBy", "ofcomValue")
     result_type = request.GET.get("resultType", "array")
+    market_region = request.GET.get("marketRegion", None)
+    retailer = request.GET.get("retailer", None)
     number_of_results = 20
     results_found = 0
-    products = []
-    better_products_minor = []
-    better_products_major = []
+
+    better_products_query = Product.objects.prefetch_related('nutrients', 'market_region', 'retailer')
+
+    if market_region:
+        market_region = market_region.lower()
+        market_region_value = market_region_map.get(market_region, market_region)
+        better_products_query = better_products_query.filter(
+            market_region__market_region_name__iexact=market_region_value
+        )
+
+    if retailer:
+        retailer = retailer.lower()
+        better_products_query = better_products_query.filter(retailer__retailer_name__iexact=retailer)
+
     if minor_category:
-        if sort_by == "ofcomValue":
-            better_products_minor = Product.objects.filter(minor_category=minor_category).order_by("ofcom_value")[:number_of_results]
-            results_found = better_products_minor.count()
-        elif sort_by == 'healthPercentage':
-            better_products_minor = Product.objects.filter(minor_category=minor_category).order_by("health_percentage")[:number_of_results]
-            results_found = better_products_minor.count()
-        else:
-            better_products_minor = Product.objects.raw("Select p.* from product as p, nutrition_fact as n where n.product_id = p.id and p.minor_category_id = %s and n.name = %s order by n.amount", [minor_category.pk, sort_by])[:number_of_results]
-            results_found = len(better_products_minor)
-       
+        better_products_query = better_products_query.filter(minor_category=minor_category)
+        results_found = better_products_query.count()
+
     if results_found < number_of_results and major_category:
-        if sort_by == "ofcomValue":
-            better_products_major = Product.objects.filter(major_category = major_category).order_by("ofcom_value")[:(number_of_results-results_found)]
-            results_found = better_products_major.count()
-        elif sort_by == 'healthPercentage':
-            better_products_major = Product.objects.filter(major_category = major_category).order_by("health_percentage")[:(number_of_results-results_found)]
-            results_found = better_products_major.count()
-        else:
-            better_products_major = Product.objects.raw("Select p.* from product as p, nutrition_fact as n where n.product_id = p.id and p.major_category_id = %s and n.name = %s order by n.amount", [major_category.pk, sort_by])[:(number_of_results-results_found)]
-            results_found = len(better_products_major)
-    for p in better_products_minor:
-        products.append(p)
-    for p in better_products_major:
-        products.append(p)
+        better_products_query = better_products_query.filter(major_category=major_category)
+        results_found = better_products_query.count()
+
+    if sort_by == 'ofcomValue':
+        better_products_query = better_products_query.order_by('ofcom_value')
+    elif sort_by == 'healthPercentage':
+        better_products_query = better_products_query.order_by('health_percentage')
+    else:
+        better_products_query = better_products_query.filter(nutrients__name=sort_by).order_by('nutrients__amount')
+
+    products = list(better_products_query[:number_of_results])
+
     if results_found > 0:
         serializer = ProductSerializer(products, many=True)
-        result = {}
-        result["success"] = True
+        result = {"success": True}
         if result_type == "array":
             result["products"] = serializer.data
         else:
@@ -552,9 +559,7 @@ def __get_better_products(request, minor_category, major_category):
             for p in serializer.data:
                 result["products"].append(__change_product_objects(p))
     else:
-        result = {}
-        result["success"] = False
-        result["products"] = None
+        result = {"success": False, "products": None}
     return Response(result)
 
 
@@ -713,6 +718,12 @@ def __recursive_translation(d):
 
 def create_product(p):
     try:
+        # Check if product is flagged for automatic updates
+        automated_update_flag_off = Product.objects.filter(gtin=p["_gtin"],
+                                                           automatic_update=False).exists()
+        if automated_update_flag_off:
+            return
+
         default_arguments = {}
         temp_image_url = None
         for n in p['productNames']:
