@@ -524,9 +524,12 @@ def __get_better_products(request, minor_category, major_category):
     if market_region:
         market_region = market_region.lower()
         market_region_value = market_region_map.get(market_region, market_region)
-        better_products_query = better_products_query.filter(market_region__market_region_name=market_region_value)
+        better_products_query = better_products_query.filter(
+            market_region__market_region_name__iexact=market_region_value
+        )
 
     if retailer:
+        retailer = retailer.lower()
         better_products_query = better_products_query.filter(retailer__retailer_name__iexact=retailer)
 
     if minor_category:
