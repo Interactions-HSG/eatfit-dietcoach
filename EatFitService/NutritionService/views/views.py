@@ -764,12 +764,13 @@ def create_product(p):
             for attr in p['nutrition']['nutritionFactsGroups']['nutritionFacts']:
                 try:
                     is_a_number, number = is_number(attr['amount'])
-                    if is_a_number:
-                        default_arguments = {}
-                        default_arguments["amount"] = number 
-                        default_arguments["unit_of_measure"] = attr['unitOfMeasure'] 
-                        NutritionFact.objects.update_or_create(product = product, name  = attr["_canonicalName"], defaults = default_arguments)
-                except: #ignore shitty data quality
+                    base_unit_of_measure_condition = attr['_baseUnitOfMeasure'] == 'g'
+                    base_amount_condition = attr['_baseAmount'] == '100'
+                    if is_a_number and base_unit_of_measure_condition and base_amount_condition:
+                        default_arguments = {"amount": number, "unit_of_measure": attr['unitOfMeasure']}
+                        NutritionFact.objects.update_or_create(product=product, name=attr["_canonicalName"],
+                                                               defaults=default_arguments)
+                except (ValueError, TypeError):  # ignore shitty data quality
                     continue
         
         # create allergens and ingridients for products
