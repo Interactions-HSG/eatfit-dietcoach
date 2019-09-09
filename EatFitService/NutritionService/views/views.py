@@ -770,7 +770,7 @@ def create_product(p):
                         default_arguments = {"amount": number, "unit_of_measure": attr['unitOfMeasure']}
                         NutritionFact.objects.update_or_create(product=product, name=attr["_canonicalName"],
                                                                defaults=default_arguments)
-                except (ValueError, TypeError):  # ignore poor data quality
+                except (ValueError, TypeError, KeyError):  # ignore poor data quality
                     continue
         
         # create allergens and ingridients for products
