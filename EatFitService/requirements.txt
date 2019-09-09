@@ -40,4 +40,3 @@ wheel==0.24.0
 xlrd==0.9.4
 xlutils==1.7.1
 xlwt==1.0.0
-pytest==4.2.0
