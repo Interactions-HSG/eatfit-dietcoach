@@ -10,6 +10,10 @@ Possible log types:
 - `[security]` to invite users to upgrade in case of vulnerabilities.
 - `[chore]` for things like maintenance tasks
 
+### v10 (2019-09-09)
+
+- [changed] Trustbox importer should only import data which has a base unit of measure in grams and a base amount of 100 (EAT-77)
+
 ### v9 (2019-08-27)
 
 - [changed] Make Openfood updater more strict by enforcing a higher data quality score (EAT-73)
