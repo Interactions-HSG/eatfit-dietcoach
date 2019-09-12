@@ -246,6 +246,43 @@ class AdditionalImage(models.Model):
         db_table = 'additional_image'
 
 
+class NutriScoreFacts(models.Model):
+    product = models.OneToOneField(Product, related_name='nutri_score_fact', on_delete=models.CASCADE)
+    # fvpn is an abbreviation for fruits, vegetables, pulses and nuts
+    fvpn_total_percentage = models.FloatField(blank=True, null=True, validators=[minimum_float_validator,
+                                                                                 maximum_float_validator])
+    fvpn_total_percentage_estimated = models.FloatField(blank=True, null=True,
+                                                        validators=[minimum_float_validator, maximum_float_validator])
+    vegetable_percentage = models.FloatField(blank=True, null=True,
+                                             validators=[minimum_float_validator, maximum_float_validator])
+    vegetable_percentage_dried = models.FloatField(blank=True, null=True,
+                                                   validators=[minimum_float_validator, maximum_float_validator])
+    nuts_percentage = models.FloatField(blank=True, null=True,
+                                        validators=[minimum_float_validator, maximum_float_validator])
+    ofcom_n_energy_kj = models.FloatField(blank=True, null=True)
+    ofcom_n_saturated_fat = models.FloatField(blank=True, null=True)
+    ofcom_n_sugars = models.FloatField(blank=True, null=True)
+    ofcom_n_salt = models.FloatField(blank=True, null=True)
+    ofcom_p_protein = models.FloatField(blank=True, null=True)
+    ofcom_p_fvpn = models.FloatField(blank=True, null=True)
+    ofcom_p_dietary_fiber = models.FloatField(blank=True, null=True)
+    ofcom_n_energy_kj_mixed = models.FloatField(blank=True, null=True)
+    ofcom_n_saturated_fat_mixed = models.FloatField(blank=True, null=True)
+    ofcom_n_sugars_mixed = models.FloatField(blank=True, null=True)
+    ofcom_n_salt_mixed = models.FloatField(blank=True, null=True)
+    ofcom_p_protein_mixed = models.FloatField(blank=True, null=True)
+    ofcom_p_fvpn_mixed = models.FloatField(blank=True, null=True)
+    ofcom_p_dietary_fiber_mixed = models.FloatField(blank=True, null=True)
+
+    class Meta:
+        verbose_name = 'Nutri-Score Facts'
+        verbose_name_plural = 'Nutri-Score Facts'
+        db_table = 'nutri_score_fact'
+
+    def __unicode__(self):
+        return self.product.id
+
+
 class ErrorLog(models.Model):
     gtin = models.BigIntegerField()
     timestamp = models.DateTimeField(auto_now_add=True)
