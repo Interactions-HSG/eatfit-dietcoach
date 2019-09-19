@@ -26,6 +26,24 @@ PROTEIN = "protein"
 SALT = "salt"
 SODIUM = "sodium"
 
+MINERAL_WATER = "Mineral Water"
+BEVERAGE = "Beverage"
+CHEESE = "Cheese"
+ADDED_FAT = "Added Fat"
+FOOD = "Food"
+NO_FOOD = "No Food"
+UNKNOWN = "Unknown"
+
+NUTRISCORE_CATEGORIES = (
+    (1, MINERAL_WATER),
+    (2, BEVERAGE),
+    (3, CHEESE),
+    (4, ADDED_FAT),
+    (5, FOOD),
+    (6, NO_FOOD),
+    (7, UNKNOWN),
+)
+
 
 def path_and_rename(instance, filename):
     base_path = "crowdsoure_images/"
@@ -67,6 +85,7 @@ class MinorCategory(models.Model):
     name_fr = models.TextField(max_length=1024, blank=True, null=True)
     category_major = models.ForeignKey(MajorCategory, on_delete=models.DO_NOTHING, null=True)
     nwd_subcategory_id = models.CharField(max_length=255, blank=True, null=True)
+    nutri_score_category = models.CharField(max_length=255, blank=True, null=True, choices=NUTRISCORE_CATEGORIES)
     icon = models.ImageField(upload_to="minor_category_icons", null=True, blank=True, verbose_name="Icon")
 
     def __unicode__(self):
@@ -85,6 +104,12 @@ class Product(models.Model):
     CODECHECK = 'Codecheck'
     OPEN_WORLD = 'open_world'
     AUTO_ID_LABS = 'Auto-ID Labs'
+    A = 'A'
+    B = 'B'
+    C = 'C'
+    D = 'D'
+    E = 'E'
+
     PRODUCT_SOURCES = (
         (TRUSTBOX, TRUSTBOX),
         (CROWDSOURCING, CROWDSOURCING),
@@ -92,6 +117,13 @@ class Product(models.Model):
         (CODECHECK, CODECHECK),
         (OPEN_WORLD, OPEN_WORLD),
         (AUTO_ID_LABS, AUTO_ID_LABS),
+    )
+    NUTRISCORE_SCORES = (
+        (A, A),
+        (B, B),
+        (C, C),
+        (D, D),
+        (E, E),
     )
     id = models.BigAutoField(primary_key=True)
     gtin = models.BigIntegerField(unique=True)
@@ -109,6 +141,13 @@ class Product(models.Model):
     image = models.ImageField(upload_to="product_images", null=True, blank=True)
     back_image = models.ImageField(upload_to="product_images", null=True, blank=True)
     original_image_url = models.TextField(null=True, blank=True)
+    nutri_score_category_estimated = models.CharField(max_length=255, blank=True, null=True,
+                                                      choices=NUTRISCORE_CATEGORIES)
+    nutri_score_final = models.CharField(max_length=1, null=True, blank=True, choices=NUTRISCORE_SCORES)
+    nutri_score_by_manufacturer = models.CharField(max_length=1, null=True, blank=True, choices=NUTRISCORE_SCORES)
+    nutri_score_calculated = models.CharField(max_length=1, null=True, blank=True, choices=NUTRISCORE_SCORES)
+    nutri_score_calculated_mixed = models.CharField(max_length=1, null=True, blank=True, choices=NUTRISCORE_SCORES)
+    nutri_score_quality_comment = models.TextField(null=True, blank=True, choices=NUTRISCORE_SCORES)
     ofcom_value = models.IntegerField(null=True, blank=True, editable=False)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
