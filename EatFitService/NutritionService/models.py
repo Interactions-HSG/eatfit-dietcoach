@@ -35,13 +35,13 @@ NO_FOOD = "No Food"
 UNKNOWN = "Unknown"
 
 NUTRISCORE_CATEGORIES = (
-    (1, MINERAL_WATER),
-    (2, BEVERAGE),
-    (3, CHEESE),
-    (4, ADDED_FAT),
-    (5, FOOD),
-    (6, NO_FOOD),
-    (7, UNKNOWN),
+    (MINERAL_WATER, MINERAL_WATER),
+    (BEVERAGE, BEVERAGE),
+    (CHEESE, CHEESE),
+    (ADDED_FAT, ADDED_FAT),
+    (FOOD, FOOD),
+    (NO_FOOD, NO_FOOD),
+    (UNKNOWN, UNKNOWN),
 )
 
 
