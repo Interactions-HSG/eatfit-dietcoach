@@ -147,7 +147,7 @@ class Product(models.Model):
     nutri_score_by_manufacturer = models.CharField(max_length=1, null=True, blank=True, choices=NUTRISCORE_SCORES)
     nutri_score_calculated = models.CharField(max_length=1, null=True, blank=True, choices=NUTRISCORE_SCORES)
     nutri_score_calculated_mixed = models.CharField(max_length=1, null=True, blank=True, choices=NUTRISCORE_SCORES)
-    nutri_score_quality_comment = models.TextField(null=True, blank=True, choices=NUTRISCORE_SCORES)
+    nutri_score_quality_comment = models.TextField(null=True, blank=True)
     ofcom_value = models.IntegerField(null=True, blank=True, editable=False)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
