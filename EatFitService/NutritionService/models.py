@@ -257,6 +257,10 @@ class NutriScoreFacts(models.Model):
                                              validators=[minimum_float_validator, maximum_float_validator])
     vegetable_percentage_dried = models.FloatField(blank=True, null=True,
                                                    validators=[minimum_float_validator, maximum_float_validator])
+    pulses_percentage = models.FloatField(blank=True, null=True,
+                                          validators=[minimum_float_validator, maximum_float_validator])
+    pulses_percentage_dried = models.FloatField(blank=True, null=True,
+                                                validators=[minimum_float_validator, maximum_float_validator])
     nuts_percentage = models.FloatField(blank=True, null=True,
                                         validators=[minimum_float_validator, maximum_float_validator])
     ofcom_n_energy_kj = models.FloatField(blank=True, null=True)
@@ -280,7 +284,7 @@ class NutriScoreFacts(models.Model):
         db_table = 'nutri_score_fact'
 
     def __unicode__(self):
-        return self.product.id
+        return unicode(self.product.gtin)
 
 
 class ErrorLog(models.Model):
