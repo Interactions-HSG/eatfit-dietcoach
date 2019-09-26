@@ -10,6 +10,11 @@ Possible log types:
 - `[security]` to invite users to upgrade in case of vulnerabilities.
 - `[chore]` for things like maintenance tasks
 
+### unreleased
+
+- [added] Add new fields for Nutri-Score categories and scores in Product model (EAT-78)
+- [added] Add new fields for Nutri-Score categories in MinorCategory model (EAT-79)
+
 ### v10 (2019-09-09)
 
 - [changed] Trustbox importer should only import data which has a base unit of measure in grams and a base amount of 100 (EAT-77)
