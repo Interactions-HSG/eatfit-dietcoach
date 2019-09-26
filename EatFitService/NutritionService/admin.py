@@ -3,7 +3,7 @@ from django.utils.functional import curry
 from django.contrib import messages
 from NutritionService.views.crowdsource_views import __create_products_from_crowdsource
 from NutritionService.models import MajorCategory, Product, MinorCategory, Allergen, NutritionFact, ErrorLog, \
-                                    CrowdsourceProduct, NotFoundLog, HealthTipp, NutrientName, \
+                                    CrowdsourceProduct, NotFoundLog, HealthTipp, NutrientName, NutriScoreFacts, \
                                     ReceiptToNutritionPartner, ReceiptToNutritionUser, Matching, DigitalReceipt, \
                                     Retailer, AdditionalImage, ImportErrorLog, MarketRegion, Ingredient
 
@@ -146,3 +146,4 @@ admin.site.register(ReceiptToNutritionUser, ReceiptToNutritionUserAdmin)
 admin.site.register(DigitalReceipt, DigitalReceiptAdmin)
 admin.site.register(AdditionalImage)
 admin.site.register(ImportErrorLog)
+admin.site.register(NutriScoreFacts)

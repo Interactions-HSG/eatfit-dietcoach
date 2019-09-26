@@ -14,6 +14,7 @@ Possible log types:
 
 - [added] Add new fields for Nutri-Score categories and scores in Product model (EAT-78)
 - [added] Add new fields for Nutri-Score categories in MinorCategory model (EAT-79)
+- [added] New model NutriScoreFacts added (EAT-80)
 
 ### v10 (2019-09-09)
 
