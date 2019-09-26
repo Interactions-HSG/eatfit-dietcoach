@@ -85,7 +85,7 @@ class MinorCategory(models.Model):
     name_fr = models.TextField(max_length=1024, blank=True, null=True)
     category_major = models.ForeignKey(MajorCategory, on_delete=models.DO_NOTHING, null=True)
     nwd_subcategory_id = models.CharField(max_length=255, blank=True, null=True)
-    nutri_score_category = models.CharField(max_length=255, blank=True, null=True, choices=NUTRISCORE_CATEGORIES)
+    nutri_score_category = models.CharField(max_length=50, blank=True, null=True, choices=NUTRISCORE_CATEGORIES)
     icon = models.ImageField(upload_to="minor_category_icons", null=True, blank=True, verbose_name="Icon")
 
     def __unicode__(self):
@@ -141,7 +141,7 @@ class Product(models.Model):
     image = models.ImageField(upload_to="product_images", null=True, blank=True)
     back_image = models.ImageField(upload_to="product_images", null=True, blank=True)
     original_image_url = models.TextField(null=True, blank=True)
-    nutri_score_category_estimated = models.CharField(max_length=255, blank=True, null=True,
+    nutri_score_category_estimated = models.CharField(max_length=50, blank=True, null=True,
                                                       choices=NUTRISCORE_CATEGORIES)
     nutri_score_final = models.CharField(max_length=1, null=True, blank=True, choices=NUTRISCORE_SCORES)
     nutri_score_by_manufacturer = models.CharField(max_length=1, null=True, blank=True, choices=NUTRISCORE_SCORES)
