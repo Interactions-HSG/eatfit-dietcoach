@@ -4,7 +4,8 @@ import pytest
 from NutritionService.models import ADDED_FAT, BEVERAGE, CHEESE, FOOD, NutritionFact, Product, determine_ofcom_values, \
     added_fat_conversion
 from NutritionService.nutriscore import score_tables
-from NutritionService.nutriscore.calculations import calculate_nutrient_ofcom_value
+from NutritionService.nutriscore.calculations import calculate_nutrient_ofcom_value, calculate_total_ofcom_value, \
+    calculate_nutriscore_beverage, calculate_nutriscore_non_beverage, calculate_negative_points
 
 
 def test_energy_kj_beverage_score():
@@ -931,3 +932,77 @@ def test_all_food_calculations():
     assert dietary_fiber == 5
     assert protein == 0
     assert sodium == 6
+
+
+def test_calculate_negative_points():
+    energy_kj = 8
+    saturated_fat = 3
+    sugars = 7
+    sodium = 6
+
+    result = calculate_negative_points(energy_kj, sugars, saturated_fat, sodium)
+    assert result == 24
+
+
+def test_total_ofcom_value():
+    """
+    Test cases:
+    1) fvpn_value < 5 and category != 'Cheese'
+    2) fvpn_value == 5
+    3) category == 'Cheese'
+    """
+    category = FOOD
+    energy_kj = 8
+    saturated_fat = 3
+    sugars = 7
+    sodium = 6
+    dietary_fiber = 5
+    protein = 2
+    fvpn_value = 1
+
+    negative_points = calculate_negative_points(energy_kj, sugars, saturated_fat, sodium)
+    assert negative_points == 24
+
+    first_result = calculate_total_ofcom_value(category, negative_points, fvpn_value, protein, dietary_fiber)
+    assert first_result == 18
+
+    fvpn_value = 5
+    second_result = calculate_total_ofcom_value(category, negative_points, fvpn_value, protein, dietary_fiber)
+    assert second_result == 12
+
+    fvpn_value = 2
+    category = CHEESE
+    third_result = calculate_total_ofcom_value(category, negative_points, fvpn_value, protein, dietary_fiber)
+    assert third_result == 15
+
+
+def test_nutriscore_calculations():
+    first_ofcom_value = -1
+    second_ofcom_value = 2
+    third_ofcom_value = 9
+    fourth_ofcom_value = 11
+    fifth_ofcom_value = 20
+
+    first_result_beverage = calculate_nutriscore_beverage(first_ofcom_value)
+    second_result_beverage = calculate_nutriscore_beverage(second_ofcom_value)
+    third_result_beverage = calculate_nutriscore_beverage(third_ofcom_value)
+    fourth_result_beverage = calculate_nutriscore_beverage(fourth_ofcom_value)
+    fifth_result_beverage = calculate_nutriscore_beverage(fifth_ofcom_value)
+
+    assert first_result_beverage == 'B'
+    assert second_result_beverage == 'C'
+    assert third_result_beverage == 'D'
+    assert fourth_result_beverage == 'E'
+    assert fifth_result_beverage == 'E'
+
+    first_result_non_beverage = calculate_nutriscore_non_beverage(first_ofcom_value)
+    second_result_non_beverage = calculate_nutriscore_non_beverage(second_ofcom_value)
+    third_result_non_beverage = calculate_nutriscore_non_beverage(third_ofcom_value)
+    fourth_result_non_beverage = calculate_nutriscore_non_beverage(fourth_ofcom_value)
+    fifth_result_non_beverage = calculate_nutriscore_non_beverage(fifth_ofcom_value)
+
+    assert first_result_non_beverage == 'A'
+    assert second_result_non_beverage == 'B'
+    assert third_result_non_beverage == 'C'
+    assert fourth_result_non_beverage == 'D'
+    assert fifth_result_non_beverage == 'E'
