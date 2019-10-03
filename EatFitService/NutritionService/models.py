@@ -7,7 +7,7 @@ from toolz import itertoolz
 
 from django.conf import settings
 from django.contrib.auth.models import User
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch.dispatcher import receiver
@@ -773,9 +773,9 @@ def separate_nutrients(grouped_nutrients, gtin):
 
 def added_fat_conversion(amount, product):
     try:
-        total_fat = NutritionFact.objects.get(product=product, name=TOTAL_FAT)
+        total_fat = NutritionFact.objects.get(product=product, name=TOTAL_FAT, unit_of_measure='g')
         return 100 * (amount / total_fat.amount)
-    except (ObjectDoesNotExist, ZeroDivisionError):
+    except (ObjectDoesNotExist, MultipleObjectsReturned, ZeroDivisionError, TypeError):
         return
 
 
@@ -815,16 +815,17 @@ def determine_ofcom_values(nutrients, category, product, mixed=False):
     }
     scores_table = SCORE_TABLES_MAP[category]
     nutri_score_facts_kwargs = {}
+
     for nutrient in nutrients:
         scores = scores_table[nutrient.name]
         if category == ADDED_FAT and nutrient.name == SATURATED_FAT:
-            amount = added_fat_conversion(nutrient.amount, product.gtin)
+            amount = added_fat_conversion(nutrient.amount, product)
         else:
             amount = nutrient.amount
         if amount:
-            key = ofcom_values_catgegories[nutrient.name][mixed]
-            value = calculations.calculate_nutrient_ofcom_value(scores, amount)
-            nutri_score_facts_kwargs.update({key: value})
+            field = ofcom_values_catgegories[nutrient.name][mixed]
+            ofcom_value = calculations.calculate_nutrient_ofcom_value(scores, amount)
+            nutri_score_facts_kwargs.update({field: ofcom_value})
 
     return nutri_score_facts_kwargs
 
