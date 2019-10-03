@@ -823,15 +823,16 @@ def determine_ofcom_values(nutrients, category, product, mixed=False):
     return nutri_score_facts_kwargs
 
 
-def determine_fvpn_share(product, mixed=False):
+def determine_fvpn_share(product, category, mixed=False):
     """
     :param product: Product (Django ORM-object)
+    :param category: str
     :param mixed: bool
     :return: float
     """
     nutri_score_fact_fvpn_kwargs = {}
     if mixed:
-        nutri_score_fact_fvpn_kwargs.update({'ofcom_p_fvpn_mixed': 0})
+        nutri_score_fact_fvpn_kwargs.update({'ofcom_p_fvpn_mixed': 0, 'fvpn_total_percentage': 0})
         return nutri_score_fact_fvpn_kwargs
     try:
         nutri_score_fact = NutriScoreFacts.objects.get(product=product)
@@ -858,7 +859,10 @@ def determine_fvpn_share(product, mixed=False):
         else:
             fvpn_share = 0
 
-    nutri_score_fact_fvpn_kwargs.update({'ofcom_p_fvpn': fvpn_share})
+    score_table = SCORE_TABLES_MAP[category]['fvpn']
+    ofcom_value = calculations.calculate_nutrient_ofcom_value(score_table, fvpn_share)
+    nutri_score_fact_fvpn_kwargs.update({'ofcom_p_fvpn': ofcom_value, 'fvpn_total_percentage': fvpn_share})
+
     return nutri_score_fact_fvpn_kwargs
 
 
@@ -871,7 +875,7 @@ def nutriscore_calculations(nutrients, product, category, mixed=False):
     :return: tuple of float, str
     """
     nutri_score_facts = determine_ofcom_values(nutrients, category, product, mixed=mixed)
-    fvpn = determine_fvpn_share(product, mixed=mixed)
+    fvpn = determine_fvpn_share(product, category, mixed=mixed)
     nutri_score_facts_kwargs = merge_dicts(nutri_score_facts, fvpn)
     NutriScoreFacts.objects.update_or_create(product=product, **nutri_score_facts_kwargs)
 
