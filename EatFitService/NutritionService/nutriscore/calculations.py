@@ -58,7 +58,7 @@ def calculate_fvpn_percentage(fruit_percentage, fruit_percentage_dried, vegetabl
                               vegetable_percentage_dried, pulses_percentage, pulses_percentage_dried, nuts_percentage):
     normal_sum = fruit_percentage + vegetable_percentage + pulses_percentage + nuts_percentage
     dried_sum = fruit_percentage_dried + vegetable_percentage_dried + pulses_percentage_dried
-    return min(100, (normal_sum + (2 * dried_sum)) / (100 + dried_sum))  # Value should not be > 100
+    return min(100, 100 * (normal_sum + (2 * dried_sum)) / (100 + dried_sum))  # Value should not be > 100
 
 
 def calculate_nutrient_ofcom_value(score_table, amount):
