@@ -256,6 +256,10 @@ class NutriScoreFacts(models.Model):
                                                                                  maximum_float_validator])
     fvpn_total_percentage_estimated = models.FloatField(blank=True, null=True,
                                                         validators=[minimum_float_validator, maximum_float_validator])
+    fruit_percentage = models.FloatField(blank=True, null=True,
+                                             validators=[minimum_float_validator, maximum_float_validator])
+    fruit_percentage_dried = models.FloatField(blank=True, null=True,
+                                                   validators=[minimum_float_validator, maximum_float_validator])
     vegetable_percentage = models.FloatField(blank=True, null=True,
                                              validators=[minimum_float_validator, maximum_float_validator])
     vegetable_percentage_dried = models.FloatField(blank=True, null=True,
