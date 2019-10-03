@@ -2,6 +2,7 @@
 
 import os
 from uuid import uuid4
+from pint.errors import DimensionalityError, UndefinedUnitError
 from toolz import itertoolz
 
 from django.conf import settings
@@ -690,6 +691,7 @@ def get_and_validate_nutrients(product):
     }
     errors = []
     valid_nutrients = []
+
     for nutrient in nutrients:
         if nutrient.name not in nutrient_data.keys():
             errors.append(
@@ -697,29 +699,33 @@ def get_and_validate_nutrients(product):
                          reporting_app='Eatfit_NS',
                          error_description='{} is missing'.format(nutrient.name))
             )
+            continue
 
-        converted, _ = is_number(nutrient.amount)
-        if not converted:
+        valid_condition_amount, _ = is_number(nutrient.amount)
+        if not valid_condition_amount:
             errors.append(
                 ErrorLog(gtin=product.gtin,
                          reporting_app='Eatfit_NS',
                          error_description='Amount of {} is not valid'.format(nutrient.name))
             )
+            continue
 
         target_unit = nutrient_data.get(nutrient.name, None)
-        if target_unit is not None and target_unit != nutrient.unit_of_measure:
-            amount = calculations.unit_of_measure_conversion(nutrient.amount, nutrient.unit_of_measure, target_unit)
-            if amount is not None:
+        if target_unit != nutrient.unit_of_measure:
+            try:
+                amount = calculations.unit_of_measure_conversion(nutrient.amount, nutrient.unit_of_measure, target_unit)
                 nutrient.amount = amount
                 nutrient.unit_of_measure = target_unit
-            else:
+            except (AttributeError, DimensionalityError, UndefinedUnitError, TypeError):
                 errors.append(
                     ErrorLog(gtin=product.gtin,
                              reporting_app='Eatfit_NS',
                              error_description='Measurement unit of {} is not valid'.format(nutrient.name))
                 )
+                continue
 
         valid_nutrients.append(nutrient)
+
     ErrorLog.objects.bulk_create(errors)
     return valid_nutrients
 

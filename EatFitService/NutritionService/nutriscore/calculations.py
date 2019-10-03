@@ -1,25 +1,57 @@
 from __future__ import division
+import pint
+
+# Allow conversions from volume to mass and vice-versa
+
+context_name = 'eatfit'
+volume = '[volume]'
+mass = '[mass]'
+
+ureg = pint.UnitRegistry()
+
+# Add kilojoule as kj to defined units
+ureg.define('kj = kilojoule')
+
+context = pint.Context(context_name)
 
 
-def unit_of_measure_conversion(amount, current_unit, target_unit):
+def mass_to_volume(unit_registry, x):
+    # Assumption: 1g = 1ml
+    density = unit_registry.gram / unit_registry.ml
+    return x / density
+
+
+def volume_to_mass(unit_registry, x):
+    # Assumption: 1ml = 1mg
+    density = unit_registry.gram / unit_registry.ml
+    return x * density
+
+
+context.add_transformation(volume, mass, volume_to_mass)
+context.add_transformation(mass, volume, mass_to_volume)
+ureg.add_context(context)
+
+quantify = ureg.Quantity
+
+
+def unit_of_measure_conversion(magnitude, current_unit, target_unit):
     """
-    Assumption: 1g = 1ml
+    :param magnitude: float
+    :param current_unit: str
+    :param target_unit: str
+    :return: float
     """
-    conversion_map = {
-        'kg': 3,
-        'cl': 2,
-        'dl': 1,
-        'g': 0,
-        'ml': 0,
-        'mg': -3
-    }
+    if not isinstance(magnitude, float):
+        # pint accepts string as input for magnitude, therefore we must restrict it to floats
+        raise TypeError
 
-    try:
-        exponent = conversion_map[current_unit] - conversion_map[target_unit]
-    except KeyError:
-        return
+    if current_unit == target_unit:
+        return magnitude
 
-    return amount * (10 ** exponent)
+    current_quantity = quantify(magnitude, current_unit)
+    target_quantity = current_quantity.to(target_unit, context_name)
+
+    return target_quantity.magnitude
 
 
 def calculate_fvpn_percentage(fruit_percentage, fruit_percentage_dried, vegetable_percentage,
