@@ -1,7 +1,8 @@
 from model_mommy import mommy
 import pytest
 
-from NutritionService.models import ErrorLog, Product, NutritionFact, get_and_validate_nutrients
+from NutritionService.models import MINERAL_WATER, MajorCategory, MinorCategory, ErrorLog, Product, NutritionFact, \
+    get_and_validate_nutrients
 from NutritionService.nutriscore.calculations import unit_of_measure_conversion
 
 
@@ -13,16 +14,24 @@ def test_nutri_score_nutrient_name():
     2) Nutrient does not have a valid name
     3) Nutrient name is correct
     """
+    assert MajorCategory.objects.count() == 0
+    assert MinorCategory.objects.count() == 0
     assert Product.objects.count() == 0
     assert NutritionFact.objects.count() == 0
 
-    test_product = mommy.make(Product)
+    major_category = mommy.make(MajorCategory, pk=16)
+    minor_category = mommy.make(MinorCategory, pk=82, category_major=major_category, nutri_score_category=MINERAL_WATER)
+
+    test_product = mommy.make(Product, minor_category=minor_category)
     mommy.make(NutritionFact, product=test_product, name=None, amount=1.0, unit_of_measure='g')
     mommy.make(NutritionFact, product=test_product, name='randomName', amount=1.0, unit_of_measure='g')
     mommy.make(NutritionFact, product=test_product, name='protein', amount=1.0, unit_of_measure='g')
 
+    assert MajorCategory.objects.count() == 1
+    assert MinorCategory.objects.count() == 1
     assert Product.objects.count() == 1
     assert NutritionFact.objects.count() == 3
+    assert ErrorLog.objects.count() == 0
 
     validated_nutrients = get_and_validate_nutrients(test_product)
 
@@ -37,15 +46,21 @@ def test_nutri_score_nutrient_amount():
     1) Nutrient amount = None cannot be converted to float (TypeError)
     2) Nutrient amount = 1.1 is valid
     """
+    assert MajorCategory.objects.count() == 0
+    assert MinorCategory.objects.count() == 0
     assert Product.objects.count() == 0
     assert NutritionFact.objects.count() == 0
 
-    test_product = mommy.make(Product)
+    major_category = mommy.make(MajorCategory, pk=16)
+    minor_category = mommy.make(MinorCategory, pk=82, category_major=major_category, nutri_score_category=MINERAL_WATER)
+
+    test_product = mommy.make(Product, minor_category=minor_category)
     mommy.make(NutritionFact, product=test_product, name='protein', amount=None, unit_of_measure='g')
     mommy.make(NutritionFact, product=test_product, name='sugars', amount=1.1, unit_of_measure='g')
 
     assert Product.objects.count() == 1
     assert NutritionFact.objects.count() == 2
+    assert ErrorLog.objects.count() == 0
 
     validated_nutrients = get_and_validate_nutrients(test_product)
 
@@ -235,7 +250,7 @@ def test_nutri_score_unit_of_measure_conversion():
 
     validated_nutrients = get_and_validate_nutrients(test_product)
 
-    assert ErrorLog.objects.count() == 2
+    assert ErrorLog.objects.count() == 3
     assert len(validated_nutrients) == 2
 
     test_nutrient_sodium = validated_nutrients[0]

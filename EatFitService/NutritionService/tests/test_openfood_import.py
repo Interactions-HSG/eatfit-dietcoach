@@ -5,7 +5,7 @@ import requests_mock
 from django.contrib.auth.models import User
 from rest_framework.test import force_authenticate, APIRequestFactory
 
-from NutritionService.models import ErrorLog, Product, NotFoundLog
+from NutritionService.models import MINERAL_WATER, ErrorLog, Product, NotFoundLog, MinorCategory, MajorCategory
 from NutritionService.views.views import get_products_from_openfood
 from openfood_data import OPENFOOD_DATA as CONTENT
 
@@ -34,7 +34,7 @@ def test_import_openfood_success(mock):
     assert response.status_code == 200
     assert NotFoundLog.objects.count() == 0
     assert Product.objects.count() == 1
-    assert ErrorLog.objects.count() == 0
+    assert ErrorLog.objects.exclude(reporting_app='Eatfit_NS').count() == 0
 
     test_product = Product.objects.get()
 
@@ -51,12 +51,21 @@ def test_import_openfood_success(mock):
 @pytest.mark.django_db
 @requests_mock.Mocker()
 def test_import_openfood_failure(mock):
+    assert MajorCategory.objects.count() == 0
+    assert MinorCategory.objects.count() == 0
+    assert NotFoundLog.objects.count() == 0
+
+    major_category = mommy.make(MajorCategory, pk=16)
+    minor_category = mommy.make(MinorCategory, pk=82, category_major=major_category, nutri_score_category=MINERAL_WATER)
     mommy.make(NotFoundLog, gtin=7610827921858)
     test_product = mommy.make(Product, gtin=7610827921858, source='TRUSTBOX', product_size='9',
                               product_size_unit_of_measure='kg', serving_size='2.5', product_name_de=u'Testprodukt',
-                              product_name_fr=u'Produit de test', product_name_it=u'Prodotto di prova')
+                              product_name_fr=u'Produit de test', product_name_it=u'Prodotto di prova',
+                              minor_category=minor_category)
 
     assert NotFoundLog.objects.count() == 1
+    assert MajorCategory.objects.count() == 1
+    assert MinorCategory.objects.count() == 1
     assert Product.objects.count() == 1
     assert ErrorLog.objects.count() == 0
 

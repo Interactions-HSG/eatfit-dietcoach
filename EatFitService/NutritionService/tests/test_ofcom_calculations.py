@@ -735,7 +735,7 @@ def test_all_beverage_calculations():
     sugars = ofcom_calculations['ofcom_n_sugars']
     dietary_fiber = ofcom_calculations['ofcom_p_dietary_fiber']
     protein = ofcom_calculations['ofcom_p_protein']
-    sodium = ofcom_calculations['ofcom_n_sodium']
+    sodium = ofcom_calculations['ofcom_n_salt']
 
     assert energy_kj == 10
     assert saturated_fat == 5
@@ -780,7 +780,7 @@ def test_all_cheese_calculations():
     sugars = ofcom_calculations['ofcom_n_sugars']
     dietary_fiber = ofcom_calculations['ofcom_p_dietary_fiber']
     protein = ofcom_calculations['ofcom_p_protein']
-    sodium = ofcom_calculations['ofcom_n_sodium']
+    sodium = ofcom_calculations['ofcom_n_salt']
 
     assert energy_kj == 6
     assert saturated_fat == 7
@@ -879,7 +879,7 @@ def test_all_added_fat_calculations():
     sugars = ofcom_calculations['ofcom_n_sugars']
     dietary_fiber = ofcom_calculations['ofcom_p_dietary_fiber']
     protein = ofcom_calculations['ofcom_p_protein']
-    sodium = ofcom_calculations['ofcom_n_sodium']
+    sodium = ofcom_calculations['ofcom_n_salt']
 
     assert energy_kj == 2
     assert saturated_fat == 9
@@ -924,7 +924,7 @@ def test_all_food_calculations():
     sugars = ofcom_calculations['ofcom_n_sugars']
     dietary_fiber = ofcom_calculations['ofcom_p_dietary_fiber']
     protein = ofcom_calculations['ofcom_p_protein']
-    sodium = ofcom_calculations['ofcom_n_sodium']
+    sodium = ofcom_calculations['ofcom_n_salt']
 
     assert energy_kj == 8
     assert saturated_fat == 3
