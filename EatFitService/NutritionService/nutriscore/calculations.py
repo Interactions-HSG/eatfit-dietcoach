@@ -41,8 +41,8 @@ def unit_of_measure_conversion(magnitude, current_unit, target_unit):
     :param target_unit: str
     :return: float
     """
-    if not isinstance(magnitude, float):
-        # pint accepts string as input for magnitude, therefore we must restrict it to floats
+    if not isinstance(magnitude, (float, int)):
+        # pint accepts string as input for magnitude, therefore we must restrict it to floats and ints
         raise TypeError
 
     if current_unit == target_unit:
