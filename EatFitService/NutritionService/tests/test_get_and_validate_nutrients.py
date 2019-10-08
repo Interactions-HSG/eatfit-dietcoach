@@ -35,7 +35,7 @@ def test_nutri_score_nutrient_name():
 
     validated_nutrients = get_and_validate_nutrients(test_product)
 
-    assert ErrorLog.objects.count() == 2
+    assert ErrorLog.objects.count() == 0
     assert len(validated_nutrients) == 1
 
 
