@@ -139,6 +139,7 @@ SCORE_TABLES_MAP = {
         'sugars': SUGARS_BEVERAGE_SCORES,
         'dietaryFiber': DIETARY_FIBER_SCORES,
         'protein': PROTEIN_SCORES,
+        'salt': SODIUM_SCORES,
         'sodium': SODIUM_SCORES,
         'fvpn': FVPN_BEVERAGE_SCORES
     },
@@ -148,6 +149,7 @@ SCORE_TABLES_MAP = {
         'sugars': SUGARS_NOT_BEVERAGE_SCORES,
         'dietaryFiber': DIETARY_FIBER_SCORES,
         'protein': PROTEIN_SCORES,
+        'salt': SODIUM_SCORES,
         'sodium': SODIUM_SCORES,
         'fvpn': FVPN_NOT_BEVERAGE_SCORES
     },
@@ -157,6 +159,7 @@ SCORE_TABLES_MAP = {
         'sugars': SUGARS_NOT_BEVERAGE_SCORES,
         'dietaryFiber': DIETARY_FIBER_SCORES,
         'protein': PROTEIN_SCORES,
+        'salt': SODIUM_SCORES,
         'sodium': SODIUM_SCORES,
         'fvpn': FVPN_NOT_BEVERAGE_SCORES
     },
@@ -166,6 +169,7 @@ SCORE_TABLES_MAP = {
         'sugars': SUGARS_NOT_BEVERAGE_SCORES,
         'dietaryFiber': DIETARY_FIBER_SCORES,
         'protein': PROTEIN_SCORES,
+        'salt': SODIUM_SCORES,
         'sodium': SODIUM_SCORES,
         'fvpn': FVPN_NOT_BEVERAGE_SCORES
     }
