@@ -10,6 +10,15 @@ Possible log types:
 - `[security]` to invite users to upgrade in case of vulnerabilities.
 - `[chore]` for things like maintenance tasks
 
+### v11 (2019-10-08)
+
+- [added] Add new fields for Nutri-Score categories and scores in Product model (EAT-78)
+- [added] Add new fields for Nutri-Score categories in MinorCategory model (EAT-79)
+- [added] New model NutriScoreFacts added (EAT-80)
+- [added] New calculation scheme and integration tests for Ofcom values and Nutri-Scores (EAT-81)
+- [changed] Adjusted tests to run correctly under new calculations (EAT-81)
+- [added] Tests for various elements of Nutri-score/Ofcom calculations (EAT-82, EAT-83, EAT-84, EAT-85)
+
 ### v10 (2019-09-09)
 
 - [changed] Trustbox importer should only import data which has a base unit of measure in grams and a base amount of 100 (EAT-77)

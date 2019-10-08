@@ -153,33 +153,6 @@ def test_digital_receipt_creation():
 
 
 @pytest.mark.django_db
-def test_calculate_nutriscore_from_ofcom():
-    r2n_partner = mommy.make(ReceiptToNutritionPartner)
-    r2n_user = mommy.make(ReceiptToNutritionUser,
-                          r2n_partner=r2n_partner)
-
-    major_category = mommy.make(MajorCategory, id=10)
-    minor_category = mommy.make(MinorCategory, category_major=major_category, id=40)
-
-    product_none = mommy.make(Product,
-                              major_category=major_category,
-                              minor_category=minor_category, ofcom_value=None)
-
-    nutri_score = views.nutri_score_from_ofcom(product_none)
-
-    # No Nutrition Facts present -> ofcom is 0
-    assert nutri_score is 2
-
-    product_zero = mommy.make(Product,
-                              major_category=major_category,
-                              minor_category=minor_category, ofcom_value=0)
-
-    nutri_score = views.nutri_score_from_ofcom(product_zero)
-
-    assert nutri_score == 2
-
-
-@pytest.mark.django_db
 def test_product_size_of_measurement():
     user = User.objects.create_user(username='test', password='test')
 

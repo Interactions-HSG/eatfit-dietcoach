@@ -5,7 +5,7 @@ import pytest
 from django.contrib.auth.models import User
 from rest_framework.test import force_authenticate, APIRequestFactory
 
-from NutritionService.models import Product, MinorCategory, MajorCategory, NutritionFact, MarketRegion, Retailer
+from NutritionService.models import MINERAL_WATER, BEVERAGE, FOOD, Product, MinorCategory, MajorCategory, NutritionFact, MarketRegion, Retailer
 from NutritionService.views.views import get_better_products_gtin
 
 
@@ -21,41 +21,48 @@ def test_get_better_products_sort_by_ofcom():
     assert MinorCategory.objects.count() == 0
     assert Product.objects.count() == 0
 
-    # Major Categories
+    # Major Category
 
     maj_cat_16 = mommy.make(MajorCategory, pk=16)
 
-    # Minor Categories
+    # Minor Category
 
-    min_cat_82 = mommy.make(MinorCategory, pk=82, category_major=maj_cat_16)
+    min_cat_82 = mommy.make(MinorCategory, pk=84, category_major=maj_cat_16, nutri_score_category=FOOD)
 
     # Products
-    first_product = mommy.make(Product, gtin=4004980511200, minor_category=min_cat_82,
-                               major_category=maj_cat_16)
-    test_nutrients = {'name': 'protein', 'amount': 10, 'unit_of_measure': 'g', 'is_mixed': True}
-    first_product.nutrients.create(**test_nutrients)
+    first_product = mommy.make(Product, gtin=4004980511200, minor_category=min_cat_82)
+
+    mommy.make(NutritionFact, product=first_product, name='dietaryFiber', amount=8.0, unit_of_measure='g')
+    mommy.make(NutritionFact, product=first_product, name='sugars', amount=0.0, unit_of_measure='g')
+    mommy.make(NutritionFact, product=first_product, name='saturatedFat', amount=0.0, unit_of_measure='g')
+    mommy.make(NutritionFact, product=first_product, name='energyKJ', amount=0.0, unit_of_measure='kj')
+    mommy.make(NutritionFact, product=first_product, name='sodium', amount=0.0, unit_of_measure='mg')
+
     first_product.save()
 
     assert first_product.ofcom_value == -5
 
-    second_product = mommy.make(Product, gtin=29000076501, minor_category=min_cat_82,
-                                major_category=maj_cat_16)
+    second_product = mommy.make(Product, gtin=29000076501, minor_category=min_cat_82)
 
-    test_nutrients = {'name': 'sugars', 'amount': 50, 'unit_of_measure': 'g', 'is_mixed': False}
-    second_product.nutrients.create(**test_nutrients)
+    mommy.make(NutritionFact, product=second_product, name='sugars', amount=9.0, unit_of_measure='g')
+    mommy.make(NutritionFact, product=second_product, name='saturatedFat', amount=2.0, unit_of_measure='g')
+    mommy.make(NutritionFact, product=second_product, name='energyKJ', amount=670.0, unit_of_measure='kj')
+    mommy.make(NutritionFact, product=second_product, name='sodium', amount=180.0, unit_of_measure='mg')
+
     second_product.save()
 
-    assert second_product.ofcom_value == 10
+    assert second_product.ofcom_value == 4
 
-    third_product = mommy.make(Product, gtin=30111187612, minor_category=min_cat_82,
-                               major_category=maj_cat_16)
+    third_product = mommy.make(Product, gtin=30111187612, minor_category=min_cat_82)
 
-    test_nutrients = {'name': 'sodium', 'amount': 270, 'unit_of_measure': 'mg', 'is_mixed': False}
-    third_product.nutrients.create(**test_nutrients)
+    mommy.make(NutritionFact, product=third_product, name='sugars', amount=0.0, unit_of_measure='g')
+    mommy.make(NutritionFact, product=third_product, name='saturatedFat', amount=0.0, unit_of_measure='g')
+    mommy.make(NutritionFact, product=third_product, name='energyKJ', amount=0.0, unit_of_measure='kj')
+    mommy.make(NutritionFact, product=third_product, name='sodium', amount=0.0, unit_of_measure='mg')
+
     third_product.save()
 
-    assert third_product.ofcom_value == 2
-
+    assert third_product.ofcom_value == 0
     assert MajorCategory.objects.count() == 1
     assert MinorCategory.objects.count() == 1
     assert Product.objects.count() == 3
