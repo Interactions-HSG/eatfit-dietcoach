@@ -64,6 +64,10 @@ OFCOM_VALUES_CATEGORIES = {
             True: 'ofcom_n_sugars_mixed',
             False: 'ofcom_n_sugars'
         },
+        SALT: {
+            True: 'ofcom_n_salt_mixed',
+            False: 'ofcom_n_salt'
+        },
         SODIUM: {
             True: 'ofcom_n_salt_mixed',
             False: 'ofcom_n_salt'
@@ -730,12 +734,10 @@ def get_and_validate_nutrients(product):
     valid_nutrients = []
 
     for nutrient in nutrients:
+        if nutrient.name == SALT:
+            nutrient.name = SODIUM
+
         if nutrient.name not in nutrient_data.keys():
-            errors.append(
-                ErrorLog(gtin=product.gtin,
-                         reporting_app=NUTRISCORE_APP,
-                         error_description='{} is missing'.format(nutrient.name))
-            )
             continue
 
         valid_condition_amount, _ = is_number(nutrient.amount)
@@ -750,6 +752,7 @@ def get_and_validate_nutrients(product):
         target_unit = nutrient_data.get(nutrient.name, None)
         if target_unit != nutrient.unit_of_measure:
             try:
+                nutrient.unit_of_measure = nutrient.unit_of_measure.lower()
                 amount = calculations.unit_of_measure_conversion(nutrient.amount, nutrient.unit_of_measure, target_unit)
                 nutrient.amount = amount
                 nutrient.unit_of_measure = target_unit
