@@ -59,6 +59,10 @@ class NutrientInline(admin.TabularInline):
             return formset
 
 
+class NutriScoreFactsInline(admin.StackedInline):
+    model = NutriScoreFacts
+
+
 class AdditionalImageInline(admin.StackedInline):
     model = AdditionalImage
 
@@ -85,6 +89,7 @@ class ProductAdmin(admin.ModelAdmin):
     search_fields = ('product_name_de', 'gtin')
     save_as = True
     inlines = [
+        NutriScoreFactsInline,
         AdditionalImageInline,
         IngredientInline,
         AllergenInline,

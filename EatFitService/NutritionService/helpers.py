@@ -16,6 +16,13 @@ from django.http import HttpResponse
 from django.core.exceptions import PermissionDenied
 
 
+def merge_dicts(*dict_args):
+    result = {}
+    for dictionary in dict_args:
+        result.update(dictionary)
+    return result
+
+
 def detect_language(text):
     try:
         blob = TextBlob(text.decode('utf-8'))

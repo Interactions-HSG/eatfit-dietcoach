@@ -2,17 +2,21 @@
 
 import os
 from uuid import uuid4
+from pint.errors import DimensionalityError, UndefinedUnitError
 from toolz import itertoolz
 
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch.dispatcher import receiver
 
 from rest_framework.authtoken.models import Token
 
-from NutritionService.helpers import is_number
+from NutritionService.helpers import is_number, merge_dicts
+from NutritionService.nutriscore import calculations
+from NutritionService.nutriscore.score_tables import SCORE_TABLES_MAP
 from NutritionService.validators import minimum_float_validator, maximum_float_validator
 
 ENERGY_KJ = "energyKJ"
@@ -25,6 +29,7 @@ DIETARY_FIBER = "dietaryFiber"
 PROTEIN = "protein"
 SALT = "salt"
 SODIUM = "sodium"
+FVPN = "fvpn"
 
 MINERAL_WATER = "Mineral Water"
 BEVERAGE = "Beverage"
@@ -33,6 +38,8 @@ ADDED_FAT = "Added Fat"
 FOOD = "Food"
 NO_FOOD = "No Food"
 UNKNOWN = "Unknown"
+
+NUTRISCORE_APP = 'Eatfit_NS'
 
 NUTRISCORE_CATEGORIES = (
     (MINERAL_WATER, MINERAL_WATER),
@@ -43,6 +50,41 @@ NUTRISCORE_CATEGORIES = (
     (NO_FOOD, NO_FOOD),
     (UNKNOWN, UNKNOWN),
 )
+
+OFCOM_VALUES_CATEGORIES = {
+        ENERGY_KJ: {
+            True: 'ofcom_n_energy_kj_mixed',
+            False: 'ofcom_n_energy_kj'
+        },
+        SATURATED_FAT: {
+            True: 'ofcom_n_saturated_fat_mixed',
+            False: 'ofcom_n_saturated_fat'
+        },
+        SUGARS: {
+            True: 'ofcom_n_sugars_mixed',
+            False: 'ofcom_n_sugars'
+        },
+        SALT: {
+            True: 'ofcom_n_salt_mixed',
+            False: 'ofcom_n_salt'
+        },
+        SODIUM: {
+            True: 'ofcom_n_salt_mixed',
+            False: 'ofcom_n_salt'
+        },
+        PROTEIN: {
+            True: 'ofcom_p_protein_mixed',
+            False: 'ofcom_p_protein'
+        },
+        FVPN: {
+            True: 'ofcom_p_fvpn_mixed',
+            False: 'ofcom_p_fvpn'
+        },
+        DIETARY_FIBER: {
+            True: 'ofcom_p_dietary_fiber_mixed',
+            False: 'ofcom_p_dietary_fiber'
+        }
+    }
 
 
 def path_and_rename(instance, filename):
@@ -148,6 +190,7 @@ class Product(models.Model):
     nutri_score_calculated = models.CharField(max_length=1, null=True, blank=True, choices=NUTRISCORE_SCORES)
     nutri_score_calculated_mixed = models.CharField(max_length=1, null=True, blank=True, choices=NUTRISCORE_SCORES)
     nutri_score_quality_comment = models.TextField(null=True, blank=True)
+    nutri_score_number_of_errors = models.PositiveIntegerField(null=True, blank=True)
     ofcom_value = models.IntegerField(null=True, blank=True, editable=False)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
@@ -162,11 +205,15 @@ class Product(models.Model):
     found_count = models.IntegerField(default=0, editable=False)
 
     def save(self, *args, **kwargs):
-        calculate_ofcom_value(self)
+        nutri_score_facts = nutri_score_main(self)
         calculate_data_score(self)
+        self.nutri_score_number_of_errors = ErrorLog.objects.filter(reporting_app=NUTRISCORE_APP,
+                                                                    gtin=self.gtin).count()
         if self.minor_category:
             self.major_category = self.minor_category.category_major
         super(Product, self).save(*args, **kwargs)
+        if nutri_score_facts:
+            NutriScoreFacts.objects.update_or_create(product=self, defaults=nutri_score_facts)
 
     class Meta:
         verbose_name = "Product"
@@ -253,6 +300,10 @@ class NutriScoreFacts(models.Model):
                                                                                  maximum_float_validator])
     fvpn_total_percentage_estimated = models.FloatField(blank=True, null=True,
                                                         validators=[minimum_float_validator, maximum_float_validator])
+    fruit_percentage = models.FloatField(blank=True, null=True,
+                                             validators=[minimum_float_validator, maximum_float_validator])
+    fruit_percentage_dried = models.FloatField(blank=True, null=True,
+                                                   validators=[minimum_float_validator, maximum_float_validator])
     vegetable_percentage = models.FloatField(blank=True, null=True,
                                              validators=[minimum_float_validator, maximum_float_validator])
     vegetable_percentage_dried = models.FloatField(blank=True, null=True,
@@ -640,3 +691,271 @@ def __calcluate_ofcom_point(amount, values):
             return points
         points = points - 1
     return 0
+
+
+def get_nutri_score_category(product):
+    """
+    :param product: Product (Django ORM-object)
+    :return: str
+    """
+    if product.minor_category is None:
+        ErrorLog.objects.create(gtin=product.gtin, reporting_app=NUTRISCORE_APP,
+                                error_description='Minor category is missing.')
+        if product.nutri_score_category_estimated is None:
+            product.nutri_score_category_estimated = 'Food'
+        return product.nutri_score_category_estimated
+
+    if product.minor_category.nutri_score_category is None:
+        ErrorLog.objects.create(gtin=product.gtin, reporting_app=NUTRISCORE_APP,
+                                error_description='Minor category does not have nutri score category assigned.')
+
+        if product.nutri_score_category_estimated is None:
+            product.nutri_score_category_estimated = 'Food'
+            return product.nutri_score_category_estimated
+
+    return product.minor_category.nutri_score_category
+
+
+def get_and_validate_nutrients(product):
+    """
+    :param product: Product (Django ORM-object)
+    :return: list
+    """
+    nutrients = list(NutritionFact.objects.filter(product=product))
+    nutrient_data = {
+        ENERGY_KJ: 'kj',
+        SATURATED_FAT: 'g',
+        SUGARS: 'g',
+        DIETARY_FIBER: 'g',
+        PROTEIN: 'g',
+        SODIUM: 'mg'
+    }
+    errors = []
+    valid_nutrients = []
+
+    for nutrient in nutrients:
+        if nutrient.name == SALT:
+            nutrient.name = SODIUM
+
+        if nutrient.name not in nutrient_data.keys():
+            continue
+
+        valid_condition_amount, _ = is_number(nutrient.amount)
+        if not valid_condition_amount:
+            errors.append(
+                ErrorLog(gtin=product.gtin,
+                         reporting_app=NUTRISCORE_APP,
+                         error_description='Amount of {} is not valid'.format(nutrient.name))
+            )
+            continue
+
+        target_unit = nutrient_data.get(nutrient.name, None)
+        if target_unit != nutrient.unit_of_measure:
+            try:
+                nutrient.unit_of_measure = nutrient.unit_of_measure.lower()
+                amount = calculations.unit_of_measure_conversion(nutrient.amount, nutrient.unit_of_measure, target_unit)
+                nutrient.amount = amount
+                nutrient.unit_of_measure = target_unit
+            except (AttributeError, DimensionalityError, UndefinedUnitError, TypeError):
+                errors.append(
+                    ErrorLog(gtin=product.gtin,
+                             reporting_app=NUTRISCORE_APP,
+                             error_description='Measurement unit of {} is not valid'.format(nutrient.name))
+                )
+                continue
+
+        valid_nutrients.append(nutrient)
+
+    ErrorLog.objects.bulk_create(errors)
+    return valid_nutrients
+
+
+def reduce_nutrients(nutrients, gtin):
+    """
+    :param nutrients: list
+    :param gtin: int
+    :return: list
+    """
+    nutrients_grouped_by_name = itertoolz.groupby(lambda x: x.name, nutrients)
+    errors = []
+    valid_nutrients = []
+    for key, value in nutrients_grouped_by_name.items():
+        if len(value) > 1:
+            errors.append(
+                ErrorLog(gtin=gtin,
+                         reporting_app=NUTRISCORE_APP,
+                         error_description='Multiple entries for {}'.format(key))
+            )
+
+        valid_nutrients.append(value[-1])
+    ErrorLog.objects.bulk_create(errors)
+    return valid_nutrients
+
+
+def separate_nutrients(grouped_nutrients, gtin):
+    """
+    :param grouped_nutrients: dict
+    :param gtin: int
+    :return: tuple of lists
+    """
+    nutrition_facts_mixed = []
+    nutrition_facts_not_mixed = []
+    for nutrient in grouped_nutrients:
+        if nutrient.is_mixed:
+            nutrition_facts_mixed.append(nutrient)
+        else:
+            nutrition_facts_not_mixed.append(nutrient)
+
+    nutrition_facts_mixed = reduce_nutrients(nutrition_facts_mixed, gtin)
+    nutrition_facts_not_mixed = reduce_nutrients(nutrition_facts_not_mixed, gtin)
+    return nutrition_facts_mixed, nutrition_facts_not_mixed
+
+
+def added_fat_conversion(amount, product):
+    try:
+        total_fat = NutritionFact.objects.get(product=product, name=TOTAL_FAT, unit_of_measure='g')
+        return 100 * (amount / total_fat.amount)
+    except (ObjectDoesNotExist, MultipleObjectsReturned, ZeroDivisionError, TypeError):
+        return
+
+
+def determine_ofcom_values(nutrients, category, product, mixed=False):
+    """
+    :param nutrients: list
+    :param category: str
+    :param product: Product (Django ORM-object)
+    :param mixed: bool
+    :return: dict
+    """
+    scores_table = SCORE_TABLES_MAP[category]
+    nutri_score_facts_kwargs = {}
+
+    for nutrient in nutrients:
+        scores = scores_table[nutrient.name]
+        if category == ADDED_FAT and nutrient.name == SATURATED_FAT:
+            amount = added_fat_conversion(nutrient.amount, product)
+        else:
+            amount = nutrient.amount
+        if isinstance(amount, (float, int)):
+            field = OFCOM_VALUES_CATEGORIES[nutrient.name][mixed]
+            ofcom_value = calculations.calculate_nutrient_ofcom_value(scores, amount)
+            nutri_score_facts_kwargs.update({field: ofcom_value})
+
+    return nutri_score_facts_kwargs
+
+
+def determine_fvpn_share(product, category, mixed=False):
+    """
+    :param product: Product (Django ORM-object)
+    :param category: str
+    :param mixed: bool
+    :return: float
+    """
+    nutri_score_fact_fvpn_kwargs = {}
+    if mixed:
+        nutri_score_fact_fvpn_kwargs.update({'ofcom_p_fvpn_mixed': 0, 'fvpn_total_percentage': 0})
+        return nutri_score_fact_fvpn_kwargs
+    try:
+        nutri_score_fact = NutriScoreFacts.objects.get(product=product)
+        fruit_percentage = nutri_score_fact.fruit_percentage
+        fruit_percentage_dried = nutri_score_fact.fruit_percentage_dried
+        pulses_percentage = nutri_score_fact.pulses_percentage
+        pulses_percentage_dried = nutri_score_fact.pulses_percentage_dried
+        vegetable_percentage = nutri_score_fact.vegetable_percentage
+        vegetable_percentage_dried = nutri_score_fact.vegetable_percentage_dried
+        nuts_percentage = nutri_score_fact.nuts_percentage
+        params = [fruit_percentage, fruit_percentage_dried, pulses_percentage, pulses_percentage_dried,
+                  vegetable_percentage,
+                  vegetable_percentage_dried, nuts_percentage]
+        if None in params:
+            fvpn_share = 0
+        else:
+            fvpn_share = calculations.calculate_fvpn_percentage(fruit_percentage, fruit_percentage_dried,
+                                                                pulses_percentage, pulses_percentage_dried,
+                                                                vegetable_percentage,
+                                                                vegetable_percentage, nuts_percentage)
+    except ObjectDoesNotExist:
+        if product.health_percentage:
+            fvpn_share = product.health_percentage
+        else:
+            fvpn_share = 0
+
+    score_table = SCORE_TABLES_MAP[category]['fvpn']
+    ofcom_value = calculations.calculate_nutrient_ofcom_value(score_table, fvpn_share)
+    nutri_score_fact_fvpn_kwargs.update({'ofcom_p_fvpn': ofcom_value, 'fvpn_total_percentage': fvpn_share})
+
+    return nutri_score_fact_fvpn_kwargs
+
+
+def nutri_score_calculations(nutrients, product, category, mixed=False):
+    """
+    :param nutrients: list
+    :param product: Product (Django ORM-object)
+    :param category: str
+    :param mixed: bool
+    :return: tuple of float, str, dict
+    """
+    energy_kj_field = OFCOM_VALUES_CATEGORIES[ENERGY_KJ][mixed]
+    sugars_field = OFCOM_VALUES_CATEGORIES[SUGARS][mixed]
+    saturated_fat_field = OFCOM_VALUES_CATEGORIES[SATURATED_FAT][mixed]
+    sodium_field = OFCOM_VALUES_CATEGORIES[SODIUM][mixed]
+    fvpn_field = OFCOM_VALUES_CATEGORIES[FVPN][mixed]
+    protein_field = OFCOM_VALUES_CATEGORIES[PROTEIN][mixed]
+    dietary_fiber_field = OFCOM_VALUES_CATEGORIES[DIETARY_FIBER][mixed]
+
+    nutri_score_facts = determine_ofcom_values(nutrients, category, product, mixed=mixed)
+    fvpn = determine_fvpn_share(product, category, mixed=mixed)
+    nutri_score_facts_kwargs = merge_dicts(nutri_score_facts, fvpn)
+
+    energy_kj = nutri_score_facts_kwargs.get(energy_kj_field, None)
+    sugars = nutri_score_facts_kwargs.get(sugars_field, None)
+    saturated_fat = nutri_score_facts_kwargs.get(saturated_fat_field, None)
+    sodium = nutri_score_facts_kwargs.get(sodium_field, None)
+
+    fvpn_value = nutri_score_facts_kwargs.get(fvpn_field, 0)
+    protein = nutri_score_facts_kwargs.get(protein_field, 0)
+    dietary_fiber = nutri_score_facts_kwargs.get(dietary_fiber_field, 0)
+
+    if None in [energy_kj, sugars, saturated_fat, sodium]:
+        return None, None, {}
+
+    negative_points = calculations.calculate_negative_points(energy_kj, sugars, saturated_fat, sodium)
+    total_ofcom_value = calculations.calculate_total_ofcom_value(category, negative_points, fvpn_value, protein,
+                                                                 dietary_fiber)
+
+    if category == BEVERAGE:
+        nutri_score = calculations.calculate_nutriscore_beverage(total_ofcom_value)
+    else:
+        nutri_score = calculations.calculate_nutriscore_non_beverage(total_ofcom_value)
+
+    return total_ofcom_value, nutri_score, nutri_score_facts_kwargs
+
+
+def nutri_score_main(product):
+    category = get_nutri_score_category(product)
+
+    if category not in [MINERAL_WATER, BEVERAGE, CHEESE, ADDED_FAT, FOOD]:
+        return
+
+    if category == MINERAL_WATER:
+        product.ofcom_value = -15
+        product.nutri_score_calculated = product.A
+    else:
+        validated_nutrients = get_and_validate_nutrients(product)
+        mixed_nutrients, nutrients = separate_nutrients(validated_nutrients, product.gtin)
+        nutri_score_facts = {}
+        if mixed_nutrients:
+            ofcom_score_mixed, nutri_score_mixed, nutri_score_facts_mixed = nutri_score_calculations(mixed_nutrients,
+                                                                                                     product,
+                                                                                                     category,
+                                                                                                     mixed=True)
+            product.nutri_score_calculated_mixed = nutri_score_mixed
+            nutri_score_facts.update(nutri_score_facts_mixed)
+
+        if nutrients:
+            ofcom_score, nutri_score, nutri_score_facts_not_mixed = nutri_score_calculations(nutrients, product, category)
+            product.ofcom_value = ofcom_score
+            product.nutri_score_calculated = nutri_score
+            nutri_score_facts.update(nutri_score_facts_not_mixed)
+
+        return nutri_score_facts
