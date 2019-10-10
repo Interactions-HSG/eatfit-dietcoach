@@ -61,6 +61,10 @@ class NutrientInline(admin.TabularInline):
 
 class NutriScoreFactsInline(admin.StackedInline):
     model = NutriScoreFacts
+    readonly_fields = ('ofcom_n_energy_kj', 'ofcom_n_saturated_fat', 'ofcom_n_sugars', 'ofcom_n_salt',
+                       'ofcom_p_protein', 'ofcom_p_fvpn', 'ofcom_p_dietary_fiber', 'ofcom_n_energy_kj_mixed',
+                       'ofcom_n_saturated_fat_mixed', 'ofcom_n_sugars_mixed', 'ofcom_n_salt_mixed',
+                       'ofcom_p_protein_mixed', 'ofcom_p_fvpn_mixed', 'ofcom_p_dietary_fiber_mixed')
 
 
 class AdditionalImageInline(admin.StackedInline):
