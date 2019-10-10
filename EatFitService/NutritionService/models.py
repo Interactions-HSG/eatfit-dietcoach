@@ -174,7 +174,7 @@ class Product(models.Model):
     product_name_fr = models.TextField(null=True, blank=True)
     product_name_it = models.TextField(null=True, blank=True)
     producer = models.TextField(null=True, blank=True)
-    major_category = models.ForeignKey(MajorCategory, on_delete=models.DO_NOTHING, null=True)
+    major_category = models.ForeignKey(MajorCategory, on_delete=models.DO_NOTHING, null=True, blank=True)
     minor_category = models.ForeignKey(MinorCategory, on_delete=models.DO_NOTHING, null=True, blank=True)
     product_size = models.CharField(max_length=255, null=True, blank=True)
     product_size_unit_of_measure = models.CharField(max_length=255, null=True, blank=True)
