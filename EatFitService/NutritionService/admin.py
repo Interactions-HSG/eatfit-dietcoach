@@ -87,6 +87,8 @@ class MarketRegionInline(admin.TabularInline):
 class ProductAdmin(admin.ModelAdmin):
     list_display = ("product_name_de", "gtin")
     search_fields = ('product_name_de', 'gtin')
+    readonly_fields = ('major_category', 'nutri_score_final', 'nutri_score_calculated', 'nutri_score_calculated_mixed',
+                       'nutri_score_number_of_errors', 'ofcom_value', 'found_count')
     save_as = True
     inlines = [
         NutriScoreFactsInline,
