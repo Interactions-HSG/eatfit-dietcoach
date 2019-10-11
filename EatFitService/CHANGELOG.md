@@ -10,6 +10,9 @@ Possible log types:
 - `[security]` to invite users to upgrade in case of vulnerabilities.
 - `[chore]` for things like maintenance tasks
 
+### unreleased
+- [changed] Change non-editable fields on Product to read-only fields in admin view (EAT-86)
+
 ### v11 (2019-10-08)
 
 - [added] Add new fields for Nutri-Score categories and scores in Product model (EAT-78)

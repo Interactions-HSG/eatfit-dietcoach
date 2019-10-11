@@ -174,7 +174,7 @@ class Product(models.Model):
     product_name_fr = models.TextField(null=True, blank=True)
     product_name_it = models.TextField(null=True, blank=True)
     producer = models.TextField(null=True, blank=True)
-    major_category = models.ForeignKey(MajorCategory, on_delete=models.DO_NOTHING, null=True, editable=False)
+    major_category = models.ForeignKey(MajorCategory, on_delete=models.DO_NOTHING, null=True, blank=True)
     minor_category = models.ForeignKey(MinorCategory, on_delete=models.DO_NOTHING, null=True, blank=True)
     product_size = models.CharField(max_length=255, null=True, blank=True)
     product_size_unit_of_measure = models.CharField(max_length=255, null=True, blank=True)
@@ -191,7 +191,7 @@ class Product(models.Model):
     nutri_score_calculated_mixed = models.CharField(max_length=1, null=True, blank=True, choices=NUTRISCORE_SCORES)
     nutri_score_quality_comment = models.TextField(null=True, blank=True)
     nutri_score_number_of_errors = models.PositiveIntegerField(null=True, blank=True)
-    ofcom_value = models.IntegerField(null=True, blank=True, editable=False)
+    ofcom_value = models.IntegerField(null=True, blank=True)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
     source_checked = models.BooleanField(default=False)  # Flag if the product source is trusted
@@ -202,7 +202,7 @@ class Product(models.Model):
     quality_checked = models.DateTimeField(null=True, blank=True)
     automatic_update = models.BooleanField(default=True)
     data_score = models.FloatField(null=True, blank=True)
-    found_count = models.IntegerField(default=0, editable=False)
+    found_count = models.IntegerField(default=0)
 
     def save(self, *args, **kwargs):
         nutri_score_facts = nutri_score_main(self)
