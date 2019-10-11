@@ -12,6 +12,7 @@ Possible log types:
 
 ### unreleased
 - [changed] Change non-editable fields on Product to read-only fields in admin view (EAT-86)
+- [added] Add calculation for nutri_score_final on Product model (EAT-88)
 
 ### v11 (2019-10-08)
 

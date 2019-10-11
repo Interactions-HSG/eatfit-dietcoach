@@ -139,8 +139,6 @@ class MinorCategory(models.Model):
         db_table = 'minor_category'
 
 
-
-
 class Product(models.Model):
     TRUSTBOX = 'Trustbox'
     OPENFOOD = 'Openfood'
@@ -217,7 +215,6 @@ class Product(models.Model):
         super(Product, self).save(*args, **kwargs)
         if nutri_score_facts:
             NutriScoreFacts.objects.update_or_create(product=self, defaults=nutri_score_facts)
-
 
     class Meta:
         verbose_name = "Product"
