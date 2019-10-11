@@ -139,6 +139,8 @@ class MinorCategory(models.Model):
         db_table = 'minor_category'
 
 
+
+
 class Product(models.Model):
     TRUSTBOX = 'Trustbox'
     OPENFOOD = 'Openfood'
@@ -207,6 +209,7 @@ class Product(models.Model):
     def save(self, *args, **kwargs):
         nutri_score_facts = nutri_score_main(self)
         calculate_data_score(self)
+        self.nutri_score_final = set_nutri_score_final(self)
         self.nutri_score_number_of_errors = ErrorLog.objects.filter(reporting_app=NUTRISCORE_APP,
                                                                     gtin=self.gtin).count()
         if self.minor_category:
@@ -214,6 +217,7 @@ class Product(models.Model):
         super(Product, self).save(*args, **kwargs)
         if nutri_score_facts:
             NutriScoreFacts.objects.update_or_create(product=self, defaults=nutri_score_facts)
+
 
     class Meta:
         verbose_name = "Product"
@@ -959,3 +963,14 @@ def nutri_score_main(product):
             nutri_score_facts.update(nutri_score_facts_not_mixed)
 
         return nutri_score_facts
+
+
+def set_nutri_score_final(product):
+    manufactured = product.nutri_score_by_manufacturer
+    mixed = product.nutri_score_calculated_mixed
+    if manufactured:
+        return manufactured
+    if mixed:
+        return mixed
+
+    return product.nutri_score_calculated
