@@ -295,7 +295,7 @@ class AdditionalImage(models.Model):
 
 
 class NutriScoreFacts(models.Model):
-    product = models.OneToOneField(Product, related_name='nutri_score_fact', on_delete=models.CASCADE)
+    product = models.OneToOneField(Product, related_name='nutri_score_facts', on_delete=models.CASCADE)
     # fvpn is an abbreviation for fruits, vegetables, pulses and nuts
     fvpn_total_percentage = models.FloatField(blank=True, null=True, validators=[minimum_float_validator,
                                                                                  maximum_float_validator])
