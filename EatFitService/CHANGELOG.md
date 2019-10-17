@@ -14,7 +14,9 @@ Possible log types:
 - [changed] Change non-editable fields on Product to read-only fields in admin view (EAT-86)
 - [added] Add calculation for nutri_score_final on Product model (EAT-88)
 - [added] Add `nutri_score_final` as field to ProductSerializer (EAT-89)
-- [added] Create `NutriScoreFactsSerializer` and add `nutri_score_facts` as field to `ProductSerializer` (EAT-89)
+- [added] Create `NutriScoreFactsSerializer` and add `nutri_score_facts` as field to `ProductSerializer` (EAT-90)
+- [changed] Change FVPN value target field to `fvpn_total_percentage_estimated` (EAT-91)
+- [changed] No more automatic estimation of product Nutri-score category (EAT-91)
 
 ### v11 (2019-10-08)
 
@@ -24,8 +26,6 @@ Possible log types:
 - [added] New calculation scheme and integration tests for Ofcom values and Nutri-Scores (EAT-81)
 - [changed] Adjusted tests to run correctly under new calculations (EAT-81)
 - [added] Tests for various elements of Nutri-score/Ofcom calculations (EAT-82, EAT-83, EAT-84, EAT-85)
-- [changed] Change FVPN value target field to `fvpn_total_percentage_estimated` (EAT-91)
-- [changed] No more automatic estimation of product Nutri-score category (EAT-91)
 
 ### v10 (2019-09-09)
 
