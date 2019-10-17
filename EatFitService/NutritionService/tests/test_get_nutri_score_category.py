@@ -17,7 +17,7 @@ def test_no_minor_category_no_product_nsc():
     assert Product.objects.count() == 1
     assert test_product.minor_category is None
     assert ErrorLog.objects.count() == 1
-    assert test_product.nutri_score_category_estimated == FOOD
+    assert test_product.nutri_score_category_estimated is None
 
 
 @pytest.mark.django_db
@@ -52,7 +52,7 @@ def test_no_minor_category_nsc_no_product_nsc():
     assert Product.objects.count() == 1
     assert test_product.minor_category.nutri_score_category is None
     assert ErrorLog.objects.count() == 1
-    assert test_product.nutri_score_category_estimated == FOOD
+    assert test_product.nutri_score_category_estimated is None
 
 
 @pytest.mark.django_db

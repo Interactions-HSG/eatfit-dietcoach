@@ -10,6 +10,14 @@ Possible log types:
 - `[security]` to invite users to upgrade in case of vulnerabilities.
 - `[chore]` for things like maintenance tasks
 
+### v12 (2019-10-17)
+- [changed] Change non-editable fields on Product to read-only fields in admin view (EAT-86)
+- [added] Add calculation for nutri_score_final on Product model (EAT-88)
+- [added] Add `nutri_score_final` as field to ProductSerializer (EAT-89)
+- [added] Create `NutriScoreFactsSerializer` and add `nutri_score_facts` as field to `ProductSerializer` (EAT-90)
+- [changed] Change FVPN value target field to `fvpn_total_percentage_estimated` (EAT-91)
+- [changed] No more automatic estimation of product Nutri-score category (EAT-91)
+
 ### v11 (2019-10-08)
 
 - [added] Add new fields for Nutri-Score categories and scores in Product model (EAT-78)
