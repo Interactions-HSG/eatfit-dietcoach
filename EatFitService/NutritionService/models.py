@@ -174,7 +174,7 @@ class Product(models.Model):
     product_name_fr = models.TextField(null=True, blank=True)
     product_name_it = models.TextField(null=True, blank=True)
     producer = models.TextField(null=True, blank=True)
-    major_category = models.ForeignKey(MajorCategory, on_delete=models.DO_NOTHING, null=True, editable=False)
+    major_category = models.ForeignKey(MajorCategory, on_delete=models.DO_NOTHING, null=True, blank=True)
     minor_category = models.ForeignKey(MinorCategory, on_delete=models.DO_NOTHING, null=True, blank=True)
     product_size = models.CharField(max_length=255, null=True, blank=True)
     product_size_unit_of_measure = models.CharField(max_length=255, null=True, blank=True)
@@ -191,7 +191,7 @@ class Product(models.Model):
     nutri_score_calculated_mixed = models.CharField(max_length=1, null=True, blank=True, choices=NUTRISCORE_SCORES)
     nutri_score_quality_comment = models.TextField(null=True, blank=True)
     nutri_score_number_of_errors = models.PositiveIntegerField(null=True, blank=True)
-    ofcom_value = models.IntegerField(null=True, blank=True, editable=False)
+    ofcom_value = models.IntegerField(null=True, blank=True)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
     source_checked = models.BooleanField(default=False)  # Flag if the product source is trusted
@@ -202,11 +202,12 @@ class Product(models.Model):
     quality_checked = models.DateTimeField(null=True, blank=True)
     automatic_update = models.BooleanField(default=True)
     data_score = models.FloatField(null=True, blank=True)
-    found_count = models.IntegerField(default=0, editable=False)
+    found_count = models.IntegerField(default=0)
 
     def save(self, *args, **kwargs):
         nutri_score_facts = nutri_score_main(self)
         calculate_data_score(self)
+        self.nutri_score_final = set_nutri_score_final(self)
         self.nutri_score_number_of_errors = ErrorLog.objects.filter(reporting_app=NUTRISCORE_APP,
                                                                     gtin=self.gtin).count()
         if self.minor_category:
@@ -294,7 +295,7 @@ class AdditionalImage(models.Model):
 
 
 class NutriScoreFacts(models.Model):
-    product = models.OneToOneField(Product, related_name='nutri_score_fact', on_delete=models.CASCADE)
+    product = models.OneToOneField(Product, related_name='nutri_score_facts', on_delete=models.CASCADE)
     # fvpn is an abbreviation for fruits, vegetables, pulses and nuts
     fvpn_total_percentage = models.FloatField(blank=True, null=True, validators=[minimum_float_validator,
                                                                                  maximum_float_validator])
@@ -702,7 +703,7 @@ def get_nutri_score_category(product):
         ErrorLog.objects.create(gtin=product.gtin, reporting_app=NUTRISCORE_APP,
                                 error_description='Minor category is missing.')
         if product.nutri_score_category_estimated is None:
-            product.nutri_score_category_estimated = 'Food'
+            return 'Food'
         return product.nutri_score_category_estimated
 
     if product.minor_category.nutri_score_category is None:
@@ -710,8 +711,8 @@ def get_nutri_score_category(product):
                                 error_description='Minor category does not have nutri score category assigned.')
 
         if product.nutri_score_category_estimated is None:
-            product.nutri_score_category_estimated = 'Food'
-            return product.nutri_score_category_estimated
+            return 'Food'
+        return product.nutri_score_category_estimated
 
     return product.minor_category.nutri_score_category
 
@@ -853,7 +854,7 @@ def determine_fvpn_share(product, category, mixed=False):
     """
     nutri_score_fact_fvpn_kwargs = {}
     if mixed:
-        nutri_score_fact_fvpn_kwargs.update({'ofcom_p_fvpn_mixed': 0, 'fvpn_total_percentage': 0})
+        nutri_score_fact_fvpn_kwargs.update({'ofcom_p_fvpn_mixed': 0, 'fvpn_total_percentage_estimated': 0})
         return nutri_score_fact_fvpn_kwargs
     try:
         nutri_score_fact = NutriScoreFacts.objects.get(product=product)
@@ -882,7 +883,7 @@ def determine_fvpn_share(product, category, mixed=False):
 
     score_table = SCORE_TABLES_MAP[category]['fvpn']
     ofcom_value = calculations.calculate_nutrient_ofcom_value(score_table, fvpn_share)
-    nutri_score_fact_fvpn_kwargs.update({'ofcom_p_fvpn': ofcom_value, 'fvpn_total_percentage': fvpn_share})
+    nutri_score_fact_fvpn_kwargs.update({'ofcom_p_fvpn': ofcom_value, 'fvpn_total_percentage_estimated': fvpn_share})
 
     return nutri_score_fact_fvpn_kwargs
 
@@ -953,9 +954,21 @@ def nutri_score_main(product):
             nutri_score_facts.update(nutri_score_facts_mixed)
 
         if nutrients:
-            ofcom_score, nutri_score, nutri_score_facts_not_mixed = nutri_score_calculations(nutrients, product, category)
+            ofcom_score, nutri_score, nutri_score_facts_not_mixed = nutri_score_calculations(nutrients, product,
+                                                                                             category)
             product.ofcom_value = ofcom_score
             product.nutri_score_calculated = nutri_score
             nutri_score_facts.update(nutri_score_facts_not_mixed)
 
         return nutri_score_facts
+
+
+def set_nutri_score_final(product):
+    manufactured = product.nutri_score_by_manufacturer
+    mixed = product.nutri_score_calculated_mixed
+    if manufactured:
+        return manufactured
+    if mixed:
+        return mixed
+
+    return product.nutri_score_calculated

@@ -404,7 +404,8 @@ def get_product(request, gtin):
 
     query param: resultType, values: 'array', 'dictionary'
     """
-    products = Product.objects.filter(gtin=gtin)
+    products = Product.objects.filter(gtin=gtin).prefetch_related('allergens', 'ingredients', 'nutrients',
+                                                                  'nutri_score_facts')
     if products.exists():
         result = __prepare_product_data(request, products, False)
     else:
