@@ -59,16 +59,16 @@ def test_determine_fvpn_share():
     assert 'ofcom_p_fvpn' not in first_result
     assert 'ofcom_p_fvpn_mixed' in first_result
     assert first_result['ofcom_p_fvpn_mixed'] == 0
-    assert 'fvpn_total_percentage' in first_result
-    assert first_result['fvpn_total_percentage'] == 0
+    assert 'fvpn_total_percentage_estimated' in first_result
+    assert first_result['fvpn_total_percentage_estimated'] == 0
 
     second_result = determine_fvpn_share(first_test_product, category)
 
     assert 'ofcom_p_fvpn_mixed' not in second_result
     assert 'ofcom_p_fvpn' in second_result
     assert second_result['ofcom_p_fvpn'] == 0
-    assert 'fvpn_total_percentage' in second_result
-    assert second_result['fvpn_total_percentage'] == 0
+    assert 'fvpn_total_percentage_estimated' in second_result
+    assert second_result['fvpn_total_percentage_estimated'] == 0
 
     second_test_product = mommy.make(Product, health_percentage=42)
 
@@ -79,8 +79,8 @@ def test_determine_fvpn_share():
     assert 'ofcom_p_fvpn_mixed' not in third_result
     assert 'ofcom_p_fvpn' in third_result
     assert third_result['ofcom_p_fvpn'] == 2
-    assert 'fvpn_total_percentage' in third_result
-    assert third_result['fvpn_total_percentage'] == 42
+    assert 'fvpn_total_percentage_estimated' in third_result
+    assert third_result['fvpn_total_percentage_estimated'] == 42
 
     mommy.make(NutriScoreFacts, product=first_test_product, fruit_percentage=None, fruit_percentage_dried=4,
                vegetable_percentage=19, vegetable_percentage_dried=2, pulses_percentage=15, pulses_percentage_dried=10,
@@ -93,8 +93,8 @@ def test_determine_fvpn_share():
     assert 'ofcom_p_fvpn_mixed' not in fourth_result
     assert 'ofcom_p_fvpn' in fourth_result
     assert fourth_result['ofcom_p_fvpn'] == 0
-    assert 'fvpn_total_percentage' in fourth_result
-    assert fourth_result['fvpn_total_percentage'] == 0
+    assert 'fvpn_total_percentage_estimated' in fourth_result
+    assert fourth_result['fvpn_total_percentage_estimated'] == 0
 
     mommy.make(NutriScoreFacts, product=second_test_product, fruit_percentage=12, fruit_percentage_dried=4,
                vegetable_percentage=19, vegetable_percentage_dried=2, pulses_percentage=15, pulses_percentage_dried=10,
@@ -107,5 +107,5 @@ def test_determine_fvpn_share():
     assert 'ofcom_p_fvpn_mixed' not in fifth_result
     assert 'ofcom_p_fvpn' in fifth_result
     assert fifth_result['ofcom_p_fvpn'] == 10
-    assert 'fvpn_total_percentage' in fifth_result
-    assert fifth_result['fvpn_total_percentage'] > 74
+    assert 'fvpn_total_percentage_estimated' in fifth_result
+    assert fifth_result['fvpn_total_percentage_estimated'] > 74

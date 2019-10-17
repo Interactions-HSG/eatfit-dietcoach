@@ -45,7 +45,7 @@ def test_nutri_score_main_beverage():
 
     test_product_ns_facts = NutriScoreFacts.objects.get(product=test_product)
 
-    assert test_product_ns_facts.fvpn_total_percentage == 15
+    assert test_product_ns_facts.fvpn_total_percentage_estimated == 15
     assert test_product_ns_facts.ofcom_n_energy_kj == 10.0
     assert test_product_ns_facts.ofcom_n_energy_kj_mixed == 1.0
     assert test_product_ns_facts.ofcom_n_saturated_fat == 5.0
