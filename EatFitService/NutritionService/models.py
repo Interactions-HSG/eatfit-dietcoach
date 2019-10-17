@@ -703,7 +703,7 @@ def get_nutri_score_category(product):
         ErrorLog.objects.create(gtin=product.gtin, reporting_app=NUTRISCORE_APP,
                                 error_description='Minor category is missing.')
         if product.nutri_score_category_estimated is None:
-            product.nutri_score_category_estimated = 'Food'
+            return 'Food'
         return product.nutri_score_category_estimated
 
     if product.minor_category.nutri_score_category is None:
@@ -711,8 +711,8 @@ def get_nutri_score_category(product):
                                 error_description='Minor category does not have nutri score category assigned.')
 
         if product.nutri_score_category_estimated is None:
-            product.nutri_score_category_estimated = 'Food'
-            return product.nutri_score_category_estimated
+            return 'Food'
+        return product.nutri_score_category_estimated
 
     return product.minor_category.nutri_score_category
 
@@ -854,7 +854,7 @@ def determine_fvpn_share(product, category, mixed=False):
     """
     nutri_score_fact_fvpn_kwargs = {}
     if mixed:
-        nutri_score_fact_fvpn_kwargs.update({'ofcom_p_fvpn_mixed': 0, 'fvpn_total_percentage': 0})
+        nutri_score_fact_fvpn_kwargs.update({'ofcom_p_fvpn_mixed': 0, 'fvpn_total_percentage_estimated': 0})
         return nutri_score_fact_fvpn_kwargs
     try:
         nutri_score_fact = NutriScoreFacts.objects.get(product=product)
@@ -883,7 +883,7 @@ def determine_fvpn_share(product, category, mixed=False):
 
     score_table = SCORE_TABLES_MAP[category]['fvpn']
     ofcom_value = calculations.calculate_nutrient_ofcom_value(score_table, fvpn_share)
-    nutri_score_fact_fvpn_kwargs.update({'ofcom_p_fvpn': ofcom_value, 'fvpn_total_percentage': fvpn_share})
+    nutri_score_fact_fvpn_kwargs.update({'ofcom_p_fvpn': ofcom_value, 'fvpn_total_percentage_estimated': fvpn_share})
 
     return nutri_score_fact_fvpn_kwargs
 
@@ -954,7 +954,8 @@ def nutri_score_main(product):
             nutri_score_facts.update(nutri_score_facts_mixed)
 
         if nutrients:
-            ofcom_score, nutri_score, nutri_score_facts_not_mixed = nutri_score_calculations(nutrients, product, category)
+            ofcom_score, nutri_score, nutri_score_facts_not_mixed = nutri_score_calculations(nutrients, product,
+                                                                                             category)
             product.ofcom_value = ofcom_score
             product.nutri_score_calculated = nutri_score
             nutri_score_facts.update(nutri_score_facts_not_mixed)
