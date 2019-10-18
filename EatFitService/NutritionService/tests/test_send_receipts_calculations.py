@@ -54,7 +54,7 @@ def test_product_validation():
 
     assert response.status_code == status.HTTP_201_CREATED
     assert NonFoundMatching.objects.count() == 0
-    assert DigitalReceipt.objects.count() == 0
+    assert DigitalReceipt.objects.count() == 1
     assert 'receipts' in response.data
     assert len(response.data['receipts']) == 1
     assert response.data['receipts'][-1]['nutriscore'] == 'unknown'

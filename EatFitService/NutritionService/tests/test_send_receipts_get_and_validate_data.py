@@ -22,6 +22,9 @@ def test_user_partner_status():
 
     assert User.objects.count() == 1
 
+    TEST_DATA['r2n_partner'] = ''
+    TEST_DATA['r2n_username'] = ''
+
     api_client = APIRequestFactory()
     view = views.SendReceiptsView.as_view()
     url = reverse('send-receipts')
@@ -45,6 +48,9 @@ def test_serializer_invalid():
 
     assert User.objects.count() == 1
     assert ReceiptToNutritionPartner.objects.count() == 1
+
+    TEST_DATA['r2n_partner'] = ''
+    TEST_DATA['r2n_username'] = ''
 
     api_client = APIRequestFactory()
     view = views.SendReceiptsView.as_view()
