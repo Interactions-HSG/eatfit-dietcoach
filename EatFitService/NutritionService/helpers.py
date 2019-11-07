@@ -7,7 +7,7 @@ import requests
 import shutil
 from skimage.measure import compare_ssim
 import string
-from StringIO import StringIO
+from io import StringIO
 import tempfile
 from textblob import TextBlob
 
