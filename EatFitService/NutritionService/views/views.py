@@ -32,12 +32,15 @@ from NutritionService.serializers import MinorCategorySerializer, MajorCategoryS
 from NutritionService.tasks import import_from_openfood
 
 allowed_units_of_measure = ["g", "kg", "ml", "l"]
-NUTRI_SCORE_MAP = {
+NUTRI_SCORE_LETTER_TO_NUMBER_MAP = {
     'A': 1,
     'B': 2,
     'C': 3,
     'D': 4,
-    'E': 5,
+    'E': 5
+}
+
+NUTRI_SCORE_NUMBER_TO_LETTER_MAP = {
     1: 'A',
     2: 'B',
     3: 'C',
@@ -63,8 +66,10 @@ class SendReceiptsView(generics.GenericAPIView, mixins.ListModelMixin, mixins.Cr
         return False not in [size_condition, unit_of_measure_condition, nutri_score_condition]
 
     def post(self, request):
-        MAXIMUM_RECEIPTS = 10  # Maximum number of baskets which should be processed
+        MAXIMUM_RECEIPTS = 10  #  Maximum number of baskets which should be processed
+        MAXIMUM_REACHED = 'error: maximum amount of calls exceeded'  # Message to be displayed instead of nutri score values
         VERSION = 2  # Current Version of API
+        
         if not hasattr(request.user, 'partner'):
             return Response({'error': 'You must be a partner to use this API'}, status=status.HTTP_403_FORBIDDEN)
 
@@ -117,7 +122,7 @@ class SendReceiptsView(generics.GenericAPIView, mixins.ListModelMixin, mixins.Cr
 
                 _, product_size = is_number(product.product_size)
                 unit_of_measure = product.product_size_unit_of_measure.lower()
-                nutri_score = NUTRI_SCORE_MAP[product.nutri_score_final]
+                nutri_score_number = NUTRI_SCORE_LETTER_TO_NUMBER_MAP[product.nutri_score_final]
 
                 if unit_of_measure in ['kg', 'l']:
                     if unit_of_measure == 'kg':
@@ -126,7 +131,7 @@ class SendReceiptsView(generics.GenericAPIView, mixins.ListModelMixin, mixins.Cr
                         target_unit = 'ml'
                     product_size = unit_of_measure_conversion(product_size, unit_of_measure, target_unit)
 
-                nutri_scores.append(nutri_score * product_size)
+                nutri_scores.append(nutri_score_number * product_size)
                 product_weights_sum += product_size
 
             if not nutri_scores or product_weights_sum == 0:
@@ -135,15 +140,15 @@ class SendReceiptsView(generics.GenericAPIView, mixins.ListModelMixin, mixins.Cr
             else:
                 total_nutri_score_raw = sum(nutri_scores) / product_weights_sum
                 total_nutri_score = int(round(total_nutri_score_raw))
-                total_nutri_score_letter = NUTRI_SCORE_MAP[total_nutri_score]
+                total_nutri_score_letter = NUTRI_SCORE_NUMBER_TO_LETTER_MAP[total_nutri_score]
 
             receipt_object = {
-                "receipt_id": receipt["receipt_id"],
-                "receipt_datetime": receipt["receipt_datetime"],
-                "business_unit": receipt["business_unit"],
-                "nutriscore": total_nutri_score_letter,
-                "nutriscore_indexed": total_nutri_score,
-                "r2n_VERSION_code": VERSION
+                'receipt_id': receipt['receipt_id'],
+                'receipt_datetime': receipt['receipt_datetime'],
+                'business_unit': receipt['business_unit'],
+                'nutriscore': total_nutri_score_letter,
+                'nutriscore_indexed': total_nutri_score,
+                'r2n_VERSION_code': VERSION
             }
             result['receipts'].append(receipt_object)
 
@@ -164,14 +169,14 @@ class SendReceiptsView(generics.GenericAPIView, mixins.ListModelMixin, mixins.Cr
                 )
                 digital_receipt_list.append(digital_receipt)
                 receipt_object = {
-                    "receipt_id": receipt["receipt_id"],
-                    "receipt_datetime": receipt["receipt_datetime"],
-                    "business_unit": receipt["business_unit"],
-                    "nutriscore": "error: maximum amount of calls exceeded",
-                    "nutriscore_indexed": "error: maximum amount of calls exceeded",
-                    "r2n_VERSION_code": VERSION
+                    'receipt_id': receipt['receipt_id'],
+                    'receipt_datetime': receipt['receipt_datetime'],
+                    'business_unit': receipt['business_unit'],
+                    'nutriscore': MAXIMUM_REACHED,
+                    'nutriscore_indexed': MAXIMUM_REACHED,
+                    'r2n_VERSION_code': VERSION
                 }
-                result["receipts"].append(receipt_object)
+                result['receipts'].append(receipt_object)
 
         DigitalReceipt.objects.bulk_create(digital_receipt_list)
         return Response(result, status=status.HTTP_200_OK)
