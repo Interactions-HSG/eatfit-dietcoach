@@ -73,7 +73,7 @@ def calculate_negative_points(energy_kj, sugars, saturated_fat, sodium):
 
 
 def calculate_total_ofcom_value(category, negative_points, fvpn_value, protein, dietary_fiber):
-    if fvpn_value < 5 and category != 'Cheese':
+    if category != 'Cheese' and negative_points >= 11 and fvpn_value < 5:
         return negative_points - fvpn_value - dietary_fiber
     return negative_points - protein - fvpn_value - dietary_fiber
 
