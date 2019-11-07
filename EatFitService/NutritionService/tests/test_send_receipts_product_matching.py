@@ -40,7 +40,7 @@ def test_matching_non_found_inexistent():
     force_authenticate(request, user=user)
     response = view(request)
 
-    assert response.status_code == status.HTTP_201_CREATED
+    assert response.status_code == status.HTTP_200_OK
     assert ReceiptToNutritionUser.objects.count() == 1
     assert NonFoundMatching.objects.count() == 1
 
@@ -74,7 +74,7 @@ def test_matching_non_found_exists():
     force_authenticate(request, user=user)
     response = view(request)
 
-    assert response.status_code == status.HTTP_201_CREATED
+    assert response.status_code == status.HTTP_200_OK
     assert NonFoundMatching.objects.count() == 1
 
     test_object = NonFoundMatching.objects.get(article_id='Apfel Braeburn', article_type='Migros_long_v1')
@@ -117,7 +117,7 @@ def test_matching_multiple():
     force_authenticate(request, user=user)
     response = view(request)
 
-    assert response.status_code == status.HTTP_201_CREATED
+    assert response.status_code == status.HTTP_200_OK
     assert NonFoundMatching.objects.count() == 0
 
     test_object = Matching.objects.filter().first()
@@ -157,5 +157,5 @@ def test_matching_valid():
     force_authenticate(request, user=user)
     response = view(request)
 
-    assert response.status_code == status.HTTP_201_CREATED
+    assert response.status_code == status.HTTP_200_OK
     assert NonFoundMatching.objects.count() == 0

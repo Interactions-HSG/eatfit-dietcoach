@@ -52,7 +52,7 @@ def test_product_validation():
     force_authenticate(request, user=user)
     response = view(request)
 
-    assert response.status_code == status.HTTP_201_CREATED
+    assert response.status_code == status.HTTP_200_OK
     assert NonFoundMatching.objects.count() == 0
     assert DigitalReceipt.objects.count() == 1
     assert 'receipts' in response.data
@@ -123,7 +123,7 @@ def test_receipt_long():
     force_authenticate(request, user=user)
     response = view(request)
 
-    assert response.status_code == status.HTTP_201_CREATED
+    assert response.status_code == status.HTTP_200_OK
     assert NonFoundMatching.objects.count() == 0
     assert DigitalReceipt.objects.count() == 12
     assert 'receipts' in response.data
@@ -295,7 +295,7 @@ def test_receipt_valid():
     force_authenticate(request, user=user)
     response = view(request)
 
-    assert response.status_code == status.HTTP_201_CREATED
+    assert response.status_code == status.HTTP_200_OK
     assert NonFoundMatching.objects.count() == 0
     assert DigitalReceipt.objects.count() == 5
     assert 'receipts' in response.data
