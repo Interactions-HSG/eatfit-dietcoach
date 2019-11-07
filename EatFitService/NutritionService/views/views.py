@@ -10,6 +10,7 @@ import logging
 from suds.client import Client
 from suds.sudsobject import asdict
 
+from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponse
 from django.http.response import HttpResponseForbidden
 from django.shortcuts import get_object_or_404
@@ -73,8 +74,12 @@ class SendReceiptsView(generics.GenericAPIView, mixins.ListModelMixin, mixins.Cr
         validated_data = serializer.validated_data
         r2n_username = validated_data.get('r2n_username')
         r2n_partner = validated_data.get('r2n_username')
-        r2n_user = get_object_or_404(ReceiptToNutritionUser.objects.filter(r2n_partner__name=r2n_partner),
-                                     r2n_username=r2n_username)
+
+        try:
+            r2n_user = ReceiptToNutritionUser.objects.get(r2n_partner__name=r2n_partner, r2n_username=r2n_username)
+        except ObjectDoesNotExist:
+            return Response({'error': 'User not found.'}, status.HTTP_404_NOT_FOUND)
+
         if not r2n_user.r2n_user_active:
             return Response({'error': 'User not active. Please check if user fulfills all relevant criteria.'},
                             status=status.HTTP_403_FORBIDDEN)
@@ -164,7 +169,7 @@ class SendReceiptsView(generics.GenericAPIView, mixins.ListModelMixin, mixins.Cr
                 result["receipts"].append(receipt_object)
 
         DigitalReceipt.objects.bulk_create(digital_receipt_list)
-        return Response(result, status=status.HTTP_201_CREATED)
+        return Response(result, status=status.HTTP_200_OK)
 
 
 @api_view(['POST'])
