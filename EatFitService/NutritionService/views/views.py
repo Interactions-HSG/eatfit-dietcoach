@@ -148,7 +148,7 @@ class SendReceiptsView(generics.GenericAPIView, mixins.ListModelMixin, mixins.Cr
                 'business_unit': receipt['business_unit'],
                 'nutriscore': total_nutri_score_letter,
                 'nutriscore_indexed': total_nutri_score,
-                'r2n_VERSION_code': VERSION
+                'r2n_version_code': VERSION
             }
             result['receipts'].append(receipt_object)
 
@@ -174,7 +174,7 @@ class SendReceiptsView(generics.GenericAPIView, mixins.ListModelMixin, mixins.Cr
                     'business_unit': receipt['business_unit'],
                     'nutriscore': MAXIMUM_REACHED,
                     'nutriscore_indexed': MAXIMUM_REACHED,
-                    'r2n_VERSION_code': VERSION
+                    'r2n_version_code': VERSION
                 }
                 result['receipts'].append(receipt_object)
 
