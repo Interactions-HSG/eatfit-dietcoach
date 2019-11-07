@@ -26,6 +26,7 @@ from NutritionService.helpers import store_image, download_csv
 from NutritionService.models import DigitalReceipt, NonFoundMatching, Matching, MajorCategory, MinorCategory, \
     HealthTipp, ImportLog, Product, Allergen, NutritionFact, Ingredient, NotFoundLog, ErrorLog, \
     ReceiptToNutritionUser, calculate_ofcom_value, MarketRegion, Retailer, get_nutri_score_category
+from NutritionService.nutriscore.calculations import unit_of_measure_conversion
 from NutritionService.serializers import MinorCategorySerializer, MajorCategorySerializer, HealthTippSerializer, \
     ProductSerializer, DigitalReceiptSerializer
 from NutritionService.tasks import import_from_openfood
@@ -115,11 +116,15 @@ class SendReceiptsView(generics.GenericAPIView, mixins.ListModelMixin, mixins.Cr
                     continue
 
                 _, product_size = is_number(product.product_size)
-                unit_of_measure = product.product_size_unit_of_measure
+                unit_of_measure = product.product_size_unit_of_measure.lower()
                 nutri_score = NUTRI_SCORE_MAP[product.nutri_score_final]
 
-                if unit_of_measure.lower() in ["kg", "l"]:
-                    product_size *= 1000
+                if unit_of_measure in ['kg', 'l']:
+                    if unit_of_measure == 'kg':
+                        target_unit = 'g'
+                    else:
+                        target_unit = 'ml'
+                    product_size = unit_of_measure_conversion(product_size, unit_of_measure, target_unit)
 
                 nutri_scores.append(nutri_score * product_size)
                 product_weights_sum += product_size
