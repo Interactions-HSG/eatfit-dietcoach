@@ -61,8 +61,8 @@ class SendReceiptsView(generics.GenericAPIView, mixins.ListModelMixin, mixins.Cr
         return False not in [size_condition, unit_of_measure_condition, nutri_score_condition]
 
     def post(self, request):
-        maximum_receipts = 10
-        version = 2
+        MAXIMUM_RECEIPTS = 10  # Maximum number of baskets which should be processed
+        VERSION = 2  # Current Version of API
         if not hasattr(request.user, 'partner'):
             return Response({'error': 'You must be a partner to use this API'}, status=status.HTTP_403_FORBIDDEN)
 
@@ -83,7 +83,7 @@ class SendReceiptsView(generics.GenericAPIView, mixins.ListModelMixin, mixins.Cr
         digital_receipt_list = []
         result = {'receipts': []}
 
-        for receipt in receipt_data[:maximum_receipts]:
+        for receipt in receipt_data[:MAXIMUM_RECEIPTS]:
             nutri_scores = []
             product_weights_sum = 0
             articles = receipt['items']
@@ -133,11 +133,11 @@ class SendReceiptsView(generics.GenericAPIView, mixins.ListModelMixin, mixins.Cr
                 "business_unit": receipt["business_unit"],
                 "nutriscore": total_nutri_score_letter,
                 "nutriscore_indexed": total_nutri_score,
-                "r2n_version_code": version
+                "r2n_VERSION_code": VERSION
             }
             result['receipts'].append(receipt_object)
 
-        for receipt in receipt_data[maximum_receipts:]:
+        for receipt in receipt_data[MAXIMUM_RECEIPTS:]:
             articles = receipt['items']
             for article in articles:
                 digital_receipt = DigitalReceipt(
@@ -159,7 +159,7 @@ class SendReceiptsView(generics.GenericAPIView, mixins.ListModelMixin, mixins.Cr
                     "business_unit": receipt["business_unit"],
                     "nutriscore": "error: maximum amount of calls exceeded",
                     "nutriscore_indexed": "error: maximum amount of calls exceeded",
-                    "r2n_version_code": version
+                    "r2n_VERSION_code": VERSION
                 }
                 result["receipts"].append(receipt_object)
 
