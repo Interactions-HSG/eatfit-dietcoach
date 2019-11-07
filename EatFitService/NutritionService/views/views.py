@@ -124,12 +124,14 @@ class SendReceiptsView(generics.GenericAPIView, mixins.ListModelMixin, mixins.Cr
                 unit_of_measure = product.product_size_unit_of_measure.lower()
                 nutri_score_number = NUTRI_SCORE_LETTER_TO_NUMBER_MAP[product.nutri_score_final]
 
-                if unit_of_measure in ['kg', 'l']:
-                    if unit_of_measure == 'kg':
-                        target_unit = 'g'
-                    else:
-                        target_unit = 'ml'
-                    product_size = unit_of_measure_conversion(product_size, unit_of_measure, target_unit)
+                if unit_of_measure == 'kg':
+                    target_unit = 'g'
+                elif unit_of_measure == 'l':
+                    target_unit = 'ml'
+                else:
+                    target_unit = unit_of_measure
+
+                product_size = unit_of_measure_conversion(product_size, unit_of_measure, target_unit)
 
                 nutri_scores.append(nutri_score_number * product_size)
                 product_weights_sum += product_size
