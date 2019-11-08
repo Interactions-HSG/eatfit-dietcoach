@@ -10,12 +10,6 @@
 from __future__ import unicode_literals
 
 from django.db import models
-from django.dispatch.dispatcher import receiver
-from django.db.models.signals import post_save
-from rest_framework.authtoken.models import Token
-from django.contrib.auth.models import User
-from django.conf import settings
-
 
 
 class ImportLog(models.Model):
@@ -39,7 +33,7 @@ class LmpCategory(models.Model):
 
 
 class Nutrition(models.Model):
-    product = models.OneToOneField('Product', primary_key=True)
+    product = models.OneToOneField('Product', primary_key=True, on_delete=models.CASCADE)
 
     class Meta:
         db_table = 'nutrition'
@@ -51,7 +45,7 @@ class NutritionAttribute(models.Model):
     language_code = models.CharField(max_length=255, blank=True, null=True)
     country_code = models.CharField(max_length=255, blank=True, null=True)
     canonical_name = models.TextField(max_length=4000, blank=True, null=True)
-    nutrition = models.ForeignKey(Nutrition, models.DO_NOTHING, blank=True, null=True)
+    nutrition = models.ForeignKey(Nutrition, on_delete=models.DO_NOTHING, blank=True, null=True)
 
     class Meta:
         db_table = 'nutrition_attribute'
@@ -66,7 +60,7 @@ class NutritionFact(models.Model):
     language_code = models.CharField(max_length=255, blank=True, null=True)
     country_code = models.CharField(max_length=255, blank=True, null=True)
     canonical_name = models.TextField(max_length=4000, blank=True, null=True)
-    nutrition_facts_group = models.ForeignKey('NutritionFactsGroup', models.DO_NOTHING, blank=True, null=True)
+    nutrition_facts_group = models.ForeignKey('NutritionFactsGroup', on_delete=models.DO_NOTHING, blank=True, null=True)
 
     class Meta:
         db_table = 'nutrition_fact'
@@ -74,7 +68,7 @@ class NutritionFact(models.Model):
 
 
 class NutritionFactsGroup(models.Model):
-    nutrition = models.OneToOneField('Nutrition', primary_key=True)
+    nutrition = models.OneToOneField('Nutrition', primary_key=True, on_delete=models.CASCADE)
 
     class Meta:
         db_table = 'nutrition_facts_group'
@@ -86,7 +80,7 @@ class NutritionGroupAttribute(models.Model):
     language_code = models.CharField(max_length=255, blank=True, null=True)
     country_code = models.CharField(max_length=255, blank=True, null=True)
     canonical_name = models.TextField(max_length=1024, blank=True, null=True)
-    nutrition_facts_group = models.ForeignKey(NutritionFactsGroup, models.DO_NOTHING, blank=True, null=True)
+    nutrition_facts_group = models.ForeignKey(NutritionFactsGroup, on_delete=models.DO_NOTHING, blank=True, null=True)
 
     class Meta:
         db_table = 'nutrition_group_attribute'
@@ -96,7 +90,7 @@ class NutritionGroupAttribute(models.Model):
 class NutritionLabel(models.Model):
     value = models.TextField(max_length=4000, blank=True, null=True)
     label_id = models.IntegerField(blank=True, null=True)
-    nutrition = models.ForeignKey(Nutrition, models.DO_NOTHING, blank=True, null=True)
+    nutrition = models.ForeignKey(Nutrition, on_delete=models.DO_NOTHING, blank=True, null=True)
 
     class Meta:
         db_table = 'nutrition_label'
@@ -117,7 +111,7 @@ class NwdMainCategoryMinNutritionFactDifference(models.Model):
     min_absolute = models.FloatField(blank=True, null=True)
     min_relative = models.IntegerField(blank=True, null=True)
     nutrition_fact_canonical_name = models.TextField(max_length=1024)
-    nwd_main_category = models.ForeignKey(NwdMainCategory, models.DO_NOTHING, blank=True, null=True)
+    nwd_main_category = models.ForeignKey(NwdMainCategory, on_delete=models.DO_NOTHING, blank=True, null=True)
 
     class Meta:
         db_table = 'nwd_main_category_min_nutrition_fact_difference'
@@ -127,11 +121,11 @@ class NwdMainCategoryMinNutritionFactDifference(models.Model):
 class NwdSubcategory(models.Model):
     nwd_subcategory_id = models.CharField(max_length=255, blank=True, null=True)
     description = models.TextField(max_length=1024, blank=True, null=True)
-    nwd_main_category = models.ForeignKey(NwdMainCategory, models.DO_NOTHING, blank=True, null=True)
-    lmp = models.ForeignKey(LmpCategory, models.DO_NOTHING, blank=True, null=True)
+    nwd_main_category = models.ForeignKey(NwdMainCategory, on_delete=models.DO_NOTHING, blank=True, null=True)
+    lmp = models.ForeignKey(LmpCategory, on_delete=models.DO_NOTHING, blank=True, null=True)
     icon = models.ImageField(upload_to ="subcategory_icons",null=True, blank=True, verbose_name="Icon")
 
-    def __unicode__(self):
+    def __str__(self):
         return self.description
 
     class Meta:
@@ -143,7 +137,7 @@ class NwdSubcategoryMinNutritionFactDifference(models.Model):
     min_absolute = models.FloatField(blank=True, null=True)
     min_relative = models.IntegerField(blank=True, null=True)
     nutrition_fact_canonical_name = models.CharField(max_length=255)
-    nwd_subcategory = models.ForeignKey(NwdSubcategory, models.DO_NOTHING, blank=True, null=True)
+    nwd_subcategory = models.ForeignKey(NwdSubcategory, on_delete=models.DO_NOTHING, blank=True, null=True)
 
     class Meta:
         db_table = 'nwd_subcategory_min_nutrition_fact_difference'
@@ -156,11 +150,11 @@ class Product(models.Model):
     gtin = models.BigIntegerField()
     status = models.CharField(max_length=255, blank=True, null=True)
     image_url = models.CharField(max_length=255, blank=True, null=True)
-    nwd_main_category = models.ForeignKey(NwdMainCategory, models.DO_NOTHING, blank=True, null=True)
-    nwd_subcategory = models.ForeignKey(NwdSubcategory, models.DO_NOTHING, blank=True, null=True)
+    nwd_main_category = models.ForeignKey(NwdMainCategory, on_delete=models.DO_NOTHING, blank=True, null=True)
+    nwd_subcategory = models.ForeignKey(NwdSubcategory, on_delete=models.DO_NOTHING, blank=True, null=True)
 
 
-    def __unicode__(self):
+    def __str__(self):
         return "Gtin: " + str(self.gtin)
 
     class Meta:
@@ -173,7 +167,7 @@ class ProductAttribute(models.Model):
     language_code = models.CharField(max_length=255, blank=True, null=True)
     country_code = models.CharField(max_length=255, blank=True, null=True)
     canonical_name = models.TextField(max_length=1024, blank=True, null=True)
-    product = models.ForeignKey(Product, models.DO_NOTHING, blank=True, null=True)
+    product = models.ForeignKey(Product, on_delete=models.DO_NOTHING, blank=True, null=True)
 
     class Meta:
         db_table = 'product_attribute'
@@ -183,7 +177,7 @@ class ProductName(models.Model):
     name = models.TextField(max_length=4000, blank=True, null=True)
     language_code = models.CharField(max_length=255, blank=True, null=True)
     country_code = models.CharField(max_length=255, blank=True, null=True)
-    product = models.ForeignKey(Product, models.DO_NOTHING, blank=True, null=True)
+    product = models.ForeignKey(Product, on_delete=models.DO_NOTHING, blank=True, null=True)
 
     class Meta:
         db_table = 'product_name'
@@ -192,7 +186,7 @@ class ProductName(models.Model):
 class AgreedData(models.Model):
     value = models.TextField(max_length=1024, blank=True, null=True)
     agreed_id = models.CharField(max_length=255, blank=True, null=True)
-    product = models.ForeignKey(Product, models.DO_NOTHING, blank=True, null=True)
+    product = models.ForeignKey(Product, on_delete=models.DO_NOTHING, blank=True, null=True)
 
     class Meta:
         db_table = 'agreed_data'
@@ -202,7 +196,7 @@ class MissingTrustboxItem(models.Model):
     name = models.CharField(max_length=255, verbose_name="Name")
     total_weight = models.FloatField(verbose_name="Gesamtgewicht in Gramm")
     gtin = models.BigIntegerField(verbose_name="GTIN")
-    nwd_subcategory = models.ForeignKey(NwdSubcategory, models.DO_NOTHING, blank=True, null=True, verbose_name="Kategorie")
+    nwd_subcategory = models.ForeignKey(NwdSubcategory, on_delete=models.DO_NOTHING, blank=True, null=True, verbose_name="Kategorie")
     serving_size = models.FloatField(verbose_name="Serving Size")
     image_url = models.URLField(blank=True, null=True)
     salt = models.FloatField(verbose_name="Salz pro 100g/ml in Gramm")
@@ -216,7 +210,7 @@ class MissingTrustboxItem(models.Model):
     protein = models.FloatField(verbose_name="Protein pro 100g/ml in Gramm")
     price = models.FloatField(verbose_name="Preis in CHF", blank=True, null=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
     class Meta:

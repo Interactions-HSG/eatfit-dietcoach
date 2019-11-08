@@ -110,7 +110,7 @@ class MajorCategory(models.Model):
     name_it = models.TextField(max_length=1024, blank=True, null=True)
     name_fr = models.TextField(max_length=1024, blank=True, null=True)
 
-    def __unicode__(self):
+    def __str__(self):
         if self.name_de:
             return self.name_de
         return 'NO_NAME_DE'
@@ -130,7 +130,7 @@ class MinorCategory(models.Model):
     nutri_score_category = models.CharField(max_length=50, blank=True, null=True, choices=NUTRISCORE_CATEGORIES)
     icon = models.ImageField(upload_to="minor_category_icons", null=True, blank=True, verbose_name="Icon")
 
-    def __unicode__(self):
+    def __str__(self):
         if self.name_de:
             return self.name_de
         return 'NO_NAME_DE'
@@ -241,14 +241,14 @@ class Retailer(models.Model):
     )
 
     retailer_name = models.CharField(max_length=20, choices=RETAILER_CHOICES)
-    product = models.ForeignKey(Product, related_name='retailer')
+    product = models.ForeignKey(Product, related_name='retailer', on_delete=models.CASCADE)
 
     class Meta:
         verbose_name = 'Retailer'
         verbose_name_plural = 'Retailers'
         db_table = 'retailers'
 
-    def __unicode__(self):
+    def __str__(self):
         return self.retailer_name
 
 
@@ -271,19 +271,19 @@ class MarketRegion(models.Model):
     MARKET_REGION_QUERY_MAP = {'ch': SWITZERLAND, 'de': GERMANY, 'au': AUSTRIA, 'fr': FRANCE, 'it': ITALY}
 
     market_region_name = models.CharField(max_length=52, choices=MARKET_REGIONS)
-    product = models.ForeignKey(Product, related_name='market_region')
+    product = models.ForeignKey(Product, related_name='market_region', on_delete=models.CASCADE)
 
     class Meta:
         verbose_name = 'Market Region'
         verbose_name_plural = 'Market Regions'
         db_table = 'market_region'
 
-    def __unicode__(self):
+    def __str__(self):
         return self.market_region_name
 
 
 class AdditionalImage(models.Model):
-    product = models.ForeignKey(Product, related_name='additional_image')
+    product = models.ForeignKey(Product, related_name='additional_image', on_delete=models.CASCADE)
     image = models.ImageField(upload_to="product_images", null=True, blank=True)
     source = models.CharField(max_length=100, null=True, blank=True)
     image_url = models.URLField()
@@ -335,7 +335,7 @@ class NutriScoreFacts(models.Model):
         verbose_name_plural = 'Nutri-Score Facts'
         db_table = 'nutri_score_fact'
 
-    def __unicode__(self):
+    def __str__(self):
         return unicode(self.product.gtin)
 
 
@@ -345,7 +345,7 @@ class ErrorLog(models.Model):
     reporting_app = models.CharField(max_length=256, null=True, blank=True)
     error_description = models.TextField(null=True, blank=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return str(self.gtin)
 
     class Meta:
@@ -362,7 +362,7 @@ class ImportErrorLog(models.Model):
     error_message = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.filename
 
     class Meta:
@@ -384,7 +384,7 @@ class Allergen(models.Model):
     )
 
     id = models.BigAutoField(primary_key=True)
-    product = models.ForeignKey(Product, related_name='allergens')
+    product = models.ForeignKey(Product, related_name='allergens', on_delete=models.CASCADE)
     name = models.CharField(max_length=64, null=True, blank=True)
     certainity = models.CharField(max_length=11, choices=CERTAINTY_CHOICES, null=True, blank=True)
 
@@ -396,7 +396,7 @@ class Allergen(models.Model):
 
 class NutritionFact(models.Model):
     id = models.BigAutoField(primary_key=True)
-    product = models.ForeignKey(Product, related_name='nutrients')
+    product = models.ForeignKey(Product, related_name='nutrients', on_delete=models.CASCADE)
     name = models.CharField(max_length=64, null=True, blank=True)
     amount = models.FloatField(null=True, blank=True)
     unit_of_measure = models.CharField(max_length=8, null=True, blank=True)
@@ -410,7 +410,7 @@ class NutritionFact(models.Model):
 
 class Ingredient(models.Model):
     id = models.BigAutoField(primary_key=True)
-    product = models.ForeignKey(Product, related_name='ingredients')
+    product = models.ForeignKey(Product, related_name='ingredients', on_delete=models.CASCADE)
     lang = models.CharField(max_length=2)
     text = models.TextField()
 
@@ -478,7 +478,7 @@ class CrowdsourceProduct(models.Model):
     ingredient_fr = models.TextField(blank=True, null=True)
     ingredient_it = models.TextField(blank=True, null=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
     def __getitem__(self, key):
@@ -493,7 +493,7 @@ class CrowdsourceProduct(models.Model):
 class NutrientName(models.Model):
     name = models.CharField(max_length=255, verbose_name="Name", primary_key=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
     class Meta:
@@ -511,7 +511,7 @@ class HealthTipp(models.Model):
     nutrients = models.ManyToManyField(NutrientName, related_name='nutrients', blank=True)
     image = models.ImageField(upload_to="health_tipp_images", null=True, blank=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.text_de
 
     class Meta:
@@ -521,10 +521,10 @@ class HealthTipp(models.Model):
 
 
 class ReceiptToNutritionPartner(models.Model):
-    user = models.OneToOneField(User, primary_key=True, related_name="partner")
+    user = models.OneToOneField(User, primary_key=True, related_name="partner", on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
     class Meta:
@@ -534,11 +534,11 @@ class ReceiptToNutritionPartner(models.Model):
 
 
 class ReceiptToNutritionUser(models.Model):
-    r2n_partner = models.ForeignKey(ReceiptToNutritionPartner)
+    r2n_partner = models.ForeignKey(ReceiptToNutritionPartner, on_delete=models.CASCADE)
     r2n_username = models.CharField(max_length=255)
     r2n_user_active = models.BooleanField(default=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.r2n_username
 
     class Meta:
@@ -549,7 +549,7 @@ class ReceiptToNutritionUser(models.Model):
 
 
 class DigitalReceipt(models.Model):
-    r2n_user = models.ForeignKey(ReceiptToNutritionUser)
+    r2n_user = models.ForeignKey(ReceiptToNutritionUser, on_delete=models.CASCADE)
     business_unit = models.CharField(max_length=255)
     receipt_id = models.CharField(max_length=255)
     article_id = models.CharField(max_length=255)
@@ -560,7 +560,7 @@ class DigitalReceipt(models.Model):
     price_currency = models.CharField(max_length=255)
     receipt_datetime = models.DateTimeField()
 
-    def __unicode__(self):
+    def __str__(self):
         return self.article_id
 
     class Meta:
@@ -574,7 +574,7 @@ class Matching(models.Model):
     article_id = models.CharField(max_length=255)
     article_type = models.CharField(max_length=255)
     gtin = models.BigIntegerField()
-    eatfit_product = models.ForeignKey(Product, null=True, blank=True, editable=False)
+    eatfit_product = models.ForeignKey(Product, null=True, blank=True, editable=False, on_delete=models.CASCADE)
 
     def save(self, *args, **kwargs):
         if self.gtin:
@@ -584,7 +584,7 @@ class Matching(models.Model):
                 self.eatfit_product = product
         super(Matching, self).save(*args, **kwargs)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.article_id
 
     class Meta:
