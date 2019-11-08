@@ -82,7 +82,7 @@ class SendReceiptsView(generics.GenericAPIView, mixins.ListModelMixin, mixins.Cr
 
         try:
             r2n_user = ReceiptToNutritionUser.objects.get(r2n_partner__name=r2n_partner, r2n_username=r2n_username)
-        except ReceiptToNutritionUser.ObjectDoesNotExist:
+        except ReceiptToNutritionUser.DoesNotExist:
             return Response({'error': 'User not found.'}, status.HTTP_404_NOT_FOUND)
 
         if not r2n_user.r2n_user_active:
