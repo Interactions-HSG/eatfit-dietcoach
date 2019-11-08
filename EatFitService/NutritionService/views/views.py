@@ -10,7 +10,6 @@ import logging
 from suds.client import Client
 from suds.sudsobject import asdict
 
-from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponse
 from django.http.response import HttpResponseForbidden
 from django.shortcuts import get_object_or_404
@@ -83,7 +82,7 @@ class SendReceiptsView(generics.GenericAPIView, mixins.ListModelMixin, mixins.Cr
 
         try:
             r2n_user = ReceiptToNutritionUser.objects.get(r2n_partner__name=r2n_partner, r2n_username=r2n_username)
-        except ObjectDoesNotExist:
+        except ReceiptToNutritionUser.ObjectDoesNotExist:
             return Response({'error': 'User not found.'}, status.HTTP_404_NOT_FOUND)
 
         if not r2n_user.r2n_user_active:
