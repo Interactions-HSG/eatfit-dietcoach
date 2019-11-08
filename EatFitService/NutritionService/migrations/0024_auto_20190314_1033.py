@@ -18,7 +18,7 @@ class Migration(migrations.Migration):
             name='AdditionalImage',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('image', models.ImageField(blank=True, null=True, upload_to=b'product_images')),
+                ('image', models.ImageField(blank=True, null=True, upload_to='product_images')),
                 ('source', models.CharField(blank=True, max_length=100, null=True)),
                 ('image_url', models.URLField()),
                 ('product', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='additional_image', to='NutritionService.Product')),
@@ -33,8 +33,8 @@ class Migration(migrations.Migration):
             name='MarketRegion',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('market_region_code', models.CharField(max_length=2, unique=True, validators=[django.core.validators.RegexValidator(message=b'Invalid ID pattern (Format: CH)', regex=b'^[A-Z]{2}$')])),
-                ('market_region_name', models.CharField(blank=True, choices=[(b'Switzerland', b'Switzerland'), (b'Germany', b'Germany'), (b'Austria', b'Austria'), (b'France', b'France'), (b'Italy', b'Italy')], max_length=52, null=True)),
+                ('market_region_code', models.CharField(max_length=2, unique=True, validators=[django.core.validators.RegexValidator(message='Invalid ID pattern (Format: CH)', regex='^[A-Z]{2}$')])),
+                ('market_region_name', models.CharField(blank=True, choices=[('Switzerland', 'Switzerland'), ('Germany', 'Germany'), ('Austria', 'Austria'), ('France', 'France'), ('Italy', 'Italy')], max_length=52, null=True)),
                 ('product', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='market_region', to='NutritionService.Product')),
             ],
             options={
@@ -47,7 +47,7 @@ class Migration(migrations.Migration):
             name='ProductInMarketRegionAtRetailer',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('market_region', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='NutritionService.MarketRegion', to_field=b'market_region_code')),
+                ('market_region', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='NutritionService.MarketRegion', to_field='market_region_code')),
                 ('product', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='NutritionService.Product')),
             ],
         ),
@@ -55,8 +55,8 @@ class Migration(migrations.Migration):
             name='Retailer',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('retailer_code', models.CharField(max_length=52, unique=True, validators=[django.core.validators.RegexValidator(message=b'Invalid ID pattern (Format: ch.coop)', regex=b'^[\\w]{2}\\.[\\w\\d-_]+$')])),
-                ('retailer_name', models.CharField(choices=[(b'Migros', b'Migros'), (b'Coop', b'Coop'), (b'Farmy', b'Farmy'), (b'Volg', b'Volg'), (b'Edeka', b'Edeka')], max_length=20)),
+                ('retailer_code', models.CharField(max_length=52, unique=True, validators=[django.core.validators.RegexValidator(message='Invalid ID pattern (Format: ch.coop)', regex='^[\\w]{2}\\.[\\w\\d-_]+$')])),
+                ('retailer_name', models.CharField(choices=[('Migros', 'Migros'), ('Coop', 'Coop'), ('Farmy', 'Farmy'), ('Volg', 'Volg'), ('Edeka', 'Edeka')], max_length=20)),
                 ('product', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='retailer', to='NutritionService.Product')),
             ],
             options={
@@ -68,6 +68,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='productinmarketregionatretailer',
             name='retailer',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='NutritionService.Retailer', to_field=b'retailer_code'),
+            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='NutritionService.Retailer', to_field='retailer_code'),
         ),
     ]

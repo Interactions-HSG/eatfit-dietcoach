@@ -16,12 +16,12 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='product',
             name='health_percentage',
-            field=models.FloatField(blank=True, null=True, validators=[django.core.validators.MinValueValidator(0.0), django.core.validators.MaxValueValidator(100.0)], verbose_name=b'Fruit, Vegetable, Nuts Share'),
+            field=models.FloatField(blank=True, null=True, validators=[django.core.validators.MinValueValidator(0.0), django.core.validators.MaxValueValidator(100.0)], verbose_name='Fruit, Vegetable, Nuts Share'),
         ),
         migrations.AddField(
             model_name='product',
             name='source',
-            field=models.CharField(blank=True, choices=[(b'Trustbox', b'Trustbox'), (b'Crowdsourcing', b'Crowdsourcing'), (b'Openfood', b'Openfood')], max_length=256, null=True),
+            field=models.CharField(blank=True, choices=[('Trustbox', 'Trustbox'), ('Crowdsourcing', 'Crowdsourcing'), ('Openfood', 'Openfood')], max_length=256, null=True),
         ),
         migrations.AddField(
             model_name='product',
