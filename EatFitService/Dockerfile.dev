@@ -17,7 +17,7 @@ ADD ./modules.load /etc/apache2/mods-enabled/modules.load
 ADD ./EatFitService-celery.conf /etc/supervisor/conf.d/EatFitService-celery.conf
 RUN pip install virtualenv
 RUN python -m virtualenv /env
-RUN . env/bin/activate && pip install -r requirements.txt
+RUN . /env/bin/activate && pip install -r requirements.txt
 RUN chown -R www-data:www-data /home/eatfit/eatfitrepo/EatFitService
 RUN chmod 775 -R /home/eatfit/eatfitrepo/EatFitService
 RUN touch /var/log/nutrition-service.log
