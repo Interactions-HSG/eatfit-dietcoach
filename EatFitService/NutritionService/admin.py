@@ -5,7 +5,7 @@ from NutritionService.views.crowdsource_views import __create_products_from_crow
 from NutritionService.models import MajorCategory, Product, MinorCategory, Allergen, NutritionFact, ErrorLog, \
                                     CrowdsourceProduct, NotFoundLog, HealthTipp, NutrientName, NutriScoreFacts, \
                                     ReceiptToNutritionPartner, ReceiptToNutritionUser, Matching, DigitalReceipt, \
-                                    Retailer, AdditionalImage, ImportErrorLog, MarketRegion, Ingredient
+                                    Retailer, AdditionalImage, ImportErrorLog, MarketRegion, Ingredient, NonFoundMatching
 
 nutrients_to_prefill = ["energyKcal", "energyKJ", "protein", "salt", "sodium", "dietaryFiber", "saturatedFat", "sugars",
                         "totalCarbohydrate", "totalFat"]
@@ -110,6 +110,9 @@ class NotFoundLogAdmin(admin.ModelAdmin):
     list_display = ("gtin", "count", "first_searched_for")
     search_fields = ("gtin", "count", "first_searched_for")
 
+class NotFoundMatchingAdmin(admin.ModelAdmin):
+    list_display = ("article_id", "article_type", "business_unit", "price_per_unit", "counter")
+    search_fields = ("article_id", "article_type", "business_unit")
 
 class MatchingAdmin(admin.ModelAdmin):
     list_display = ("gtin", "article_id", "article_type")
@@ -159,3 +162,4 @@ admin.site.register(DigitalReceipt, DigitalReceiptAdmin)
 admin.site.register(AdditionalImage)
 admin.site.register(ImportErrorLog)
 admin.site.register(NutriScoreFacts)
+admin.site.register(NonFoundMatching, NotFoundMatchingAdmin)
