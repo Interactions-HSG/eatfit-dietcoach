@@ -604,6 +604,9 @@ class NonFoundMatching(models.Model):
         verbose_name = "NonFoundMatching"
         verbose_name_plural = "NonFoundMatchings"
         db_table = 'non_found_matching'
+    
+    def __unicode__(self):
+        return self.article_id
 
 
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
