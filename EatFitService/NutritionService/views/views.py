@@ -30,6 +30,7 @@ from NutritionService.serializers import MinorCategorySerializer, MajorCategoryS
     ProductSerializer, DigitalReceiptSerializer
 from NutritionService.tasks import import_from_openfood
 
+logger = logging.getLogger('NutritionService.views.views')
 allowed_units_of_measure = ["g", "kg", "ml", "l"]
 NUTRI_SCORE_LETTER_TO_NUMBER_MAP = {
     'A': 1,
@@ -401,7 +402,6 @@ class ProductWeightNotANumber(Exception):
 
 
 def log_product_errors(product):
-    logger = logging.getLogger('NutritionService.test_product')
     product.save()
 
     category_check_fail = not product.major_category or not product.minor_category
@@ -805,7 +805,6 @@ def __update_objects_from_trustbox(last_updated):
     """
     Takes date of last updated and creates new and changed objects
     """
-    logger = logging.getLogger('NutritionService.trustbox_import')
     client = Client(TRUSTBOX_URL)
     response = client.service.getChangedArticles(last_updated, TRUSTBOX_USERNAME, TRUSTBOX_PASSWORD)
     updated_gtins = [article['gtin'] for article in __recursive_translation(response)["article"]]
