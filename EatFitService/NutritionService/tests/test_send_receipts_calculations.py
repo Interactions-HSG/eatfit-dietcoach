@@ -13,9 +13,14 @@ from NutritionService.models import FOOD, ErrorLog, NonFoundMatching, DigitalRec
     ReceiptToNutritionPartner, MajorCategory, MinorCategory, Product, Matching, NutritionFact
 from send_receipts_data import TEST_DATA, TEST_DATA_LONG, TEST_DATA_DETAILED
 
+RECEIPTS_KEY = 'receipts'
+
 
 @pytest.mark.django_db
 def test_product_validation():
+
+    ERROR_MESSAGE = 'unknown'
+
     assert User.objects.count() == 0
     assert ReceiptToNutritionPartner.objects.count() == 0
     assert ReceiptToNutritionUser.objects.count() == 0
@@ -55,14 +60,17 @@ def test_product_validation():
     assert response.status_code == status.HTTP_200_OK
     assert NonFoundMatching.objects.count() == 0
     assert DigitalReceipt.objects.count() == 1
-    assert 'receipts' in response.data
-    assert len(response.data['receipts']) == 1
-    assert response.data['receipts'][-1]['nutriscore'] == 'unknown'
-    assert response.data['receipts'][-1]['nutriscore_indexed'] == 'unknown'
+    assert RECEIPTS_KEY in response.data
+    assert len(response.data[RECEIPTS_KEY]) == 1
+    assert response.data[RECEIPTS_KEY][-1]['nutriscore'] == ERROR_MESSAGE
+    assert response.data[RECEIPTS_KEY][-1]['nutriscore_indexed'] == ERROR_MESSAGE
 
 
 @pytest.mark.django_db
 def test_receipt_long():
+
+    ERROR_MESSAGE = 'error: maximum amount of calls exceeded'
+
     assert User.objects.count() == 0
     assert ReceiptToNutritionPartner.objects.count() == 0
     assert ReceiptToNutritionUser.objects.count() == 0
@@ -126,10 +134,10 @@ def test_receipt_long():
     assert response.status_code == status.HTTP_200_OK
     assert NonFoundMatching.objects.count() == 0
     assert DigitalReceipt.objects.count() == 12
-    assert 'receipts' in response.data
-    assert len(response.data['receipts']) == 12
-    assert response.data['receipts'][-1]['nutriscore'] == 'error: maximum amount of calls exceeded'
-    assert response.data['receipts'][-1]['nutriscore_indexed'] == 'error: maximum amount of calls exceeded'
+    assert RECEIPTS_KEY in response.data
+    assert len(response.data[RECEIPTS_KEY]) == 12
+    assert response.data[RECEIPTS_KEY][-1]['nutriscore'] == ERROR_MESSAGE
+    assert response.data[RECEIPTS_KEY][-1]['nutriscore_indexed'] == ERROR_MESSAGE
 
     
 
@@ -170,11 +178,7 @@ def test_receipt_valid():
     mommy.make(NutritionFact, product=first_product, name='availableCarbohydrate', amount=54.0, unit_of_measure='g')
     first_product.save()
 
-    assert first_product.product_size is not None
-    assert first_product.product_size_unit_of_measure is not None
     assert first_product.data_score >= 25
-    assert first_product.minor_category is not None
-    assert first_product.major_category is not None
     assert first_product.nutri_score_final is not None
 
     second_product = mommy.make(Product, gtin=2, product_name_de='Dessert-Tart. Royal 5cm 8 x 23 St.',
@@ -195,11 +199,7 @@ def test_receipt_valid():
     mommy.make(NutritionFact, product=second_product, name='availableCarbohydrate', amount=65.0, unit_of_measure='g')
     second_product.save()
 
-    assert second_product.product_size is not None
-    assert second_product.product_size_unit_of_measure is not None
     assert second_product.data_score >= 25
-    assert second_product.minor_category is not None
-    assert second_product.major_category is not None
     assert second_product.nutri_score_final is not None
 
 
@@ -221,11 +221,7 @@ def test_receipt_valid():
     mommy.make(NutritionFact, product=third_product, name='availableCarbohydrate', amount=77.0, unit_of_measure='g')
     third_product.save()
 
-    assert third_product.product_size is not None
-    assert third_product.product_size_unit_of_measure is not None
     assert third_product.data_score >= 25
-    assert third_product.minor_category is not None
-    assert third_product.major_category is not None
     assert third_product.nutri_score_final is not None
 
     fourth_product = mommy.make(Product, gtin=4, product_name_de='Alnatura Black Bean Cashew Burger',
@@ -245,11 +241,7 @@ def test_receipt_valid():
     mommy.make(NutritionFact, product=fourth_product, name='energyKcal', amount=238.0, unit_of_measure='Kcal')
     fourth_product.save()
 
-    assert fourth_product.product_size is not None
-    assert fourth_product.product_size_unit_of_measure is not None
     assert fourth_product.data_score >= 25
-    assert fourth_product.minor_category is not None
-    assert fourth_product.major_category is not None
     assert fourth_product.nutri_score_final is not None
 
     fifth_product = mommy.make(Product, gtin=5, product_name_de='Rindshackfleisch 500g',
@@ -269,11 +261,7 @@ def test_receipt_valid():
     mommy.make(NutritionFact, product=fifth_product, name='energyKcal', amount=186.0, unit_of_measure='Kcal')
     fifth_product.save()
 
-    assert fifth_product.product_size is not None
-    assert fifth_product.product_size_unit_of_measure is not None
     assert fifth_product.data_score >= 25
-    assert fifth_product.minor_category is not None
-    assert fifth_product.major_category is not None
     assert fifth_product.nutri_score_final is not None
 
     TEST_DATA_DETAILED['r2n_partner'] = r2n_partner.name
@@ -298,5 +286,7 @@ def test_receipt_valid():
     assert response.status_code == status.HTTP_200_OK
     assert NonFoundMatching.objects.count() == 0
     assert DigitalReceipt.objects.count() == 5
-    assert 'receipts' in response.data
-    assert len(response.data['receipts']) == 1
+    assert RECEIPTS_KEY in response.data
+    assert len(response.data[RECEIPTS_KEY]) == 1
+    assert response.data[RECEIPTS_KEY][0]['nutriscore_indexed'] == 3
+    assert response.data[RECEIPTS_KEY][0]['nutriscore'] == 'C'
