@@ -11,9 +11,13 @@ from NutritionService.views import views
 from NutritionService.models import ReceiptToNutritionUser, ReceiptToNutritionPartner
 from send_receipts_data import TEST_DATA
 
+ERROR_KEY = 'error'
+
 
 @pytest.mark.django_db
-def test_user_partner_status():
+def test_user_partner_exists():
+
+    ERROR_MESSAGE = 'You must be a partner to use this API'
 
     assert User.objects.count() == 0
     assert ReceiptToNutritionPartner.objects.count() == 0
@@ -33,8 +37,8 @@ def test_user_partner_status():
     response = view(request)
 
     assert response.status_code == status.HTTP_403_FORBIDDEN
-    assert 'error' in response.data
-    assert response.data['error'] == 'You must be a partner to use this API'
+    assert ERROR_KEY in response.data
+    assert response.data[ERROR_KEY] == ERROR_MESSAGE
 
 
 @pytest.mark.django_db
@@ -92,6 +96,8 @@ def test_user_partner_inexistent():
 @pytest.mark.django_db
 def test_user_partner_activity():
 
+    ERROR_MESSAGE = 'User not active. Please check if user fulfills all relevant criteria.'
+
     assert User.objects.count() == 0
     assert ReceiptToNutritionPartner.objects.count() == 0
     assert ReceiptToNutritionUser.objects.count() == 0
@@ -115,5 +121,5 @@ def test_user_partner_activity():
     response = view(request)
 
     assert response.status_code == status.HTTP_403_FORBIDDEN
-    assert 'error' in response.data
-    assert response.data['error'] == 'User not active. Please check if user fulfills all relevant criteria.'
+    assert ERROR_KEY in response.data
+    assert response.data[ERROR_KEY] == ERROR_MESSAGE
