@@ -9,17 +9,16 @@ from rest_framework.reverse import reverse
 from rest_framework import status
 
 from NutritionService.views import views
-from NutritionService.models import FOOD, ErrorLog, NonFoundMatching, DigitalReceipt, ReceiptToNutritionUser, \
+from NutritionService.views.errors import SendReceiptsErrors
+from NutritionService.models import FOOD, NonFoundMatching, DigitalReceipt, ReceiptToNutritionUser, \
     ReceiptToNutritionPartner, MajorCategory, MinorCategory, Product, Matching, NutritionFact
 from send_receipts_data import TEST_DATA, TEST_DATA_LONG, TEST_DATA_DETAILED
 
 RECEIPTS_KEY = 'receipts'
-
+errors = SendReceiptsErrors()
 
 @pytest.mark.django_db
 def test_product_validation():
-
-    ERROR_MESSAGE = 'unknown'
 
     assert User.objects.count() == 0
     assert ReceiptToNutritionPartner.objects.count() == 0
@@ -62,14 +61,12 @@ def test_product_validation():
     assert DigitalReceipt.objects.count() == 1
     assert RECEIPTS_KEY in response.data
     assert len(response.data[RECEIPTS_KEY]) == 1
-    assert response.data[RECEIPTS_KEY][-1]['nutriscore'] == ERROR_MESSAGE
-    assert response.data[RECEIPTS_KEY][-1]['nutriscore_indexed'] == ERROR_MESSAGE
+    assert response.data[RECEIPTS_KEY][-1]['nutriscore'] == errors.UNKNOWN
+    assert response.data[RECEIPTS_KEY][-1]['nutriscore_indexed'] == errors.UNKNOWN
 
 
 @pytest.mark.django_db
 def test_receipt_long():
-
-    ERROR_MESSAGE = 'error: maximum amount of calls exceeded'
 
     assert User.objects.count() == 0
     assert ReceiptToNutritionPartner.objects.count() == 0
@@ -136,8 +133,8 @@ def test_receipt_long():
     assert DigitalReceipt.objects.count() == 12
     assert RECEIPTS_KEY in response.data
     assert len(response.data[RECEIPTS_KEY]) == 12
-    assert response.data[RECEIPTS_KEY][-1]['nutriscore'] == ERROR_MESSAGE
-    assert response.data[RECEIPTS_KEY][-1]['nutriscore_indexed'] == ERROR_MESSAGE
+    assert response.data[RECEIPTS_KEY][-1]['nutriscore'] == errors.MAXIMUM_REACHED
+    assert response.data[RECEIPTS_KEY][-1]['nutriscore_indexed'] == errors.MAXIMUM_REACHED
 
     
 

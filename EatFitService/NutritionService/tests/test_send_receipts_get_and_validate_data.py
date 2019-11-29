@@ -8,10 +8,12 @@ from rest_framework.reverse import reverse
 from rest_framework import status
 
 from NutritionService.views import views
+from NutritionService.views.errors import SendReceiptsErrors
 from NutritionService.models import ReceiptToNutritionUser, ReceiptToNutritionPartner
 from send_receipts_data import TEST_DATA
 
 ERROR_KEY = 'error'
+errors = SendReceiptsErrors()
 
 
 @pytest.mark.django_db
@@ -38,7 +40,7 @@ def test_user_partner_exists():
 
     assert response.status_code == status.HTTP_403_FORBIDDEN
     assert ERROR_KEY in response.data
-    assert response.data[ERROR_KEY] == ERROR_MESSAGE
+    assert response.data[ERROR_KEY] == errors.PARTNER_DOES_NOT_EXIST
 
 
 @pytest.mark.django_db
@@ -96,8 +98,6 @@ def test_user_partner_inexistent():
 @pytest.mark.django_db
 def test_user_partner_activity():
 
-    ERROR_MESSAGE = 'User not active. Please check if user fulfills all relevant criteria.'
-
     assert User.objects.count() == 0
     assert ReceiptToNutritionPartner.objects.count() == 0
     assert ReceiptToNutritionUser.objects.count() == 0
@@ -122,4 +122,4 @@ def test_user_partner_activity():
 
     assert response.status_code == status.HTTP_403_FORBIDDEN
     assert ERROR_KEY in response.data
-    assert response.data[ERROR_KEY] == ERROR_MESSAGE
+    assert response.data[ERROR_KEY] == errors.USER_INACTIVE

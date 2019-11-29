@@ -29,6 +29,7 @@ from NutritionService.nutriscore.calculations import unit_of_measure_conversion
 from NutritionService.serializers import MinorCategorySerializer, MajorCategorySerializer, HealthTippSerializer, \
     ProductSerializer, DigitalReceiptSerializer
 from NutritionService.tasks import import_from_openfood
+from errors import SendReceiptsErrors
 
 logger = logging.getLogger('NutritionService.views')
 allowed_units_of_measure = ["g", "kg", "ml", "l"]
@@ -67,11 +68,12 @@ class SendReceiptsView(generics.GenericAPIView, mixins.ListModelMixin, mixins.Cr
 
     def post(self, request):
         MAXIMUM_RECEIPTS = 10  #  Maximum number of baskets which should be processed
-        MAXIMUM_REACHED = 'error: maximum amount of calls exceeded'  # Message to be displayed instead of nutri score values
         VERSION = 2  # Current Version of API
+
+        errors = SendReceiptsErrors()
         
         if not hasattr(request.user, 'partner'):
-            return Response({'error': 'You must be a partner to use this API'}, status=status.HTTP_403_FORBIDDEN)
+            return Response({'error': errors.PARTNER_DOES_NOT_EXIST}, status=status.HTTP_403_FORBIDDEN)
 
         serializer = self.serializer_class(data=request.data)
         if not serializer.is_valid():
@@ -84,10 +86,10 @@ class SendReceiptsView(generics.GenericAPIView, mixins.ListModelMixin, mixins.Cr
         try:
             r2n_user = ReceiptToNutritionUser.objects.get(r2n_partner__name=r2n_partner, r2n_username=r2n_username)
         except ReceiptToNutritionUser.DoesNotExist:
-            return Response({'error': 'User not found.'}, status.HTTP_404_NOT_FOUND)
+            return Response({'error': errors.USER_NOT_FOUND}, status.HTTP_404_NOT_FOUND)
 
         if not r2n_user.r2n_user_active:
-            return Response({'error': 'User not active. Please check if user fulfills all relevant criteria.'},
+            return Response({'error': errors.USER_INACTIVE},
                             status=status.HTTP_403_FORBIDDEN)
 
         receipt_data = validated_data['receipts']
@@ -137,8 +139,8 @@ class SendReceiptsView(generics.GenericAPIView, mixins.ListModelMixin, mixins.Cr
                 product_weights_sum += product_size
 
             if not nutri_scores or product_weights_sum == 0:
-                total_nutri_score = 'unknown'
-                total_nutri_score_letter = 'unknown'
+                total_nutri_score = errors.UNKNOWN
+                total_nutri_score_letter = errors.UNKNOWN
             else:
                 total_nutri_score_raw = sum(nutri_scores) / product_weights_sum
                 total_nutri_score = int(round(total_nutri_score_raw))
@@ -174,8 +176,8 @@ class SendReceiptsView(generics.GenericAPIView, mixins.ListModelMixin, mixins.Cr
                     'receipt_id': receipt['receipt_id'],
                     'receipt_datetime': receipt['receipt_datetime'],
                     'business_unit': receipt['business_unit'],
-                    'nutriscore': MAXIMUM_REACHED,
-                    'nutriscore_indexed': MAXIMUM_REACHED,
+                    'nutriscore': errors.MAXIMUM_REACHED,
+                    'nutriscore_indexed': errors.MAXIMUM_REACHED,
                     'r2n_version_code': VERSION
                 }
                 result['receipts'].append(receipt_object)
