@@ -30,7 +30,7 @@ from NutritionService.serializers import MinorCategorySerializer, MajorCategoryS
     ProductSerializer, DigitalReceiptSerializer
 from NutritionService.tasks import import_from_openfood
 
-logger = logging.getLogger('NutritionService.views.views')
+logger = logging.getLogger('NutritionService.views')
 allowed_units_of_measure = ["g", "kg", "ml", "l"]
 NUTRI_SCORE_LETTER_TO_NUMBER_MAP = {
     'A': 1,
