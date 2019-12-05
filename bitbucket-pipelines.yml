@@ -9,4 +9,4 @@ pipelines:
           - curl -L "https://github.com/docker/compose/releases/download/1.23.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
           - cd EatFitService
           - cp EatFitService/settings_keys.template.py EatFitService/settings_keys.py
-          - docker-compose -f docker-compose.yml run api run_tests.sh
+          - docker-compose -f docker-compose.yml run api bash run_tests.sh
