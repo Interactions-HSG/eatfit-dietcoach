@@ -54,13 +54,13 @@ def import_from_openfood():
 
             if "name_translations" in p:
                 if "de" in p["name_translations"]:
-                    product.product_name_de = unicode(p["name_translations"]["de"])
+                    product.product_name_de = str(p["name_translations"]["de"])
                 if "fr" in p["name_translations"]:
-                    product.product_name_fr = unicode(p["name_translations"]["fr"])
+                    product.product_name_fr = str(p["name_translations"]["fr"])
                 if "it" in p["name_translations"]:
-                    product.product_name_it = unicode(p["name_translations"]["it"])
+                    product.product_name_it = str(p["name_translations"]["it"])
                 if "en" in p["name_translations"]:
-                    product.product_name_en = unicode(p["name_translations"]["en"])
+                    product.product_name_en = str(p["name_translations"]["en"])
 
             try:
                 product.full_clean()
@@ -89,7 +89,7 @@ def import_from_openfood():
             if "ingredients_translations" in p:
                 for key in p["ingredients_translations"]:
                     Ingredient.objects.update_or_create(product=product, lang=key,
-                                                        defaults={"text": unicode(p["ingredients_translations"][key])})
+                                                        defaults={"text": str(p["ingredients_translations"][key])})
 
             if "nutrients" in p:
                 nutrients = p["nutrients"]
@@ -162,13 +162,13 @@ def update_from_openfood(product, fields_to_update):
 
         if "name_translations" in p:
             if "product_name_de" in fields_to_update and "de" in p["name_translations"]:
-                product.product_name_de = unicode(p["name_translations"]["de"])
+                product.product_name_de = p["name_translations"]["de"]
             if "product_name_fr" in fields_to_update and "fr" in p["name_translations"]:
-                product.product_name_fr = unicode(p["name_translations"]["fr"])
+                product.product_name_fr = p["name_translations"]["fr"]
             if "product_name_it" in fields_to_update and "it" in p["name_translations"]:
-                product.product_name_it = unicode(p["name_translations"]["it"])
+                product.product_name_it = p["name_translations"]["it"]
             if "product_name_en" in fields_to_update and "en" in p["name_translations"]:
-                product.product_name_en = unicode(p["name_translations"]["en"])
+                product.product_name_en = p["name_translations"]["en"]
 
         if "image" in fields_to_update:
             image_url = None
@@ -228,13 +228,13 @@ def import_from_open_world_food_facts():
 
             if "name_translations" in p:
                 if "de" in p["name_translations"]:
-                    product.product_name_de = unicode(p["name_translations"]["de"])
+                    product.product_name_de = str(p["name_translations"]["de"])
                 if "fr" in p["name_translations"]:
-                    product.product_name_fr = unicode(p["name_translations"]["fr"])
+                    product.product_name_fr = str(p["name_translations"]["fr"])
                 if "it" in p["name_translations"]:
-                    product.product_name_it = unicode(p["name_translations"]["it"])
+                    product.product_name_it = str(p["name_translations"]["it"])
                 if "en" in p["name_translations"]:
-                    product.product_name_en = unicode(p["name_translations"]["en"])
+                    product.product_name_en = str(p["name_translations"]["en"])
 
             product.save()
 
@@ -253,7 +253,7 @@ def import_from_open_world_food_facts():
             if "ingredients_translations" in p:
                 for key in p["ingredients_translations"]:
                     Ingredient.objects.update_or_create(product=product, lang=key,
-                                                        defaults={"text": unicode(p["ingredients_translations"][key])})
+                                                        defaults={"text": str(p["ingredients_translations"][key])})
 
             if "nutrients" in p:
                 nutrients = p["nutrients"]
