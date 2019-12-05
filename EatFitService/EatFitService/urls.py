@@ -3,7 +3,7 @@ Definition of urls for EatFitService.
 """
 
 from django.conf.urls import url, include
-from django.urls import path
+import django.contrib.auth.views
 from django.contrib import admin
 from rest_framework.authtoken import views as auth_views
 
@@ -19,5 +19,5 @@ urlpatterns = [
     url(r'', include('SaltTrackerService.urls')),
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     url(r'^api-token-auth/', auth_views.obtain_auth_token),
-    path('admin/', admin.site.urls)
+    url(r'^admin/', include(admin.site.urls)),
 ]
