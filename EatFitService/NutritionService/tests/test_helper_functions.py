@@ -9,7 +9,7 @@ def test_calculate_ssim_same_image():
         first_image = SimpleUploadedFile(infile.name, infile.read())
 
     with open('NutritionService/tests/product_image.jpg', 'rb') as infile:
-        second_image = SimpleUploadedFile(infile.name, infile.read(), content_type='image/jpeg')
+        second_image = SimpleUploadedFile(infile.name, infile.read())
 
     ssim = calculate_image_ssim(first_image, second_image, original_buffered=True, new_buffered=True)
 
