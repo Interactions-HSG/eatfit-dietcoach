@@ -39,4 +39,5 @@ urllib3==1.22
 vine==1.1.4
 wheel==0.24.0
 xlrd==0.9.4
+xlutils==2.0.0
 xlwt==1.0.0
