@@ -162,13 +162,13 @@ def update_from_openfood(product, fields_to_update):
 
         if "name_translations" in p:
             if "product_name_de" in fields_to_update and "de" in p["name_translations"]:
-                product.product_name_de = p["name_translations"]["de"]
+                product.product_name_de = str(p["name_translations"]["de"])
             if "product_name_fr" in fields_to_update and "fr" in p["name_translations"]:
-                product.product_name_fr = p["name_translations"]["fr"]
+                product.product_name_fr = str(p["name_translations"]["fr"])
             if "product_name_it" in fields_to_update and "it" in p["name_translations"]:
-                product.product_name_it = p["name_translations"]["it"]
+                product.product_name_it = str(p["name_translations"]["it"])
             if "product_name_en" in fields_to_update and "en" in p["name_translations"]:
-                product.product_name_en = p["name_translations"]["en"]
+                product.product_name_en = str(p["name_translations"]["en"])
 
         if "image" in fields_to_update:
             image_url = None
