@@ -18,7 +18,10 @@ RECEIPTS_KEY = 'receipts'
 errors = SendReceiptsErrors()
 
 @pytest.mark.django_db
-def test_product_validation():
+def test_receipt2nutrition_partner_is_valid():
+    """
+    Assert that the r2n_user is a valid r2n_partner and can successfully call the API with matching product.
+    """
 
     assert User.objects.count() == 0
     assert ReceiptToNutritionPartner.objects.count() == 0
@@ -66,8 +69,10 @@ def test_product_validation():
 
 
 @pytest.mark.django_db
-def test_receipt_long():
-
+def test_too_many_receipts():
+    """
+    Assert that the API request is too long (more than 10 receipts).
+    """
     assert User.objects.count() == 0
     assert ReceiptToNutritionPartner.objects.count() == 0
     assert ReceiptToNutritionUser.objects.count() == 0
@@ -140,6 +145,9 @@ def test_receipt_long():
 
 @pytest.mark.django_db
 def test_receipt_valid():
+    """
+    Assert that the API request is valid (less than 10 receipts and correct data is provided).
+    """
     assert User.objects.count() == 0
     assert ReceiptToNutritionPartner.objects.count() == 0
     assert ReceiptToNutritionUser.objects.count() == 0
