@@ -14,7 +14,7 @@ from django.http import HttpResponse
 from django.http.response import HttpResponseForbidden
 from django.shortcuts import get_object_or_404
 
-from rest_framework import permissions
+from rest_framework import permissions, generics, mixins, status
 from rest_framework.decorators import permission_classes, api_view
 from rest_framework.response import Response
 
@@ -24,12 +24,166 @@ from NutritionService.codecheck_integration.codecheck import import_from_codeche
 from NutritionService.helpers import store_image, download_csv
 from NutritionService.models import DigitalReceipt, NonFoundMatching, Matching, MajorCategory, MinorCategory, \
     HealthTipp, ImportLog, Product, Allergen, NutritionFact, Ingredient, NotFoundLog, ErrorLog, \
-    ReceiptToNutritionUser, calculate_ofcom_value, MarketRegion, Retailer
+    ReceiptToNutritionUser, calculate_ofcom_value, MarketRegion, Retailer, get_nutri_score_category
+from NutritionService.nutriscore.calculations import unit_of_measure_conversion
 from NutritionService.serializers import MinorCategorySerializer, MajorCategorySerializer, HealthTippSerializer, \
     ProductSerializer, DigitalReceiptSerializer
 from NutritionService.tasks import import_from_openfood
+from errors import SendReceiptsErrors
 
+logger = logging.getLogger('NutritionService.views')
 allowed_units_of_measure = ["g", "kg", "ml", "l"]
+NUTRI_SCORE_LETTER_TO_NUMBER_MAP = {
+    'A': 1,
+    'B': 2,
+    'C': 3,
+    'D': 4,
+    'E': 5
+}
+
+NUTRI_SCORE_NUMBER_TO_LETTER_MAP = {
+    1: 'A',
+    2: 'B',
+    3: 'C',
+    4: 'D',
+    5: 'E'
+}
+
+
+class SendReceiptsView(generics.GenericAPIView, mixins.ListModelMixin, mixins.CreateModelMixin):
+    queryset = DigitalReceipt.objects.all()
+    serializer_class = DigitalReceiptSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    @staticmethod
+    def product_is_valid(product):
+        log_product_errors(product)
+        size_condition, _ = is_number(product.product_size)
+        unit_of_measure_condition = product.product_size_unit_of_measure is not None
+        if unit_of_measure_condition:
+            unit_of_measure_condition = product.product_size_unit_of_measure.lower() in allowed_units_of_measure
+        nutri_score_condition = product.nutri_score_final is not None
+
+        return False not in [size_condition, unit_of_measure_condition, nutri_score_condition]
+
+    def post(self, request):
+        MAXIMUM_RECEIPTS = 10  #  Maximum number of baskets which should be processed
+        VERSION = 2  # Current Version of API
+
+        errors = SendReceiptsErrors()
+        
+        if not hasattr(request.user, 'partner'):
+            return Response({'error': errors.PARTNER_DOES_NOT_EXIST}, status=status.HTTP_403_FORBIDDEN)
+
+        serializer = self.serializer_class(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        validated_data = serializer.validated_data
+        r2n_username = validated_data.get('r2n_username')
+        r2n_partner = validated_data.get('r2n_username')
+
+        try:
+            r2n_user = ReceiptToNutritionUser.objects.get(r2n_partner__name=r2n_partner, r2n_username=r2n_username)
+        except ReceiptToNutritionUser.DoesNotExist:
+            return Response({'error': errors.USER_NOT_FOUND}, status.HTTP_404_NOT_FOUND)
+
+        if not r2n_user.r2n_user_active:
+            return Response({'error': errors.USER_INACTIVE},
+                            status=status.HTTP_403_FORBIDDEN)
+
+        receipt_data = validated_data['receipts']
+        digital_receipt_list = []
+        result = {'receipts': []}
+
+        for receipt in receipt_data[:MAXIMUM_RECEIPTS]:
+            nutri_scores = []
+            product_weights_sum = 0
+            articles = receipt['items']
+            for article in articles:
+                digital_receipt = DigitalReceipt(
+                    r2n_user=r2n_user,
+                    business_unit=receipt['business_unit'],
+                    receipt_id=receipt['receipt_id'],
+                    receipt_datetime=receipt['receipt_datetime'],
+                    article_id=article['article_id'],
+                    article_type=article['article_type'],
+                    quantity=article['quantity'],
+                    quantity_unit=article['quantity_unit'],
+                    price=article['price'],
+                    price_currency=article['price_currency']
+                )
+                digital_receipt_list.append(digital_receipt)
+                product = match_receipt(digital_receipt)
+
+                if product is None:
+                    continue
+
+                if not self.product_is_valid(product):
+                    continue
+
+                _, product_size = is_number(product.product_size)
+                unit_of_measure = product.product_size_unit_of_measure.lower()
+                nutri_score_number = NUTRI_SCORE_LETTER_TO_NUMBER_MAP[product.nutri_score_final]
+
+                if unit_of_measure == 'kg':
+                    target_unit = 'g'
+                elif unit_of_measure == 'l':
+                    target_unit = 'ml'
+                else:
+                    target_unit = unit_of_measure
+
+                product_size = unit_of_measure_conversion(product_size, unit_of_measure, target_unit)
+
+                nutri_scores.append(nutri_score_number * product_size)
+                product_weights_sum += product_size
+
+            if not nutri_scores or product_weights_sum == 0:
+                total_nutri_score = errors.UNKNOWN
+                total_nutri_score_letter = errors.UNKNOWN
+            else:
+                total_nutri_score_raw = sum(nutri_scores) / product_weights_sum
+                total_nutri_score = int(round(total_nutri_score_raw))
+                total_nutri_score_letter = NUTRI_SCORE_NUMBER_TO_LETTER_MAP[total_nutri_score]
+
+            receipt_object = {
+                'receipt_id': receipt['receipt_id'],
+                'receipt_datetime': receipt['receipt_datetime'],
+                'business_unit': receipt['business_unit'],
+                'nutriscore': total_nutri_score_letter,
+                'nutriscore_indexed': total_nutri_score,
+                'r2n_version_code': VERSION
+            }
+            result['receipts'].append(receipt_object)
+
+        for receipt in receipt_data[MAXIMUM_RECEIPTS:]:
+            articles = receipt['items']
+            for article in articles:
+                digital_receipt = DigitalReceipt(
+                    r2n_user=r2n_user,
+                    business_unit=receipt['business_unit'],
+                    receipt_id=receipt['receipt_id'],
+                    receipt_datetime=receipt['receipt_datetime'],
+                    article_id=article['article_id'],
+                    article_type=article['article_type'],
+                    quantity=article['quantity'],
+                    quantity_unit=article['quantity_unit'],
+                    price=article['price'],
+                    price_currency=article['price_currency']
+                )
+                digital_receipt_list.append(digital_receipt)
+                receipt_object = {
+                    'receipt_id': receipt['receipt_id'],
+                    'receipt_datetime': receipt['receipt_datetime'],
+                    'business_unit': receipt['business_unit'],
+                    'nutriscore': errors.MAXIMUM_REACHED,
+                    'nutriscore_indexed': errors.MAXIMUM_REACHED,
+                    'r2n_version_code': VERSION
+                }
+                result['receipts'].append(receipt_object)
+
+        DigitalReceipt.objects.bulk_create(digital_receipt_list)
+        return Response(result, status=status.HTTP_200_OK)
 
 
 @api_view(['POST'])
@@ -200,7 +354,6 @@ def match_receipt(digital_receipt):
 
 
 def nutri_score_from_ofcom(product):
-
     try:
 
         if product.ofcom_value is None:
@@ -238,6 +391,7 @@ def nutri_score_from_ofcom(product):
     except AttributeError:
         return None
 
+
 def __get_nutri_score_from_average(nutriscore_average):
     rounded_average = int(round(nutriscore_average))
     if rounded_average > 0:
@@ -250,7 +404,6 @@ class ProductWeightNotANumber(Exception):
 
 
 def log_product_errors(product):
-    logger = logging.getLogger('NutritionService.test_product')
     product.save()
 
     category_check_fail = not product.major_category or not product.minor_category
@@ -291,39 +444,6 @@ def log_product_errors(product):
                            gtin=product.gtin,
                            error_description=description) for description in error_logs]
     ErrorLog.objects.bulk_create(log_models)
-
-
-@api_view(['POST'])
-@permission_classes((permissions.IsAuthenticated,))
-def send_receipts(request):
-    partner = request.user.partner
-    if not partner:
-        return Response({"error": "You must be a partner to use this API"}, status=403)
-    serializer = DigitalReceiptSerializer(data=request.data)
-    if serializer.is_valid():
-        r2n_username = serializer.validated_data["r2n_username"]
-        r2n_partner = serializer.validated_data["r2n_partner"]
-        if r2n_partner != partner.name:
-            return Response({"error": "Partner name and user mismatch"}, status=403)
-        r2n_user = get_object_or_404(ReceiptToNutritionUser.objects.filter(r2n_partner__name=r2n_partner),
-                                     r2n_username=r2n_username)
-        if not r2n_user.r2n_user_active:
-            return Response({"error": "User not active. Please check if user fulfills all relevant criteria."},
-                            status=403)
-        receipts_calculated = 0
-        result = {}
-        result["receipts"] = []
-        for receipt in serializer.validated_data["receipts"]:
-            nutri_score_array = []
-            for article in receipt["items"]:
-                digital_receipt = DigitalReceipt(r2n_user=r2n_user, business_unit=receipt["business_unit"],
-                                                 receipt_id=receipt["receipt_id"],
-                                                 receipt_datetime=receipt["receipt_datetime"],
-                                                 article_id=article["article_id"], article_type=article["article_type"],
-                                                 quantity=article["quantity"], quantity_unit=article["quantity_unit"],
-                                                 price=article["price"], price_currency=article["price_currency"])
-                digital_receipt.save()
-    return Response(status=200)
 
 
 @api_view(['POST'])
@@ -422,12 +542,13 @@ def get_product(request, gtin):
             result["products"] = None
     return Response(result)
 
-def __prepare_product_data(request, products, weighted_product, price = None):
+
+def __prepare_product_data(request, products, weighted_product, price=None):
     result_type = request.GET.get("resultType", "array")
     for product in products:
         product.found_count = product.found_count + 1
         product.save()
-    serializer = ProductSerializer(products, many=True, context={'weighted_article': weighted_product, "price" : price})
+    serializer = ProductSerializer(products, many=True, context={'weighted_article': weighted_product, "price": price})
     result = {}
     result["success"] = True
     if result_type == "array":
@@ -452,6 +573,7 @@ def __check_if_weighted_product(gtin):
     except Exception as e:
         pass
     return None, -1
+
 
 def __change_product_objects(product):
     result_product = {}
@@ -478,7 +600,7 @@ def __change_product_objects(product):
     for n in product["nutrients"]:
         result_product["nutrients"][n["name"]] = {}
         result_product["nutrients"][n["name"]]["amount"] = n["amount"]
-        result_product["nutrients"][n["name"]]["unit_of_measure"]  = n["unit_of_measure"]
+        result_product["nutrients"][n["name"]]["unit_of_measure"] = n["unit_of_measure"]
     for i in product["ingredients"]:
         result_product["ingredients"][i["lang"]] = i["text"]
     return result_product
@@ -493,8 +615,9 @@ def get_better_products_minor_category(request, minor_category_pk):
                                  'sodium'
     query param: resultType, values: 'array', 'dictionary'
     """
-    minor_category = get_object_or_404(MinorCategory.objects.all(), pk = minor_category_pk)
+    minor_category = get_object_or_404(MinorCategory.objects.all(), pk=minor_category_pk)
     return __get_better_products(request, minor_category, None)
+
 
 @api_view(['GET'])
 @permission_classes((permissions.IsAuthenticated,))
@@ -570,12 +693,12 @@ def update_database(request):
     if not request.user.is_superuser:
         return HttpResponseForbidden()
     """ checks for changes since last update and adds new objects"""
-    last_updated='2000-01-01T00:00:00Z'
+    last_updated = '2000-01-01T00:00:00Z'
     import_log_queryset = ImportLog.objects.filter(import_finished__isnull=False).order_by("-import_finished")[:1]
     if import_log_queryset.exists():
         last_updated = import_log_queryset[0].import_finished.strftime("%Y-%m-%dT%H:%M:%SZ")
     __update_objects_from_trustbox(last_updated)
-    return HttpResponse(status = 200)
+    return HttpResponse(status=200)
 
 
 @api_view(['GET'])
@@ -584,7 +707,8 @@ def get_products_from_openfood(request):
     if not request.user.is_superuser:
         return HttpResponseForbidden()
     import_from_openfood()
-    return HttpResponse(status = 200)
+    return HttpResponse(status=200)
+
 
 @api_view(['GET'])
 @permission_classes((permissions.IsAuthenticated,))
@@ -592,7 +716,8 @@ def get_products_from_codecheck(request):
     if not request.user.is_superuser:
         return HttpResponseForbidden()
     import_from_codecheck()
-    return Response(status = 200)
+    return Response(status=200)
+
 
 @api_view(['GET'])
 @permission_classes((permissions.IsAuthenticated,))
@@ -604,7 +729,8 @@ def calculate_ofcom_values(request):
         calculate_ofcom_value(product)
         count = count + 1
         print("calculated for product: " + str(count))
-    return Response(status = 200)
+    return Response(status=200)
+
 
 @api_view(['GET'])
 @permission_classes((permissions.IsAuthenticated,))
@@ -612,7 +738,8 @@ def generate_status_report(request):
     if not request.user.is_superuser:
         return HttpResponseForbidden()
     reports.generate_daily_report()
-    return Response(status = 200)
+    return Response(status=200)
+
 
 @api_view(['GET'])
 @permission_classes((permissions.IsAuthenticated,))
@@ -621,21 +748,24 @@ def data_clean_task(request):
         return HttpResponseForbidden()
     data_cleaning.clean_salt_sodium()
     data_cleaning.fill_product_names_and_images()
-    return Response(status = 200)
+    return Response(status=200)
+
 
 @api_view(['GET'])
 @permission_classes((permissions.IsAuthenticated,))
 def get_major_categories(request):
     categories = MajorCategory.objects.all()
     serilaizer = MajorCategorySerializer(categories, many=True)
-    return Response(serilaizer.data, status = 200)
+    return Response(serilaizer.data, status=200)
+
 
 @api_view(['GET'])
 @permission_classes((permissions.IsAuthenticated,))
 def get_minor_categories(request):
     categories = MinorCategory.objects.all()
     serilaizer = MinorCategorySerializer(categories, many=True)
-    return Response(serilaizer.data, status = 200)
+    return Response(serilaizer.data, status=200)
+
 
 @api_view(['GET'])
 @permission_classes((permissions.IsAuthenticated,))
@@ -644,15 +774,16 @@ def get_health_tipps(request):
     request_nutrient = request.GET.get("nutrient", None)
 
     if request_category and request_nutrient:
-        health_tipps = HealthTipp.objects.filter(minor_categories = request_category, nutrients = request_nutrient)
+        health_tipps = HealthTipp.objects.filter(minor_categories=request_category, nutrients=request_nutrient)
     elif request_category:
-        health_tipps = HealthTipp.objects.filter(minor_categories = request_category)
+        health_tipps = HealthTipp.objects.filter(minor_categories=request_category)
     elif request_nutrient:
-        health_tipps = HealthTipp.objects.filter(nutrients = request_nutrient)
+        health_tipps = HealthTipp.objects.filter(nutrients=request_nutrient)
     else:
-        return Response(status = 400)
+        return Response(status=400)
     serializer = HealthTippSerializer(health_tipps, many=True)
-    return Response(serializer.data, status = 200)
+    return Response(serializer.data, status=200)
+
 
 @permission_classes((permissions.IsAuthenticated,))
 def export_digital_receipts(request):
@@ -662,6 +793,7 @@ def export_digital_receipts(request):
     response['Content-Disposition'] = 'attachment;filename=' + filename
     return response
 
+
 @permission_classes((permissions.IsAuthenticated,))
 def export_matching(request):
     data = download_csv(request, Matching.objects.all())
@@ -670,6 +802,7 @@ def export_matching(request):
     response['Content-Disposition'] = 'attachment;filename=' + filename
     return response
 
+
 def __update_objects_from_trustbox(last_updated):
     """
     Takes date of last updated and creates new and changed objects
@@ -677,17 +810,18 @@ def __update_objects_from_trustbox(last_updated):
     client = Client(TRUSTBOX_URL)
     response = client.service.getChangedArticles(last_updated, TRUSTBOX_USERNAME, TRUSTBOX_PASSWORD)
     updated_gtins = [article['gtin'] for article in __recursive_translation(response)["article"]]
-    import_log = ImportLog.objects.create(import_started = datetime.now())
+    import_log = ImportLog.objects.create(import_started=datetime.now())
     count = 0
     for gtin in updated_gtins:
-        count = count + 1
+        count += 1
         result = client.service.getTrustedDataByGTIN(gtin, TRUSTBOX_USERNAME, TRUSTBOX_PASSWORD)
         __soap_response_to_objects(result)
-        #print("imported model: " + str(count))
+        logger.debug("imported model: " + str(count))
     import_log.import_finished = datetime.now()
     import_log.save()
 
-# to be optimized -- objects can be created in batches 
+
+# to be optimized -- objects can be created in batches
 def __soap_response_to_objects(response):
     """
     Takes SOAP response from TRUSTBOX, crates and save object in DB.
@@ -697,6 +831,7 @@ def __soap_response_to_objects(response):
     products = result_as_dict['productList'][0]['products']
     for p in products:
         create_product(p)
+
 
 def __recursive_translation(d):
     ### helper method to translate SOAP response to dictionary ###
@@ -714,7 +849,6 @@ def __recursive_translation(d):
         else:
             result[k] = v
     return result
-
 
 
 def create_product(p):
@@ -751,12 +885,12 @@ def create_product(p):
                 continue
         if 'nutritionGroupAttributes' in p['nutrition']['nutritionFactsGroups']:
             for attr in p['nutrition']['nutritionFactsGroups']['nutritionGroupAttributes']:
-                if attr['_canonicalName'] == 'servingSize' and attr['value'] != "0.0": 
-                    #check against 0 due to multiple entries with different values
+                if attr['_canonicalName'] == 'servingSize' and attr['value'] != "0.0":
+                    # check against 0 due to multiple entries with different values
                     default_arguments["serving_size"] = attr['value']
         default_arguments["source"] = Product.TRUSTBOX
         default_arguments["source_checked"] = True
-        product, created = Product.objects.update_or_create(gtin = p['_gtin'], defaults = default_arguments)
+        product, created = Product.objects.update_or_create(gtin=p['_gtin'], defaults=default_arguments)
         if temp_image_url:
             store_image(temp_image_url, product)
 
@@ -773,20 +907,23 @@ def create_product(p):
                                                                defaults=default_arguments)
                 except (ValueError, TypeError, KeyError):  # ignore poor data quality
                     continue
-        
+
         # create allergens and ingridients for products
         for attr in p['nutrition']['nutritionAttributes']:
             if attr['_canonicalName'].startswith('allergen') and (attr['value'] == "true" or attr['value'] == 'false'):
-                Allergen.objects.update_or_create(product = product, name = attr["_canonicalName"], defaults = {"certainity" : attr['value']})
+                Allergen.objects.update_or_create(product=product, name=attr["_canonicalName"],
+                                                  defaults={"certainity": attr['value']})
             if attr['_canonicalName'] == 'ingredients':
-                Ingredient.objects.update_or_create(product = product, lang = attr["_languageCode"], defaults = {"text" : unicode(attr['value'])})
+                Ingredient.objects.update_or_create(product=product, lang=attr["_languageCode"],
+                                                    defaults={"text": unicode(attr['value'])})
         calculate_ofcom_value(product)
     except Exception as e:
         print(e)
 
+
 def is_number(s):
     try:
         v = float(s)
-        return True, v 
+        return True, v
     except (ValueError, TypeError):
         return False, None
