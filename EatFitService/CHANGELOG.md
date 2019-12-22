@@ -12,6 +12,7 @@ Possible log types:
 
 ### unreleased
 - [changed] Rebuild SendReceipts view and refactor on basis of send_receipts_experimental (EAT-92)
+- [changed] Update Python from 2.7.16 to 3.6.9 (EAT-93)
 
 ### v12 (2019-10-17)
 - [changed] Change non-editable fields on Product to read-only fields in admin view (EAT-86)

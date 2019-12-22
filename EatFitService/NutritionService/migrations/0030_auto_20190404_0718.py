@@ -17,7 +17,7 @@ class Migration(migrations.Migration):
             name='MarketRegion',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('market_region_name', models.CharField(choices=[(b'Switzerland', b'Switzerland'), (b'Germany', b'Germany'), (b'Austria', b'Austria'), (b'France', b'France'), (b'Italy', b'Italy')], max_length=52)),
+                ('market_region_name', models.CharField(choices=[('Switzerland', 'Switzerland'), ('Germany', 'Germany'), ('Austria', 'Austria'), ('France', 'France'), ('Italy', 'Italy')], max_length=52)),
                 ('product', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='market_region', to='NutritionService.Product')),
             ],
             options={
@@ -33,6 +33,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='retailer',
             name='retailer_name',
-            field=models.CharField(choices=[(b'Migros', b'Migros'), (b'Coop', b'Coop'), (b'Denner', b'Denner'), (b'Farmy', b'Farmy'), (b'Volg', b'Volg'), (b'Edeka', b'Edeka')], max_length=20),
+            field=models.CharField(choices=[('Migros', 'Migros'), ('Coop', 'Coop'), ('Denner', 'Denner'), ('Farmy', 'Farmy'), ('Volg', 'Volg'), ('Edeka', 'Edeka')], max_length=20),
         ),
     ]

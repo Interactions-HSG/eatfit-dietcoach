@@ -131,7 +131,7 @@ class NwdSubcategory(models.Model):
     lmp = models.ForeignKey(LmpCategory, models.DO_NOTHING, blank=True, null=True)
     icon = models.ImageField(upload_to ="subcategory_icons",null=True, blank=True, verbose_name="Icon")
 
-    def __unicode__(self):
+    def __str__(self):
         return self.description
 
     class Meta:
@@ -160,7 +160,7 @@ class Product(models.Model):
     nwd_subcategory = models.ForeignKey(NwdSubcategory, models.DO_NOTHING, blank=True, null=True)
 
 
-    def __unicode__(self):
+    def __str__(self):
         return "Gtin: " + str(self.gtin)
 
     class Meta:
@@ -216,7 +216,7 @@ class MissingTrustboxItem(models.Model):
     protein = models.FloatField(verbose_name="Protein pro 100g/ml in Gramm")
     price = models.FloatField(verbose_name="Preis in CHF", blank=True, null=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
     class Meta:

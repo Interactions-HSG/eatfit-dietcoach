@@ -29,7 +29,7 @@ from NutritionService.nutriscore.calculations import unit_of_measure_conversion
 from NutritionService.serializers import MinorCategorySerializer, MajorCategorySerializer, HealthTippSerializer, \
     ProductSerializer, DigitalReceiptSerializer
 from NutritionService.tasks import import_from_openfood
-from errors import SendReceiptsErrors
+from .errors import SendReceiptsErrors
 
 logger = logging.getLogger('NutritionService.views')
 allowed_units_of_measure = ["g", "kg", "ml", "l"]
@@ -864,17 +864,17 @@ def create_product(p):
         for n in p['productNames']:
             language_code = n['_languageCode'].lower()
             if language_code == "de":
-                default_arguments["product_name_de"] = unicode(n['name'])
+                default_arguments["product_name_de"] = str(n['name'])
             if language_code == "fr":
-                default_arguments["product_name_fr"] = unicode(n['name'])
+                default_arguments["product_name_fr"] = str(n['name'])
             if language_code == "en":
-                default_arguments["product_name_en"] = unicode(n['name'])
+                default_arguments["product_name_en"] = str(n['name'])
             if language_code == "it":
-                default_arguments["product_name_it"] = unicode(n['name'])
+                default_arguments["product_name_it"] = str(n['name'])
         for attr in p['productAttributes']:
             try:
                 if attr['_canonicalName'] == 'manufacturer':
-                    default_arguments["producer"] = unicode(attr['value'])
+                    default_arguments["producer"] = str(attr['value'])
                 if attr['_canonicalName'] == 'packageSize':
                     default_arguments["product_size"] = attr['value']
                 if attr['_canonicalName'] == 'packageSize_uom':
@@ -914,8 +914,7 @@ def create_product(p):
                 Allergen.objects.update_or_create(product=product, name=attr["_canonicalName"],
                                                   defaults={"certainity": attr['value']})
             if attr['_canonicalName'] == 'ingredients':
-                Ingredient.objects.update_or_create(product=product, lang=attr["_languageCode"],
-                                                    defaults={"text": unicode(attr['value'])})
+                Ingredient.objects.update_or_create(product = product, lang = attr["_languageCode"], defaults = {"text" : str(attr['value'])})
         calculate_ofcom_value(product)
     except Exception as e:
         print(e)

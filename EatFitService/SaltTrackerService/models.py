@@ -11,7 +11,7 @@ from django.db import models
 from django.contrib.auth.models import User
 
 class SaltTrackerUser(models.Model):
-    user = models.OneToOneField(User, models.CASCADE, primary_key=True)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)
     nickname = models.CharField(unique=True, max_length=50)
     profile_image = models.CharField(max_length=100, blank=True, null=True)
     date_of_birth = models.DateField(blank=True, null=True)
@@ -31,7 +31,7 @@ class SaltTrackerUser(models.Model):
         app_label = 'api' 
 
 class ReebateCredentials(models.Model):
-    user = models.ForeignKey(SaltTrackerUser, models.DO_NOTHING)
+    user = models.ForeignKey(SaltTrackerUser, on_delete=models.DO_NOTHING)
     username = models.CharField(max_length=255)
     password = models.CharField(max_length=255)
     last_reebate_import = models.BigIntegerField(null=True, blank=True)
@@ -42,7 +42,7 @@ class ReebateCredentials(models.Model):
         app_label = 'api' 
 
 class MigrosBasket(models.Model):
-    user = models.ForeignKey(SaltTrackerUser, models.DO_NOTHING)
+    user = models.ForeignKey(SaltTrackerUser, on_delete=models.DO_NOTHING)
     external_id = models.CharField(max_length=255)
     date_of_purchase_millis = models.BigIntegerField()
     store = models.CharField(max_length=255)
@@ -65,8 +65,8 @@ class MigrosItem(models.Model):
         app_label = 'api' 
 
 class MigrosBasketItem(models.Model):
-    migros_basket = models.ForeignKey(MigrosBasket, models.CASCADE)
-    migros_item = models.ForeignKey(MigrosItem, models.DO_NOTHING)
+    migros_basket = models.ForeignKey(MigrosBasket, on_delete=models.CASCADE)
+    migros_item = models.ForeignKey(MigrosItem, on_delete=models.DO_NOTHING)
     quantity = models.FloatField()
     price = models.FloatField()
 
@@ -83,7 +83,7 @@ class ShoppingResult(models.Model):
     total_sugar = models.FloatField()
     serving_size = models.FloatField()
     quantity = models.FloatField()
-    user = models.ForeignKey(User)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     added = models.DateTimeField()
     nwd_subcategory_name = models.TextField(max_length=1024, blank=True, null=True)
 
@@ -99,7 +99,7 @@ class ShoppingTip(models.Model):
     is_general = models.BooleanField(default=False, verbose_name="Allgemeiner Tipp")
     icon = models.ImageField(upload_to ="shopping_tips",null=True, blank=True, verbose_name="Icon")
 
-    def __unicode__(self):
+    def __str__(self):
         return self.text[:20]
 
     class Meta:
@@ -109,7 +109,7 @@ class ShoppingTip(models.Model):
 
 
 class AutoidScraperMigrosBasket(models.Model):
-    user = models.ForeignKey('SaltTrackerUser', models.DO_NOTHING)
+    user = models.ForeignKey('SaltTrackerUser', on_delete=models.DO_NOTHING)
     storename = models.CharField(max_length=255, blank=True, null=True)
     transaction_nr = models.FloatField(blank=True, null=True)
     kst = models.IntegerField(blank=True, null=True)
@@ -130,8 +130,8 @@ class AutoidScraperMigrosBasket(models.Model):
 class AutoidScraperMigrosBasketItem(models.Model):
     quantity = models.FloatField(blank=True, null=True)
     price = models.FloatField(blank=True, null=True)
-    autoid_scraper_migros_basket = models.ForeignKey(AutoidScraperMigrosBasket, models.DO_NOTHING)
-    autoid_scraper_migros_item = models.ForeignKey('AutoidScraperMigrosItem', models.DO_NOTHING)
+    autoid_scraper_migros_basket = models.ForeignKey(AutoidScraperMigrosBasket, on_delete=models.DO_NOTHING)
+    autoid_scraper_migros_item = models.ForeignKey('AutoidScraperMigrosItem', on_delete=models.DO_NOTHING)
 
     class Meta:
         managed = False
