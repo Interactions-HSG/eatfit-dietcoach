@@ -29,7 +29,7 @@ from NutritionService.nutriscore.calculations import unit_of_measure_conversion
 from NutritionService.serializers import MinorCategorySerializer, MajorCategorySerializer, HealthTippSerializer, \
     ProductSerializer, DigitalReceiptSerializer
 from NutritionService.tasks import import_from_openfood
-from errors import SendReceiptsErrors
+from .errors import SendReceiptsErrors
 
 logger = logging.getLogger('NutritionService.views')
 allowed_units_of_measure = ["g", "kg", "ml", "l"]
