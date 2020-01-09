@@ -83,7 +83,7 @@ class ShoppingResult(models.Model):
     total_sugar = models.FloatField()
     serving_size = models.FloatField()
     quantity = models.FloatField()
-    user = models.ForeignKey(User, models.CASCADE)
+    user = models.ForeignKey(User)
     added = models.DateTimeField()
     nwd_subcategory_name = models.TextField(max_length=1024, blank=True, null=True)
 
@@ -130,8 +130,8 @@ class AutoidScraperMigrosBasket(models.Model):
 class AutoidScraperMigrosBasketItem(models.Model):
     quantity = models.FloatField(blank=True, null=True)
     price = models.FloatField(blank=True, null=True)
-    autoid_scraper_migros_basket = models.ForeignKey(AutoidScraperMigrosBasket)
-    autoid_scraper_migros_item = models.ForeignKey('AutoidScraperMigrosItem')
+    autoid_scraper_migros_basket = models.ForeignKey(AutoidScraperMigrosBasket, models.DO_NOTHING)
+    autoid_scraper_migros_item = models.ForeignKey('AutoidScraperMigrosItem', models.DO_NOTHING)
 
     class Meta:
         managed = False
