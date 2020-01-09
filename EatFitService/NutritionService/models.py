@@ -241,7 +241,7 @@ class Retailer(models.Model):
     )
 
     retailer_name = models.CharField(max_length=20, choices=RETAILER_CHOICES)
-    product = models.ForeignKey(Product, related_name='retailer', on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, related_name='retailer')
 
     class Meta:
         verbose_name = 'Retailer'
@@ -271,7 +271,7 @@ class MarketRegion(models.Model):
     MARKET_REGION_QUERY_MAP = {'ch': SWITZERLAND, 'de': GERMANY, 'au': AUSTRIA, 'fr': FRANCE, 'it': ITALY}
 
     market_region_name = models.CharField(max_length=52, choices=MARKET_REGIONS)
-    product = models.ForeignKey(Product, related_name='market_region', on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, related_name='market_region')
 
     class Meta:
         verbose_name = 'Market Region'
@@ -384,7 +384,7 @@ class Allergen(models.Model):
     )
 
     id = models.BigAutoField(primary_key=True)
-    product = models.ForeignKey(Product, related_name='allergens', on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, related_name='allergens')
     name = models.CharField(max_length=64, null=True, blank=True)
     certainity = models.CharField(max_length=11, choices=CERTAINTY_CHOICES, null=True, blank=True)
 
@@ -396,7 +396,7 @@ class Allergen(models.Model):
 
 class NutritionFact(models.Model):
     id = models.BigAutoField(primary_key=True)
-    product = models.ForeignKey(Product, related_name='nutrients', on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, related_name='nutrients')
     name = models.CharField(max_length=64, null=True, blank=True)
     amount = models.FloatField(null=True, blank=True)
     unit_of_measure = models.CharField(max_length=8, null=True, blank=True)
@@ -410,7 +410,7 @@ class NutritionFact(models.Model):
 
 class Ingredient(models.Model):
     id = models.BigAutoField(primary_key=True)
-    product = models.ForeignKey(Product, related_name='ingredients', on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, related_name='ingredients')
     lang = models.CharField(max_length=2)
     text = models.TextField()
 
@@ -521,7 +521,7 @@ class HealthTipp(models.Model):
 
 
 class ReceiptToNutritionPartner(models.Model):
-    user = models.OneToOneField(User, primary_key=True, related_name="partner", on_delete=models.CASCADE)
+    user = models.OneToOneField(User, primary_key=True, related_name="partner")
     name = models.CharField(max_length=255)
 
     def __str__(self):
@@ -534,7 +534,7 @@ class ReceiptToNutritionPartner(models.Model):
 
 
 class ReceiptToNutritionUser(models.Model):
-    r2n_partner = models.ForeignKey(ReceiptToNutritionPartner, on_delete=models.CASCADE)
+    r2n_partner = models.ForeignKey(ReceiptToNutritionPartner)
     r2n_username = models.CharField(max_length=255)
     r2n_user_active = models.BooleanField(default=True)
 
@@ -549,7 +549,7 @@ class ReceiptToNutritionUser(models.Model):
 
 
 class DigitalReceipt(models.Model):
-    r2n_user = models.ForeignKey(ReceiptToNutritionUser, on_delete=models.CASCADE)
+    r2n_user = models.ForeignKey(ReceiptToNutritionUser)
     business_unit = models.CharField(max_length=255)
     receipt_id = models.CharField(max_length=255)
     article_id = models.CharField(max_length=255)
@@ -574,7 +574,7 @@ class Matching(models.Model):
     article_id = models.CharField(max_length=255)
     article_type = models.CharField(max_length=255)
     gtin = models.BigIntegerField()
-    eatfit_product = models.ForeignKey(Product, null=True, blank=True, editable=False, on_delete=models.CASCADE)
+    eatfit_product = models.ForeignKey(Product, null=True, blank=True, editable=False)
 
     def save(self, *args, **kwargs):
         if self.gtin:
