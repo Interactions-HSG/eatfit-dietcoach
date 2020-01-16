@@ -19,6 +19,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='allergen',
             name='certainty',
-            field=models.CharField(choices=[(b'true', b'true'), (b'false', b'false'), (b'mayContain', b'mayContain')], default=b'false', max_length=11),
+            field=models.CharField(choices=[('true', 'true'), ('false', 'false'), ('mayContain', 'mayContain')], default='false', max_length=11),
         ),
     ]

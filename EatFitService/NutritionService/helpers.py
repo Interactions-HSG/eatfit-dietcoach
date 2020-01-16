@@ -7,7 +7,7 @@ import requests
 import shutil
 from skimage.measure import compare_ssim
 import string
-from StringIO import StringIO
+from io import BytesIO
 import tempfile
 from textblob import TextBlob
 
@@ -33,13 +33,11 @@ def detect_language(text):
 
 
 def prepare_image_buffered(image):
-
-    temp_buffer = StringIO()
+    temp_buffer = BytesIO()
     temp_buffer.write(image.read())
     temp_buffer.seek(0)
-    image = np.array(Image.open(temp_buffer), dtype=np.uint8)
 
-    return image
+    return np.array(Image.open(temp_buffer), dtype=np.uint8)
 
 
 def calculate_image_ssim(original_image, new_image, original_buffered=True, new_buffered=False):

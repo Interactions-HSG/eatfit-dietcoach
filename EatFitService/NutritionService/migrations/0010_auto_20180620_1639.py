@@ -20,7 +20,7 @@ class Migration(migrations.Migration):
                 ('text_en', models.TextField(blank=True, null=True)),
                 ('text_fr', models.TextField(blank=True, null=True)),
                 ('text_it', models.TextField(blank=True, null=True)),
-                ('image', models.ImageField(blank=True, null=True, upload_to=b'health_tipp_images')),
+                ('image', models.ImageField(blank=True, null=True, upload_to='health_tipp_images')),
                 ('minor_categories', models.ManyToManyField(blank=True, related_name='minor_category', to='NutritionService.MinorCategory')),
             ],
             options={
@@ -32,7 +32,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='NutrientName',
             fields=[
-                ('name', models.CharField(max_length=255, primary_key=True, serialize=False, verbose_name=b'Name')),
+                ('name', models.CharField(max_length=255, primary_key=True, serialize=False, verbose_name='Name')),
             ],
             options={
                 'db_table': 'nutrient_name',

@@ -15,12 +15,12 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='minorcategory',
             name='nutri_score_category',
-            field=models.CharField(blank=True, choices=[(b'Mineral Water', b'Mineral Water'), (b'Beverage', b'Beverage'), (b'Cheese', b'Cheese'), (b'Added Fat', b'Added Fat'), (b'Food', b'Food'), (b'No Food', b'No Food'), (b'Unknown', b'Unknown')], max_length=50, null=True),
+            field=models.CharField(blank=True, choices=[('Mineral Water', 'Mineral Water'), ('Beverage', 'Beverage'), ('Cheese', 'Cheese'), ('Added Fat', 'Added Fat'), ('Food', 'Food'), ('No Food', 'No Food'), ('Unknown', 'Unknown')], max_length=50, null=True),
         ),
         migrations.AlterField(
             model_name='product',
             name='nutri_score_category_estimated',
-            field=models.CharField(blank=True, choices=[(b'Mineral Water', b'Mineral Water'), (b'Beverage', b'Beverage'), (b'Cheese', b'Cheese'), (b'Added Fat', b'Added Fat'), (b'Food', b'Food'), (b'No Food', b'No Food'), (b'Unknown', b'Unknown')], max_length=50, null=True),
+            field=models.CharField(blank=True, choices=[('Mineral Water', 'Mineral Water'), ('Beverage', 'Beverage'), ('Cheese', 'Cheese'), ('Added Fat', 'Added Fat'), ('Food', 'Food'), ('No Food', 'No Food'), ('Unknown', 'Unknown')], max_length=50, null=True),
         ),
         migrations.AlterField(
             model_name='product',

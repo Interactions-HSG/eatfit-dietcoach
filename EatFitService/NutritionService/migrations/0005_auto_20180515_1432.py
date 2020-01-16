@@ -30,6 +30,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='product',
             name='source',
-            field=models.CharField(blank=True, choices=[(b'Trustbox', b'Trustbox'), (b'Crowdsourcing', b'Crowdsourcing'), (b'Openfood', b'Openfood'), (b'Codecheck', b'Codecheck'), (b'Auto-ID Labs', b'Auto-ID Labs')], max_length=256, null=True),
+            field=models.CharField(blank=True, choices=[('Trustbox', 'Trustbox'), ('Crowdsourcing', 'Crowdsourcing'), ('Openfood', 'Openfood'), ('Codecheck', 'Codecheck'), ('Auto-ID Labs', 'Auto-ID Labs')], max_length=256, null=True),
         ),
     ]

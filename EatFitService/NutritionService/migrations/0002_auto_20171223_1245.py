@@ -15,7 +15,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='minorcategory',
             name='icon',
-            field=models.ImageField(blank=True, null=True, upload_to=b'minor_category_icons', verbose_name=b'Icon'),
+            field=models.ImageField(blank=True, null=True, upload_to='minor_category_icons', verbose_name='Icon'),
         ),
         migrations.AddField(
             model_name='minorcategory',

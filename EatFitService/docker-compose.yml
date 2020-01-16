@@ -20,10 +20,12 @@ services:
     build:
       dockerfile: Dockerfile.dev
       context: .
+    image: api:latest
     command: sh api-worker.sh
     ports:
       - 80:80
       - 443:443
+      - 81:81
     depends_on:
       - mysql
       - rabbitmq
@@ -32,9 +34,7 @@ services:
     environment:
       - DJANGO_SETTINGS_MODULE=EatFitService.local_settings
   celery-worker:
-    build:
-      dockerfile: Dockerfile.dev
-      context: .
+    image: api:latest
     command: sh celery-worker.sh
     depends_on:
       - mysql
