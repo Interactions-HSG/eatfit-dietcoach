@@ -3,7 +3,7 @@
 from __future__ import print_function
 from model_mommy import mommy
 import pytest
-import requests_mock
+from requests_mock import ANY
 
 from rest_framework.reverse import reverse
 from rest_framework.test import APIClient
@@ -37,7 +37,7 @@ def test_is_authenticated(url):
 
 @pytest.mark.django_db
 def test_allergens_form():
-    with open('NutritionService/tests/allergens_test.csv') as infile:
+    with open('NutritionService/tests/allergens_test.csv', 'rb') as infile:
         allergens_csv_file = SimpleUploadedFile(infile.name, infile.read())
 
     allergens_fields = {'allergen_name': 'Update',
@@ -50,7 +50,7 @@ def test_allergens_form():
 
 @pytest.mark.django_db
 def test_nutrients_form():
-    with open('NutritionService/tests/nutrients_test.csv') as infile:
+    with open('NutritionService/tests/nutrients_test.csv', 'rb') as infile:
         nutrients_csv_file = SimpleUploadedFile(infile.name, infile.read())
 
     nutrients_fields = {'nutrients_name': 'Update',
@@ -64,7 +64,7 @@ def test_nutrients_form():
 
 @pytest.mark.django_db
 def test_products_form():
-    with open('NutritionService/tests/products_test.csv') as infile:
+    with open('NutritionService/tests/products_test.csv', 'rb') as infile:
         products_csv_file = SimpleUploadedFile(infile.name, infile.read())
 
     products_fields = {'product_name_de': 'Update',
@@ -139,7 +139,7 @@ def test_allergen_import_update():
 
     factory = RequestFactory()
 
-    with open('NutritionService/tests/allergens_test.csv') as infile:
+    with open('NutritionService/tests/allergens_test.csv', 'rb') as infile:
         allergens_csv_file = SimpleUploadedFile(infile.name, infile.read())
 
     form_data = {'allergen_name': 'Update',
@@ -163,7 +163,7 @@ def test_allergen_import_create():
 
     factory = RequestFactory()
 
-    with open('NutritionService/tests/allergens_test.csv') as infile:
+    with open('NutritionService/tests/allergens_test.csv', 'rb') as infile:
         allergens_csv_file = SimpleUploadedFile(infile.name, infile.read())
 
     form_data = {'allergen_name': 'Create',
@@ -188,7 +188,7 @@ def test_allergen_import_error_logging():
 
     factory = RequestFactory()
 
-    with open('NutritionService/tests/allergens_test.csv') as infile:
+    with open('NutritionService/tests/allergens_test.csv', 'rb') as infile:
         allergens_csv_file = SimpleUploadedFile(infile.name, infile.read())
 
     form_data = {'allergen_name': 'Update',
@@ -214,7 +214,7 @@ def test_nutrient_import_update():
 
     factory = RequestFactory()
 
-    with open('NutritionService/tests/nutrients_test.csv') as infile:
+    with open('NutritionService/tests/nutrients_test.csv', 'rb') as infile:
         nutrients_csv_file = SimpleUploadedFile(infile.name, infile.read())
 
     form_data = {'nutrients_name': 'Update',
@@ -240,7 +240,7 @@ def test_nutrient_import_create():
 
     factory = RequestFactory()
 
-    with open('NutritionService/tests/nutrients_test.csv') as infile:
+    with open('NutritionService/tests/nutrients_test.csv', 'rb') as infile:
         nutrients_csv_file = SimpleUploadedFile(infile.name, infile.read())
 
     form_data = {'nutrients_name': 'Create',
@@ -268,7 +268,7 @@ def test_nutrient_import_error_logging():
 
     factory = RequestFactory()
 
-    with open('NutritionService/tests/nutrients_test.csv') as infile:
+    with open('NutritionService/tests/nutrients_test.csv', 'rb') as infile:
         nutrients_csv_file = SimpleUploadedFile(infile.name, infile.read())
 
     form_data = {'nutrients_name': 'Update',
@@ -298,7 +298,7 @@ def test_product_on_pk():
 
     factory = RequestFactory()
 
-    with open('NutritionService/tests/products_test.csv') as infile:
+    with open('NutritionService/tests/products_test.csv', 'rb') as infile:
         product_csv_file = SimpleUploadedFile(infile.name, infile.read())
 
     form_data = {'product_name_de': 'Update',
@@ -333,7 +333,7 @@ def test_product_import_safe_update_and_create():
 
     factory = RequestFactory()
 
-    with open('NutritionService/tests/products_test.csv') as infile:
+    with open('NutritionService/tests/products_test.csv', 'rb') as infile:
         product_csv_file = SimpleUploadedFile(infile.name, infile.read())
 
     form_data = {'product_name_de': 'Update',
@@ -371,7 +371,7 @@ def test_product_import_ingredients_update():
 
     factory = RequestFactory()
 
-    with open('NutritionService/tests/products_test.csv') as infile:
+    with open('NutritionService/tests/products_test.csv', 'rb') as infile:
         product_csv_file = SimpleUploadedFile(infile.name, infile.read())
 
     form_data = {'product_name_de': 'None',
@@ -409,7 +409,7 @@ def test_product_import_ingredients_create():
 
     factory = RequestFactory()
 
-    with open('NutritionService/tests/products_test.csv') as infile:
+    with open('NutritionService/tests/products_test.csv', 'rb') as infile:
         product_csv_file = SimpleUploadedFile(infile.name, infile.read())
 
     form_data = {'product_name_de': 'None',
@@ -439,16 +439,15 @@ def test_product_import_ingredients_create():
 
 
 @pytest.mark.django_db
-@requests_mock.Mocker()
-def test_product_import_load_main_image(mock):
-    with open('NutritionService/tests/product_image.jpg') as infile:
+def test_product_import_load_main_image(requests_mock):
+    with open('NutritionService/tests/product_image.jpg', 'rb') as infile:
         test_img = infile.read()
 
-    mock.get(requests_mock.ANY, content=test_img)
+    requests_mock.get(ANY, content=test_img)
 
     factory = RequestFactory()
 
-    with open('NutritionService/tests/products_test.csv') as infile:
+    with open('NutritionService/tests/products_test.csv', 'rb') as infile:
         product_csv_file = SimpleUploadedFile(infile.name, infile.read())
 
     form_data = {'product_name_de': 'None',
@@ -476,16 +475,15 @@ def test_product_import_load_main_image(mock):
 
 
 @pytest.mark.django_db
-@requests_mock.Mocker()
-def test_product_import_main_image_exists_update(mock):
-    with open('NutritionService/tests/product_image.jpg') as infile:
+def test_product_import_main_image_exists_update(requests_mock):
+    with open('NutritionService/tests/product_image.jpg', 'rb') as infile:
         test_img = infile.read()
 
-    mock.get(requests_mock.ANY, content=test_img)
+    requests_mock.get(ANY, content=test_img)
 
     test_prod = mommy.make(Product, gtin=4018852104216, original_image_url='https://www.example.com/')
 
-    with open('NutritionService/tests/product_image.jpg') as infile:
+    with open('NutritionService/tests/product_image.jpg', 'rb') as infile:
         product_main_image = SimpleUploadedFile(infile.name, infile.read())
 
     test_prod.image = product_main_image
@@ -493,7 +491,7 @@ def test_product_import_main_image_exists_update(mock):
 
     factory = RequestFactory()
 
-    with open('NutritionService/tests/products_test.csv') as infile:
+    with open('NutritionService/tests/products_test.csv', 'rb') as infile:
         product_csv_file = SimpleUploadedFile(infile.name, infile.read())
 
     form_data = {'product_name_de': 'None',
@@ -532,7 +530,7 @@ def test_product_import_major_category():
 
     factory = RequestFactory()
 
-    with open('NutritionService/tests/products_test.csv') as infile:
+    with open('NutritionService/tests/products_test.csv', 'rb') as infile:
         product_csv_file = SimpleUploadedFile(infile.name, infile.read())
 
     form_data = {'product_name_de': 'None',
@@ -570,7 +568,7 @@ def test_product_import_minor_category():
 
     factory = RequestFactory()
 
-    with open('NutritionService/tests/products_test.csv') as infile:
+    with open('NutritionService/tests/products_test.csv', 'rb') as infile:
         product_csv_file = SimpleUploadedFile(infile.name, infile.read())
 
     form_data = {'product_name_de': 'None',
@@ -607,7 +605,7 @@ def test_product_import_retailer_update():
 
     factory = RequestFactory()
 
-    with open('NutritionService/tests/products_test.csv') as infile:
+    with open('NutritionService/tests/products_test.csv', 'rb') as infile:
         product_csv_file = SimpleUploadedFile(infile.name, infile.read())
 
     form_data = {'product_name_de': 'None',
@@ -643,7 +641,7 @@ def test_product_import_retailer_create():
 
     factory = RequestFactory()
 
-    with open('NutritionService/tests/products_test.csv') as infile:
+    with open('NutritionService/tests/products_test.csv', 'rb') as infile:
         product_csv_file = SimpleUploadedFile(infile.name, infile.read())
 
     form_data = {'product_name_de': 'None',
@@ -680,7 +678,7 @@ def test_product_import_market_region_update():
 
     factory = RequestFactory()
 
-    with open('NutritionService/tests/products_test.csv') as infile:
+    with open('NutritionService/tests/products_test.csv', 'rb') as infile:
         product_csv_file = SimpleUploadedFile(infile.name, infile.read())
 
     form_data = {'product_name_de': 'None',
@@ -716,7 +714,7 @@ def test_product_import_market_region_create():
 
     factory = RequestFactory()
 
-    with open('NutritionService/tests/products_test.csv') as infile:
+    with open('NutritionService/tests/products_test.csv', 'rb') as infile:
         product_csv_file = SimpleUploadedFile(infile.name, infile.read())
 
     form_data = {'product_name_de': 'None',
@@ -750,7 +748,7 @@ def test_product_import_error_logging():
 
     factory = RequestFactory()
 
-    with open('NutritionService/tests/products_test.csv') as infile:
+    with open('NutritionService/tests/products_test.csv', 'rb') as infile:
         product_csv_file = SimpleUploadedFile(infile.name, infile.read())
 
     form_data = {'product_name_de': 'Update',

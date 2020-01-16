@@ -3,7 +3,6 @@ import csv
 
 from django.conf import settings
 from django.core.mail import send_mail
-from django.db.models import Q
 
 from NutritionService.helpers import detect_language, store_image_optim, store_image
 from NutritionService.models import MajorCategory, MinorCategory, Product, ImportErrorLog
@@ -30,7 +29,7 @@ class ImportBase:
         self.form_params = form_params
 
     def check_encoding(self):
-        with open(self.csv_file_path) as csv_file:
+        with open(self.csv_file_path, 'rb') as csv_file:
             detector = chardet.universaldetector.UniversalDetector()
             # check only first 30 lines for encoding
             for line in csv_file.readlines()[:30]:

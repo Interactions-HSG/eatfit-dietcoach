@@ -4,7 +4,6 @@ from EatFitService import settings
 from SaltTrackerService.models import ReebateCredentials, MigrosBasket, MigrosItem, MigrosBasketItem
 from SaltTrackerService.serializers import ReebateSerializer
 import json
-from itertools import izip
 from TrustBoxAPI.models import ImportLog
 from datetime import datetime
 

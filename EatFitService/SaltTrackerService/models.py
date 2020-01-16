@@ -99,7 +99,7 @@ class ShoppingTip(models.Model):
     is_general = models.BooleanField(default=False, verbose_name="Allgemeiner Tipp")
     icon = models.ImageField(upload_to ="shopping_tips",null=True, blank=True, verbose_name="Icon")
 
-    def __unicode__(self):
+    def __str__(self):
         return self.text[:20]
 
     class Meta:

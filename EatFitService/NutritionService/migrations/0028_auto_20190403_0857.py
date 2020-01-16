@@ -19,7 +19,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='retailer',
             name='market_region_name',
-            field=models.CharField(choices=[(b'Switzerland', b'Switzerland'), (b'Germany', b'Germany'), (b'Austria', b'Austria'), (b'France', b'France'), (b'Italy', b'Italy')], default='Switzerland', max_length=52),
+            field=models.CharField(choices=[('Switzerland', 'Switzerland'), ('Germany', 'Germany'), ('Austria', 'Austria'), ('France', 'France'), ('Italy', 'Italy')], default='Switzerland', max_length=52),
             preserve_default=False,
         ),
         migrations.DeleteModel(

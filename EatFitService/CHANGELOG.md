@@ -10,6 +10,10 @@ Possible log types:
 - `[security]` to invite users to upgrade in case of vulnerabilities.
 - `[chore]` for things like maintenance tasks
 
+### v13 (2019-12-22)
+- [changed] Rebuild SendReceipts view and refactor on basis of send_receipts_experimental (EAT-92)
+- [changed] Update Python from 2.7.16 to 3.6.9 (EAT-93)
+
 ### v12 (2019-10-17)
 - [changed] Change non-editable fields on Product to read-only fields in admin view (EAT-86)
 - [added] Add calculation for nutri_score_final on Product model (EAT-88)

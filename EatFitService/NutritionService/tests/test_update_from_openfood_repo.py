@@ -1,10 +1,9 @@
 from datetime import datetime, timedelta
 from model_mommy import mommy
 import pytest
-import requests_mock
+from requests_mock import ANY
 
 from django.contrib.auth.models import User
-from django.db.models import Q
 from rest_framework.test import force_authenticate, APIRequestFactory
 
 from NutritionService.models import Product, NutritionFact
@@ -18,8 +17,7 @@ def create_user():
 
 
 @pytest.mark.django_db
-@requests_mock.Mocker()
-def test_openfood_repo_update_success(mock):
+def test_openfood_repo_update_success(requests_mock):
 
     test_product = mommy.make(Product, gtin=7610827921858, product_size=None, product_size_unit_of_measure=None,
                               product_name_de=None, product_name_fr=None, product_name_it=None,
@@ -30,7 +28,7 @@ def test_openfood_repo_update_success(mock):
     assert Product.objects.count() == 1
     assert NutritionFact.objects.count() == 1
 
-    mock.get(requests_mock.ANY, content=CONTENT)
+    requests_mock.get(ANY, text=CONTENT)
 
     factory = APIRequestFactory()
     request = factory.get('data/data-cleaning/')
@@ -68,8 +66,7 @@ def test_openfood_repo_update_success(mock):
 
 
 @pytest.mark.django_db
-@requests_mock.Mocker()
-def test_openfood_repo_update_failure(mock):
+def test_openfood_repo_update_failure(requests_mock):
 
     date_checked = datetime.now() - timedelta(days=32)
 
@@ -84,7 +81,7 @@ def test_openfood_repo_update_failure(mock):
     assert Product.objects.count() == 1
     assert NutritionFact.objects.count() == 1
 
-    mock.get(requests_mock.ANY, content=CONTENT)
+    requests_mock.get(ANY, text=CONTENT)
 
     factory = APIRequestFactory()
     request = factory.get('data/data-cleaning/')
