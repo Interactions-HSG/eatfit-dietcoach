@@ -336,7 +336,7 @@ class NutriScoreFacts(models.Model):
         db_table = 'nutri_score_fact'
 
     def __str__(self):
-        return unicode(self.product.gtin)
+        return self.product.gtin
 
 
 class ErrorLog(models.Model):
