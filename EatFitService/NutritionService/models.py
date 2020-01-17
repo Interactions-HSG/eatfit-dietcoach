@@ -336,7 +336,7 @@ class NutriScoreFacts(models.Model):
         db_table = 'nutri_score_fact'
 
     def __str__(self):
-        return unicode(self.product.gtin)
+        return str(self.product.gtin)
 
 
 class ErrorLog(models.Model):
@@ -605,7 +605,7 @@ class NonFoundMatching(models.Model):
         verbose_name_plural = "NonFoundMatchings"
         db_table = 'non_found_matching'
     
-    def __unicode__(self):
+    def __str__(self):
         return self.article_id
 
 
