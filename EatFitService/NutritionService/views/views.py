@@ -81,7 +81,7 @@ class SendReceiptsView(generics.GenericAPIView, mixins.ListModelMixin, mixins.Cr
 
         validated_data = serializer.validated_data
         r2n_username = validated_data.get('r2n_username')
-        r2n_partner = validated_data.get('r2n_username')
+        r2n_partner = validated_data.get('r2n_partner')
 
         try:
             r2n_user = ReceiptToNutritionUser.objects.get(r2n_partner__name=r2n_partner, r2n_username=r2n_username)
