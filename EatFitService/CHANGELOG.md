@@ -10,6 +10,11 @@ Possible log types:
 - `[security]` to invite users to upgrade in case of vulnerabilities.
 - `[chore]` for things like maintenance tasks
 
+### unreleased (2019-01-31)
+
+- [fixed] Fix wrong r2n_partner key in send-receipts API view
+- [fixed] Fix middleware bug with applicationinsights
+
 ### v13 (2019-12-22)
 - [changed] Rebuild SendReceipts view and refactor on basis of send_receipts_experimental (EAT-92)
 - [changed] Update Python from 2.7.16 to 3.6.9 (EAT-93)
