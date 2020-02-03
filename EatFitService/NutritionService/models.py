@@ -615,6 +615,7 @@ class CurrentStudies(models.Model):
     study_teaser_en = models.CharField(max_length=255)
     study_teaser_fr = models.CharField(max_length=255)
     study_teaser_it = models.CharField(max_length=255)
+    link = models.CharField(max_length=255, default='', null=True)
     icon = models.ImageField(upload_to="current_studies_icon")
     banner = models.ImageField(upload_to="current_studies_banner")
 
