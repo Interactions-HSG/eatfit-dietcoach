@@ -20,7 +20,7 @@ cp settings_keys.template.py settings_keys.py
 Move to directory 
 
 ```
-source env/bin/activate
+source /usr/local/venves/eatfitenv/bin/activate
 pip install -r requirements.txt
 ```
 
