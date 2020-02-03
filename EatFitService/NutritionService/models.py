@@ -609,6 +609,25 @@ class NonFoundMatching(models.Model):
         return self.article_id
 
 
+class CurrentStudies(models.Model):
+    study_name = models.CharField(max_length=255)
+    study_teaser_de = models.CharField(max_length=255)
+    study_teaser_en = models.CharField(max_length=255)
+    study_teaser_fr = models.CharField(max_length=255)
+    study_teaser_it = models.CharField(max_length=255)
+    icon = models.ImageField(upload_to="current_studies_icon")
+    banner = models.ImageField(upload_to="current_studies_banner")
+
+    class Meta:
+        verbose_name = "Current Study"
+        verbose_name_plural = "Current Studies"
+        db_table = 'current_studies'
+    
+    def __str__(self):
+        return self.study_name
+
+
+
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
 def create_auth_token(sender, instance=None, created=False, **kwargs):
     if created:

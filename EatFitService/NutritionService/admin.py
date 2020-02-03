@@ -5,7 +5,8 @@ from NutritionService.views.crowdsource_views import __create_products_from_crow
 from NutritionService.models import MajorCategory, Product, MinorCategory, Allergen, NutritionFact, ErrorLog, \
                                     CrowdsourceProduct, NotFoundLog, HealthTipp, NutrientName, NutriScoreFacts, \
                                     ReceiptToNutritionPartner, ReceiptToNutritionUser, Matching, DigitalReceipt, \
-                                    Retailer, AdditionalImage, ImportErrorLog, MarketRegion, Ingredient, NonFoundMatching
+                                    Retailer, AdditionalImage, ImportErrorLog, MarketRegion, Ingredient, \
+                                    NonFoundMatching, CurrentStudies
 
 nutrients_to_prefill = ["energyKcal", "energyKJ", "protein", "salt", "sodium", "dietaryFiber", "saturatedFat", "sugars",
                         "totalCarbohydrate", "totalFat"]
@@ -163,3 +164,4 @@ admin.site.register(AdditionalImage)
 admin.site.register(ImportErrorLog)
 admin.site.register(NutriScoreFacts)
 admin.site.register(NonFoundMatching, NotFoundMatchingAdmin)
+admin.site.register(CurrentStudies)

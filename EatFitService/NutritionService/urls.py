@@ -21,6 +21,7 @@ urlpatterns = [
      url(r'^crowdsource/approve/$', crowdsource_views.approve_crowdsouce_products),
 
      url(r'^health-tipps/$', views.get_health_tipps),
+     url(r'^current-studies/$', views.CurrentStudiesView.as_view(), name='current-studies'),
 
      url(r'^category/major/$', views.get_major_categories),
      url(r'^category/minor/$', views.get_minor_categories),

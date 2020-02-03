@@ -24,10 +24,10 @@ from NutritionService.codecheck_integration.codecheck import import_from_codeche
 from NutritionService.helpers import store_image, download_csv
 from NutritionService.models import DigitalReceipt, NonFoundMatching, Matching, MajorCategory, MinorCategory, \
     HealthTipp, ImportLog, Product, Allergen, NutritionFact, Ingredient, NotFoundLog, ErrorLog, \
-    ReceiptToNutritionUser, calculate_ofcom_value, MarketRegion, Retailer, get_nutri_score_category
+    ReceiptToNutritionUser, calculate_ofcom_value, MarketRegion, Retailer, get_nutri_score_category, CurrentStudies
 from NutritionService.nutriscore.calculations import unit_of_measure_conversion
 from NutritionService.serializers import MinorCategorySerializer, MajorCategorySerializer, HealthTippSerializer, \
-    ProductSerializer, DigitalReceiptSerializer
+    ProductSerializer, DigitalReceiptSerializer, CurrentStudiesSerializer
 from NutritionService.tasks import import_from_openfood
 from .errors import SendReceiptsErrors
 
@@ -48,6 +48,12 @@ NUTRI_SCORE_NUMBER_TO_LETTER_MAP = {
     4: 'D',
     5: 'E'
 }
+
+
+class CurrentStudiesView(generics.ListAPIView):
+    queryset = CurrentStudies.objects.all()
+    serializer_class = CurrentStudiesSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
 
 class SendReceiptsView(generics.GenericAPIView, mixins.ListModelMixin, mixins.CreateModelMixin):

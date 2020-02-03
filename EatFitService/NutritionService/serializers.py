@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from NutritionService.models import Product, Allergen, Ingredient, NutritionFact, CrowdsourceProduct, HealthTipp, \
-    MajorCategory, MinorCategory, DigitalReceipt, NutriScoreFacts
+    MajorCategory, MinorCategory, DigitalReceipt, NutriScoreFacts, CurrentStudies
 
 
 class AllergenSerializer(serializers.ModelSerializer):
@@ -133,3 +133,17 @@ class DigitalReceiptSerializer(serializers.Serializer):
     r2n_username = serializers.CharField()
     receipts = ReceiptSerializer(many=True)
 
+class CurrentStudiesSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CurrentStudies
+        fields = [
+            'id', 
+            'study_name', 
+            'study_teaser_de',
+            'study_teaser_fr',
+            'study_teaser_en',
+            'study_teaser_it',
+            'icon',
+            'banner'   
+        ]
+        
