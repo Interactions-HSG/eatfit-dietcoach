@@ -615,7 +615,7 @@ class CurrentStudies(models.Model):
     study_teaser_en = models.CharField(max_length=255)
     study_teaser_fr = models.CharField(max_length=255)
     study_teaser_it = models.CharField(max_length=255)
-    link = models.CharField(max_length=255, default='', null=True)
+    link = models.URLField(null=True, blank=True)
     icon = models.ImageField(upload_to="current_studies_icon")
     banner = models.ImageField(upload_to="current_studies_banner")
 
@@ -626,7 +626,6 @@ class CurrentStudies(models.Model):
     
     def __str__(self):
         return self.study_name
-
 
 
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
