@@ -18,7 +18,7 @@ def test_basket_analysis_nutrients_and_ofcom_values_is_valid():
                                 nutri_score_category=models.FOOD)
 
     test_product = mommy.make(models.Product, minor_category=minor_category, product_size='1',
-                              product_size_unit_of_measure='l')
+                              product_size_unit_of_measure='kg')
     mommy.make(models.NutritionFact, product=test_product, name='saturatedFat', amount=5.3, unit_of_measure='g')
     mommy.make(models.NutritionFact, product=test_product, name='energyKcal', amount=280.2, unit_of_measure='kcal')
     mommy.make(models.NutritionFact, product=test_product, name='energyKJ', amount=500, unit_of_measure='kj')
@@ -51,11 +51,14 @@ def test_basket_analysis_nutrients_and_ofcom_values_is_valid():
     assert basket_analysis_api_test_instance.validate_product(test_product)
 
     expected_results = [
-        {'nutrient': 'saturatedFat', 'unit': 'g', 'minor_category_id': 82, 'amount': 5.3, 'ofcom_value': 5.0},
-        {'nutrient': 'energyKcal', 'unit': 'kcal', 'minor_category_id': 82, 'amount': 280.2, 'ofcom_value': 1.0},
-        {'nutrient': 'sugars', 'unit': 'g', 'minor_category_id': 82, 'amount': 11.6, 'ofcom_value': 2.0},
-        {'nutrient': 'salt', 'unit': 'g', 'minor_category_id': 82, 'amount': 620.0, 'ofcom_value': 6.0}
-    ]
+        {'nutrient': 'saturatedFat', 'unit': 'g', 'minor_category_id': 82, 'product_size': 1000.0, 'amount': 5.3,
+         'ofcom_value': 5.0},
+        {'nutrient': 'energyKcal', 'unit': 'kcal', 'minor_category_id': 82, 'product_size': 1000.0, 'amount': 280.2,
+         'ofcom_value': 1.0},
+        {'nutrient': 'sugars', 'unit': 'g', 'minor_category_id': 82, 'product_size': 1000.0, 'amount': 11.6,
+         'ofcom_value': 2.0},
+        {'nutrient': 'salt', 'unit': 'g', 'minor_category_id': 82, 'product_size': 1000.0, 'amount': 620.0,
+         'ofcom_value': 6.0}]
 
     results = basket_analysis_api_test_instance.prepare_product_nutrients_and_ofcom_values(test_product,
                                                                                            product_size, 1, 'units')
