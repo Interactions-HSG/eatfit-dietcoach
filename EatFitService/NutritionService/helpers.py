@@ -1,5 +1,6 @@
 import csv
 import cv2
+import datetime
 import numpy as np
 from PIL import Image
 import random
@@ -14,6 +15,18 @@ from textblob import TextBlob
 from django.core import files
 from django.http import HttpResponse
 from django.core.exceptions import PermissionDenied
+
+
+def get_start_and_end_date_from_calendar_week(year, calendar_week):
+    """
+    Assumptions:
+    - Sunday is first day of the week
+    - Calendar weeks are zero-indexed
+    """
+    sunday = datetime.datetime.strptime(f'{year}-{calendar_week}-1', "%Y-%W-%u").date()
+    next_sunday = sunday + datetime.timedelta(days=6.9)
+    result_format = '%Y-%m-%dT%H:%M:%SZ'
+    return sunday.strftime(result_format), next_sunday.strftime(result_format)
 
 
 def merge_dicts(*dict_args):
