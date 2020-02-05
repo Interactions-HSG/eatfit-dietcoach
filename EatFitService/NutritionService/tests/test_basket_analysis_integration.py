@@ -170,8 +170,6 @@ def test_basket_analysis_api_is_valid():
     request = api_client.post(url, BASKET_ANALYSIS_DATA, format='json')
     force_authenticate(request, user=user)
     response = view(request)
-    import pdb
-    pdb.set_trace()
 
     assert response.status_code == status.HTTP_200_OK
     assert models.NonFoundMatching.objects.count() == 0
