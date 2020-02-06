@@ -27,7 +27,7 @@ from NutritionService.helpers import store_image, download_csv, get_start_and_en
 from NutritionService.models import DigitalReceipt, NonFoundMatching, Matching, MajorCategory, MinorCategory, \
     HealthTipp, ImportLog, Product, Allergen, NutritionFact, Ingredient, NotFoundLog, ErrorLog, \
     ReceiptToNutritionUser, calculate_ofcom_value, MarketRegion, Retailer, get_nutri_score_category, CurrentStudies, \
-    NutriScoreFacts
+    NutriScoreFacts, SALT, SATURATED_FAT, SUGARS, ENERGY_KCAL, SODIUM, ENERGY_KJ
 from NutritionService.nutriscore.calculations import unit_of_measure_conversion
 from NutritionService.serializers import MinorCategorySerializer, MajorCategorySerializer, HealthTippSerializer, \
     ProductSerializer, DigitalReceiptSerializer, CurrentStudiesSerializer
@@ -51,7 +51,7 @@ NUTRI_SCORE_NUMBER_TO_LETTER_MAP = {
     4: 'D',
     5: 'E'
 }
-
+UNITS = 'units'
 
 class BasketAnalysisView(generics.GenericAPIView):
     serializer_class = DigitalReceiptSerializer
@@ -63,8 +63,8 @@ class BasketAnalysisView(generics.GenericAPIView):
         size_condition, _ = is_number(product.product_size)
         unit_of_measure_condition = product.product_size_unit_of_measure is not None
         nutrients_condition = NutritionFact.objects.filter(product=product,
-                                                           name__in=['salt', 'sodium', 'sugars', 'saturatedFat',
-                                                                     'energyKcal', 'energyKJ']).exists()
+                                                           name__in=[SALT, SODIUM, SUGARS, SATURATED_FAT, ENERGY_KCAL,
+                                                                     ENERGY_KJ]).exists()
         nutri_score_facts_condition = NutriScoreFacts.objects.filter(product=product).exists()
         if unit_of_measure_condition:
             unit_of_measure_condition = product.product_size_unit_of_measure.lower() in allowed_units_of_measure
@@ -76,17 +76,17 @@ class BasketAnalysisView(generics.GenericAPIView):
     @staticmethod
     def prepare_product_nutrients_and_ofcom_values(product, size, quantity, quantity_unit):
         nutrients = list(NutritionFact.objects.filter(product=product,
-                                                      name__in=['salt', 'sugars', 'saturatedFat', 'energyKcal']))
+                                                      name__in=[SALT, SUGARS, SATURATED_FAT, ENERGY_KCAL]))
         nutrients_grouped = itertoolz.groupby(lambda x: x.name, nutrients)
         nutri_score_facts = NutriScoreFacts.objects.get(product=product)
 
         minor_category = product.minor_category.id
 
-        salt = {'nutrient': 'salt', 'unit': 'g', 'minor_category_id': minor_category, 'product_size': size}
-        sugars = {'nutrient': 'sugars', 'unit': 'g', 'minor_category_id': minor_category, 'product_size': size}
-        saturated_fat = {'nutrient': 'saturatedFat', 'unit': 'g', 'minor_category_id': minor_category,
+        salt = {'nutrient': SALT, 'unit': 'g', 'minor_category_id': minor_category, 'product_size': size}
+        sugars = {'nutrient': SUGARS, 'unit': 'g', 'minor_category_id': minor_category, 'product_size': size}
+        saturated_fat = {'nutrient': SATURATED_FAT, 'unit': 'g', 'minor_category_id': minor_category,
                          'product_size': size}
-        energy_kcal = {'nutrient': 'energyKcal', 'unit': 'kcal', 'minor_category_id': minor_category,
+        energy_kcal = {'nutrient': ENERGY_KCAL, 'unit': 'kcal', 'minor_category_id': minor_category,
                        'product_size': size}
 
         nutrient_potential = []
@@ -98,13 +98,13 @@ class BasketAnalysisView(generics.GenericAPIView):
                 is_mixed = False
                 nutrient_amount = next(nutrient.amount for nutrient in nutrient_values if nutrient.is_mixed is False)
 
-            if quantity_unit == 'units':
+            if quantity_unit == UNITS:
                 amount = nutrient_amount * quantity
             else:
                 # All nutrients per 100g/ml
                 amount = (nutrient_amount * size / 100)
 
-            if name == 'salt':
+            if name == SALT:
                 if is_mixed:
                     ofcom_value = nutri_score_facts.ofcom_n_salt_mixed
                 else:
@@ -113,7 +113,7 @@ class BasketAnalysisView(generics.GenericAPIView):
                 salt['ofcom_value'] = ofcom_value
                 nutrient_potential.append(salt)
 
-            if name == 'sugars':
+            if name == SUGARS:
                 if is_mixed:
                     ofcom_value = nutri_score_facts.ofcom_n_sugars_mixed
                 else:
@@ -122,7 +122,7 @@ class BasketAnalysisView(generics.GenericAPIView):
                 sugars['ofcom_value'] = ofcom_value
                 nutrient_potential.append(sugars)
 
-            if name == 'saturatedFat':
+            if name == SATURATED_FAT:
                 if is_mixed:
                     ofcom_value = nutri_score_facts.ofcom_n_saturated_fat_mixed
                 else:
@@ -131,7 +131,7 @@ class BasketAnalysisView(generics.GenericAPIView):
                 saturated_fat['ofcom_value'] = ofcom_value
                 nutrient_potential.append(saturated_fat)
 
-            if name == 'energyKcal':
+            if name == ENERGY_KCAL:
                 if is_mixed:
                     ofcom_value = nutri_score_facts.ofcom_n_energy_kj_mixed
                 else:
