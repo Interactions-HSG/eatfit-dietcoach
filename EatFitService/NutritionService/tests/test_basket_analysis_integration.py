@@ -7,15 +7,298 @@ from rest_framework.test import APIRequestFactory, force_authenticate
 from rest_framework.reverse import reverse
 from rest_framework import status
 
-from NutritionService.views import views
 from NutritionService import models
-from basket_analysis_data import BASKET_ANALYSIS_DATA
+from NutritionService.views import views
+from NutritionService.views.errors import BasketAnalysisErrors
+from basket_analysis_data import BASKET_ANALYSIS_DATA_SIMPLE, BASKET_ANALYSIS_DATA_DETAILED
+
+TEST_USER_AND_PASSWORD = 'test'
+PARTNER_AND_USER_NAME = 'Karen'
+URL_REVERSE = 'basket-analysis'
+ERROR_KEY = 'error'
+ARTICLE_ID_SIMPLE = 'Apfel Braeburn'
+ARTICLE_TYPE_SIMPLE = 'Migros_long_v1'
+
+errors = BasketAnalysisErrors()
+
+
+@pytest.mark.django_db
+def test_basket_analysis_api_forbidden_request():
+    """
+    Assert that a request without partner data does not get processed.
+    """
+    assert User.objects.count() == 0
+    assert models.ReceiptToNutritionPartner.objects.count() == 0
+
+    user = User.objects.create_user(username=TEST_USER_AND_PASSWORD, password=TEST_USER_AND_PASSWORD)
+
+    assert User.objects.count() == 1
+
+    BASKET_ANALYSIS_DATA_SIMPLE['r2n_partner'] = ''
+    BASKET_ANALYSIS_DATA_SIMPLE['r2n_username'] = ''
+
+    api_client = APIRequestFactory()
+    view = views.BasketAnalysisView.as_view()
+    url = reverse(URL_REVERSE)
+    request = api_client.post(url, BASKET_ANALYSIS_DATA_SIMPLE, format='json')
+    force_authenticate(request, user=user)
+    response = view(request)
+
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert ERROR_KEY in response.data
+    assert response.data[ERROR_KEY] == errors.PARTNER_DOES_NOT_EXIST
+
+
+@pytest.mark.django_db
+def test_basket_analysis_api_serializer_invalid():
+    """
+    Assert that invalid request data does not get processed.
+    """
+    assert User.objects.count() == 0
+    assert models.ReceiptToNutritionPartner.objects.count() == 0
+
+    user = User.objects.create_user(username=TEST_USER_AND_PASSWORD, password=TEST_USER_AND_PASSWORD)
+    mommy.make(models.ReceiptToNutritionPartner, user=user)
+
+    assert User.objects.count() == 1
+    assert models.ReceiptToNutritionPartner.objects.count() == 1
+
+    BASKET_ANALYSIS_DATA_SIMPLE['r2n_partner'] = ''
+    BASKET_ANALYSIS_DATA_SIMPLE['r2n_username'] = ''
+
+    api_client = APIRequestFactory()
+    view = views.BasketAnalysisView.as_view()
+    url = reverse(URL_REVERSE)
+    request = api_client.post(url, BASKET_ANALYSIS_DATA_SIMPLE, format='json')
+    force_authenticate(request, user=user)
+    response = view(request)
+
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+@pytest.mark.django_db
+def test_basket_analysis_api_user_partner_does_not_exist():
+    """
+    Assert that a request of a non-existant partner does not get processed.
+    """
+    assert User.objects.count() == 0
+    assert models.ReceiptToNutritionPartner.objects.count() == 0
+    assert models.ReceiptToNutritionUser.objects.count() == 0
+
+    user = User.objects.create_user(username=TEST_USER_AND_PASSWORD, password=TEST_USER_AND_PASSWORD)
+    mommy.make(models.ReceiptToNutritionPartner, user=user)
+
+    BASKET_ANALYSIS_DATA_SIMPLE['r2n_partner'] = PARTNER_AND_USER_NAME
+    BASKET_ANALYSIS_DATA_SIMPLE['r2n_username'] = PARTNER_AND_USER_NAME
+
+    assert User.objects.count() == 1
+    assert models.ReceiptToNutritionPartner.objects.count() == 1
+    assert models.ReceiptToNutritionUser.objects.count() == 0
+
+    api_client = APIRequestFactory()
+    view = views.BasketAnalysisView.as_view()
+    url = reverse(URL_REVERSE)
+    request = api_client.post(url, BASKET_ANALYSIS_DATA_SIMPLE, format='json')
+    force_authenticate(request, user=user)
+    response = view(request)
+
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
+@pytest.mark.django_db
+def test_basket_analysis_api_user_partner_is_inactive():
+    """
+    Assert that a request of an inactive partner does not get processed.
+    """
+    assert User.objects.count() == 0
+    assert models.ReceiptToNutritionPartner.objects.count() == 0
+    assert models.ReceiptToNutritionUser.objects.count() == 0
+
+    user = User.objects.create_user(username=TEST_USER_AND_PASSWORD, password=TEST_USER_AND_PASSWORD)
+    r2n_partner = mommy.make(models.ReceiptToNutritionPartner, user=user, name=PARTNER_AND_USER_NAME)
+    r2n_user = mommy.make(models.ReceiptToNutritionUser, r2n_partner=r2n_partner, r2n_username=PARTNER_AND_USER_NAME,
+                          r2n_user_active=False)
+
+    BASKET_ANALYSIS_DATA_SIMPLE['r2n_partner'] = r2n_partner.name
+    BASKET_ANALYSIS_DATA_SIMPLE['r2n_username'] = r2n_user.r2n_username
+
+    assert User.objects.count() == 1
+    assert models.ReceiptToNutritionPartner.objects.count() == 1
+    assert models.ReceiptToNutritionUser.objects.count() == 1
+
+    api_client = APIRequestFactory()
+    view = views.BasketAnalysisView.as_view()
+    url = reverse(URL_REVERSE)
+    request = api_client.post(url, BASKET_ANALYSIS_DATA_SIMPLE, format='json')
+    force_authenticate(request, user=user)
+    response = view(request)
+
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert ERROR_KEY in response.data
+    assert response.data[ERROR_KEY] == errors.USER_INACTIVE
+
+
+@pytest.mark.django_db
+def test_basket_analysis_api_non_found_does_not_exists():
+    """
+    Assert that when no matching was found and a NonFoundMatching object does not exists that it gets created.
+    """
+    assert User.objects.count() == 0
+    assert models.ReceiptToNutritionPartner.objects.count() == 0
+    assert models.ReceiptToNutritionUser.objects.count() == 0
+    assert models.Matching.objects.count() == 0
+    assert models.NonFoundMatching.objects.count() == 0
+
+    user = User.objects.create_user(username=TEST_USER_AND_PASSWORD, password=TEST_USER_AND_PASSWORD)
+    r2n_partner = mommy.make(models.ReceiptToNutritionPartner, user=user, name=PARTNER_AND_USER_NAME)
+    r2n_user = mommy.make(models.ReceiptToNutritionUser, r2n_partner=r2n_partner, r2n_username=PARTNER_AND_USER_NAME)
+
+    BASKET_ANALYSIS_DATA_SIMPLE['r2n_partner'] = r2n_partner.name
+    BASKET_ANALYSIS_DATA_SIMPLE['r2n_username'] = r2n_user.r2n_username
+
+    assert User.objects.count() == 1
+    assert models.ReceiptToNutritionPartner.objects.count() == 1
+    assert models.ReceiptToNutritionUser.objects.count() == 1
+
+    api_client = APIRequestFactory()
+    view = views.SendReceiptsView.as_view()
+    url = reverse(URL_REVERSE)
+    request = api_client.post(url, BASKET_ANALYSIS_DATA_SIMPLE, format='json')
+    force_authenticate(request, user=user)
+    response = view(request)
+
+    assert response.status_code == status.HTTP_200_OK
+    assert models.ReceiptToNutritionUser.objects.count() == 1
+    assert models.NonFoundMatching.objects.count() == 1
+
+
+@pytest.mark.django_db
+def test_basket_analysis_api_matching_non_found_exists():
+    """
+    Assert that when no matching was found and a NonFoundMatching object exists that its counter is incremented.
+    """
+    assert User.objects.count() == 0
+    assert models.ReceiptToNutritionPartner.objects.count() == 0
+    assert models.ReceiptToNutritionUser.objects.count() == 0
+    assert models.Matching.objects.count() == 0
+    assert models.NonFoundMatching.objects.count() == 0
+
+    user = User.objects.create_user(username=TEST_USER_AND_PASSWORD, password=TEST_USER_AND_PASSWORD)
+    r2n_partner = mommy.make(models.ReceiptToNutritionPartner, user=user, name=PARTNER_AND_USER_NAME)
+    r2n_user = mommy.make(models.ReceiptToNutritionUser, r2n_partner=r2n_partner, r2n_username=PARTNER_AND_USER_NAME)
+    mommy.make(models.NonFoundMatching, article_id=ARTICLE_ID_SIMPLE, article_type=ARTICLE_TYPE_SIMPLE)
+
+    BASKET_ANALYSIS_DATA_SIMPLE['r2n_partner'] = r2n_partner.name
+    BASKET_ANALYSIS_DATA_SIMPLE['r2n_username'] = r2n_user.r2n_username
+
+    assert User.objects.count() == 1
+    assert models.ReceiptToNutritionPartner.objects.count() == 1
+    assert models.ReceiptToNutritionUser.objects.count() == 1
+    assert models.NonFoundMatching.objects.count() == 1
+
+    api_client = APIRequestFactory()
+    view = views.SendReceiptsView.as_view()
+    url = reverse(URL_REVERSE)
+    request = api_client.post(url, BASKET_ANALYSIS_DATA_SIMPLE, format='json')
+    force_authenticate(request, user=user)
+    response = view(request)
+
+    assert response.status_code == status.HTTP_200_OK
+    assert models.NonFoundMatching.objects.count() == 1
+
+    test_object = models.NonFoundMatching.objects.get(article_id=ARTICLE_ID_SIMPLE, article_type='Migros_long_v1')
+
+    assert test_object.counter == 1
+
+
+@pytest.mark.django_db
+def test_basket_analysis_api_matching_multiple():
+    """
+    Assert that when multiple identical matchings occur that the first one is selected.
+    """
+    assert User.objects.count() == 0
+    assert models.ReceiptToNutritionPartner.objects.count() == 0
+    assert models.ReceiptToNutritionUser.objects.count() == 0
+    assert models.Matching.objects.count() == 0
+    assert models.NonFoundMatching.objects.count() == 0
+    assert models.Product.objects.count() == 0
+
+    user = User.objects.create_user(username=TEST_USER_AND_PASSWORD, password=TEST_USER_AND_PASSWORD)
+    r2n_partner = mommy.make(models.ReceiptToNutritionPartner, user=user, name=PARTNER_AND_USER_NAME)
+    r2n_user = mommy.make(models.ReceiptToNutritionUser, r2n_partner=r2n_partner, r2n_username=PARTNER_AND_USER_NAME)
+    test_product = mommy.make(models.Product)
+    mommy.make(models.Matching, article_id=ARTICLE_ID_SIMPLE, article_type=ARTICLE_TYPE_SIMPLE, gtin=0,
+               eatfit_product=test_product)
+    mommy.make(models.Matching, article_id=ARTICLE_ID_SIMPLE, article_type=ARTICLE_TYPE_SIMPLE, gtin=1,
+               eatfit_product=test_product)
+
+    BASKET_ANALYSIS_DATA_SIMPLE['r2n_partner'] = r2n_partner.name
+    BASKET_ANALYSIS_DATA_SIMPLE['r2n_username'] = r2n_user.r2n_username
+
+    assert User.objects.count() == 1
+    assert models.ReceiptToNutritionPartner.objects.count() == 1
+    assert models.ReceiptToNutritionUser.objects.count() == 1
+    assert models.Matching.objects.count() == 2
+    assert models.Product.objects.count() == 1
+
+    api_client = APIRequestFactory()
+    view = views.SendReceiptsView.as_view()
+    url = reverse(URL_REVERSE)
+    request = api_client.post(url, BASKET_ANALYSIS_DATA_SIMPLE, format='json')
+    force_authenticate(request, user=user)
+    response = view(request)
+
+    assert response.status_code == status.HTTP_200_OK
+    assert models.NonFoundMatching.objects.count() == 0
+
+    test_object = models.Matching.objects.filter().first()
+
+    assert test_object.gtin == 0
+
+
+@pytest.mark.django_db
+def test_basket_analysis_api_matching_valid():
+    """
+    Assert that product is matched correctly and valid.
+    """
+    assert User.objects.count() == 0
+    assert models.ReceiptToNutritionPartner.objects.count() == 0
+    assert models.ReceiptToNutritionUser.objects.count() == 0
+    assert models.Matching.objects.count() == 0
+    assert models.NonFoundMatching.objects.count() == 0
+    assert models.Product.objects.count() == 0
+
+    user = User.objects.create_user(username=TEST_USER_AND_PASSWORD, password=TEST_USER_AND_PASSWORD)
+    r2n_partner = mommy.make(models.ReceiptToNutritionPartner, user=user, name=PARTNER_AND_USER_NAME)
+    r2n_user = mommy.make(models.ReceiptToNutritionUser, r2n_partner=r2n_partner, r2n_username=PARTNER_AND_USER_NAME)
+    test_product = mommy.make(models.Product)
+    mommy.make(models.Matching, article_id=ARTICLE_ID_SIMPLE, article_type=ARTICLE_TYPE_SIMPLE,
+               eatfit_product=test_product)
+
+    BASKET_ANALYSIS_DATA_SIMPLE['r2n_partner'] = r2n_partner.name
+    BASKET_ANALYSIS_DATA_SIMPLE['r2n_username'] = r2n_user.r2n_username
+
+    assert User.objects.count() == 1
+    assert models.ReceiptToNutritionPartner.objects.count() == 1
+    assert models.ReceiptToNutritionUser.objects.count() == 1
+    assert models.Matching.objects.count() == 1
+    assert models.Product.objects.count() == 1
+
+    api_client = APIRequestFactory()
+    view = views.SendReceiptsView.as_view()
+    url = reverse(URL_REVERSE)
+    request = api_client.post(url, BASKET_ANALYSIS_DATA_SIMPLE, format='json')
+    force_authenticate(request, user=user)
+    response = view(request)
+
+    assert response.status_code == status.HTTP_200_OK
+    assert models.NonFoundMatching.objects.count() == 0
 
 
 @pytest.mark.django_db
 def test_basket_analysis_api_is_valid():
     """
-    Assert that the API request is valid (less than 10 receipts and correct data is provided).
+    Assert that the API request and calculations are valid (full integration).
     """
     assert User.objects.count() == 0
     assert models.ReceiptToNutritionPartner.objects.count() == 0
@@ -28,9 +311,9 @@ def test_basket_analysis_api_is_valid():
     assert models.NonFoundMatching.objects.count() == 0
     assert models.DigitalReceipt.objects.count() == 0
 
-    user = User.objects.create_user(username='test', password='test')
-    r2n_partner = mommy.make(models.ReceiptToNutritionPartner, user=user, name='Kevin')
-    r2n_user = mommy.make(models.ReceiptToNutritionUser, r2n_partner=r2n_partner, r2n_username='Kevin')
+    user = User.objects.create_user(username=TEST_USER_AND_PASSWORD, password=TEST_USER_AND_PASSWORD)
+    r2n_partner = mommy.make(models.ReceiptToNutritionPartner, user=user, name=PARTNER_AND_USER_NAME)
+    r2n_user = mommy.make(models.ReceiptToNutritionUser, r2n_partner=r2n_partner, r2n_username=PARTNER_AND_USER_NAME)
 
     major_category = mommy.make(models.MajorCategory, pk=16)
     first_minor_category = mommy.make(models.MinorCategory, pk=82, category_major=major_category,
@@ -152,8 +435,8 @@ def test_basket_analysis_api_is_valid():
     assert fifth_product.data_score >= 25
     assert fifth_product.nutri_score_final is not None
 
-    BASKET_ANALYSIS_DATA['r2n_partner'] = r2n_partner.name
-    BASKET_ANALYSIS_DATA['r2n_username'] = r2n_user.r2n_username
+    BASKET_ANALYSIS_DATA_DETAILED['r2n_partner'] = r2n_partner.name
+    BASKET_ANALYSIS_DATA_DETAILED['r2n_username'] = r2n_user.r2n_username
 
     assert User.objects.count() == 1
     assert models.ReceiptToNutritionPartner.objects.count() == 1
@@ -167,10 +450,41 @@ def test_basket_analysis_api_is_valid():
     api_client = APIRequestFactory()
     view = views.BasketAnalysisView.as_view()
     url = reverse('basket-analysis')
-    request = api_client.post(url, BASKET_ANALYSIS_DATA, format='json')
+    request = api_client.post(url, BASKET_ANALYSIS_DATA_DETAILED, format='json')
     force_authenticate(request, user=user)
     response = view(request)
 
+    expected_results = {'nutri_score_by_basket': [
+        {'receipt_id': '1551533421', 'receipt_datetime': '2019-03-02T14:30:21Z',
+         'business_unit': 'Migros', 'nutri_score_average': 'C', 'nutri_score_indexed': 2.96}], 'nutri_score_by_week': [
+        {'name_calendar_week': '2019-08', 'nutri_score_average': 'C', 'nutri_score_indexed': 2.96,
+         'start_date': '2019-02-25T00:00:00Z', 'end_date': '2019-03-03T00:00:00Z'}], 'improvement_potential': [
+        {'nutrient': 'saturatedFat', 'ofcom_point_average': 4.6, 'potential_percentage': 20.19, 'amount': 129.56,
+         'unit': 'g', 'sources': [{'minor_category_id': 84, 'amount': 46.0, 'unit': 'g'},
+                                  {'minor_category_id': 82, 'amount': 31.12, 'unit': 'g'},
+                                  {'minor_category_id': 86, 'amount': 23.0, 'unit': 'g'},
+                                  {'minor_category_id': 83, 'amount': 22.08, 'unit': 'g'},
+                                  {'minor_category_id': 85, 'amount': 7.36, 'unit': 'g'}]},
+        {'nutrient': 'sugars', 'ofcom_point_average': 2.0, 'potential_percentage': 13.32, 'amount': 398.65, 'unit': 'g',
+         'sources': [{'minor_category_id': 84, 'amount': 310.0, 'unit': 'g'},
+                     {'minor_category_id': 83, 'amount': 38.64, 'unit': 'g'},
+                     {'minor_category_id': 82, 'amount': 32.85, 'unit': 'g'},
+                     {'minor_category_id': 86, 'amount': 13.0, 'unit': 'g'},
+                     {'minor_category_id': 85, 'amount': 4.16, 'unit': 'g'}]},
+        {'nutrient': 'salt', 'ofcom_point_average': 2.2, 'potential_percentage': 34.72, 'amount': 42.29, 'unit': 'g',
+         'sources': [{'minor_category_id': 82, 'amount': 32.85, 'unit': 'g'},
+                     {'minor_category_id': 84, 'amount': 6.8, 'unit': 'g'},
+                     {'minor_category_id': 85, 'amount': 1.92, 'unit': 'g'},
+                     {'minor_category_id': 86, 'amount': 0.5, 'unit': 'g'},
+                     {'minor_category_id': 83, 'amount': 0.22, 'unit': 'g'}]},
+        {'nutrient': 'energyKcal', 'ofcom_point_average': 4.0, 'potential_percentage': 31.77, 'amount': 14108.68,
+         'unit': 'kcal', 'sources': [{'minor_category_id': 82, 'amount': 7538.44, 'unit': 'kcal'},
+                                     {'minor_category_id': 84, 'amount': 4310.0, 'unit': 'kcal'},
+                                     {'minor_category_id': 83, 'amount': 949.44, 'unit': 'kcal'},
+                                     {'minor_category_id': 86, 'amount': 930.0, 'unit': 'kcal'},
+                                     {'minor_category_id': 85, 'amount': 380.8, 'unit': 'kcal'}]}]}
+
     assert response.status_code == status.HTTP_200_OK
+    assert response.data == expected_results
     assert models.NonFoundMatching.objects.count() == 0
     assert models.DigitalReceipt.objects.count() == 5
