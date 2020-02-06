@@ -32,7 +32,7 @@ from NutritionService.nutriscore.calculations import unit_of_measure_conversion
 from NutritionService.serializers import MinorCategorySerializer, MajorCategorySerializer, HealthTippSerializer, \
     ProductSerializer, DigitalReceiptSerializer, CurrentStudiesSerializer
 from NutritionService.tasks import import_from_openfood
-from .errors import SendReceiptsErrors
+from .errors import SendReceiptsErrors, BasketAnalysisErrors
 
 logger = logging.getLogger('NutritionService.views')
 allowed_units_of_measure = ["g", "kg", "ml", "l"]
@@ -54,7 +54,6 @@ NUTRI_SCORE_NUMBER_TO_LETTER_MAP = {
 
 
 class BasketAnalysisView(generics.GenericAPIView):
-    queryset = DigitalReceipt.objects.all()
     serializer_class = DigitalReceiptSerializer
     permission_classes = [permissions.IsAuthenticated]
 
@@ -103,7 +102,6 @@ class BasketAnalysisView(generics.GenericAPIView):
                 amount = nutrient_amount * quantity
             else:
                 # All nutrients per 100g/ml
-                # TODO: Test this more thoroughly
                 amount = (nutrient_amount * size / 100)
 
             if name == 'salt':
@@ -236,7 +234,7 @@ class BasketAnalysisView(generics.GenericAPIView):
         return improvement_potential
 
     def post(self, request):
-        errors = SendReceiptsErrors()
+        errors = BasketAnalysisErrors()
 
         if not hasattr(request.user, 'partner'):
             return Response({'error': errors.PARTNER_DOES_NOT_EXIST}, status=status.HTTP_403_FORBIDDEN)
@@ -267,6 +265,7 @@ class BasketAnalysisView(generics.GenericAPIView):
             articles = receipt['items']
             receipt_id = receipt['receipt_id']
             receipt_datetime = receipt['receipt_datetime']
+            receipt_datetime_formatted = receipt_datetime.strftime('%Y-%m-%dT%H:%M:%SZ')
             year_of_receipt = receipt_datetime.year
             calendar_week = receipt_datetime.strftime('%U')  # Assuming sunday is the first day of the week
             for article in articles:
@@ -312,7 +311,7 @@ class BasketAnalysisView(generics.GenericAPIView):
                     'nutri_score': nutri_score_number,
                     'product_weight': product_size,
                     'receipt_id': receipt_id,
-                    'receipt_datetime': receipt['receipt_datetime'],
+                    'receipt_datetime': receipt_datetime_formatted,
                     'business_unit': receipt['business_unit'],
                 })
                 product_nutrients_and_ofcom_values = self.prepare_product_nutrients_and_ofcom_values(product,
