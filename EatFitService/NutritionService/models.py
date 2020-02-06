@@ -751,19 +751,22 @@ def get_and_validate_nutrients(product):
         SUGARS: 'g',
         DIETARY_FIBER: 'g',
         PROTEIN: 'g',
-        SODIUM: 'mg'
+        SODIUM: 'mg',
+        SALT: None
     }
     errors = []
     valid_nutrients = []
 
     for nutrient in nutrients:
-        if nutrient.name == SALT:
-            nutrient.name = SODIUM
-
         if nutrient.name not in nutrient_data.keys():
             continue
 
-        valid_condition_amount, _ = is_number(nutrient.amount)
+        valid_condition_amount, amount = is_number(nutrient.amount)
+
+        if nutrient.name == SALT:
+            nutrient.name = SODIUM
+            nutrient.amount = amount / 2.5
+
         if not valid_condition_amount:
             errors.append(
                 ErrorLog(gtin=product.gtin,
