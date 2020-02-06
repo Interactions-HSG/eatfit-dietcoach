@@ -1,4 +1,26 @@
-BASKET_ANALYSIS_DATA = {
+BASKET_ANALYSIS_DATA_SIMPLE = {
+    "r2n_partner": '',
+    "r2n_username": '',
+    "receipts": [
+        {
+            "receipt_id": "1551533420",
+            "receipt_datetime": "2019-03-02T14:30:21Z",
+            "business_unit": "Migros",
+            "items": [
+                {
+                    "article_id": "Apfel Braeburn",
+                    "article_type": "Migros_long_v1",
+                    "quantity": 0.712,
+                    "quantity_unit": "kg",
+                    "price": "1.85",
+                    "price_currency": "CHF"
+                }
+            ]
+        }
+    ]
+}
+
+BASKET_ANALYSIS_DATA_DETAILED = {
     "r2n_partner": '',
     "r2n_username": '',
     "receipts": [
