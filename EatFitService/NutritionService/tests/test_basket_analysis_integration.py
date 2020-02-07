@@ -139,9 +139,9 @@ def test_basket_analysis_api_user_partner_is_inactive():
 
 
 @pytest.mark.django_db
-def test_basket_analysis_api_non_found_does_not_exists():
+def test_basket_analysis_api_non_found_does_not_exist():
     """
-    Assert that when no matching was found and a NonFoundMatching object does not exists that it gets created.
+    Assert that when no matching was found and a NonFoundMatching object does not exist that it gets created.
     """
     assert User.objects.count() == 0
     assert models.ReceiptToNutritionPartner.objects.count() == 0
@@ -186,7 +186,7 @@ def test_basket_analysis_api_matching_non_found_exists():
     user = User.objects.create_user(username=TEST_USER_AND_PASSWORD, password=TEST_USER_AND_PASSWORD)
     r2n_partner = mommy.make(models.ReceiptToNutritionPartner, user=user, name=PARTNER_AND_USER_NAME)
     r2n_user = mommy.make(models.ReceiptToNutritionUser, r2n_partner=r2n_partner, r2n_username=PARTNER_AND_USER_NAME)
-    mommy.make(models.NonFoundMatching, article_id=ARTICLE_ID_SIMPLE, article_type=ARTICLE_TYPE_SIMPLE)
+    mommy.make(models.NonFoundMatching, article_id=ARTICLE_ID_SIMPLE, article_type=ARTICLE_TYPE_SIMPLE, counter=0)
 
     BASKET_ANALYSIS_DATA_SIMPLE['r2n_partner'] = r2n_partner.name
     BASKET_ANALYSIS_DATA_SIMPLE['r2n_username'] = r2n_user.r2n_username
