@@ -448,16 +448,16 @@ def test_basket_analysis_api_is_valid():
 
     api_client = APIRequestFactory()
     view = views.BasketAnalysisView.as_view()
-    url = reverse('basket-analysis')
+    url = reverse(URL_REVERSE)
     request = api_client.post(url, BASKET_ANALYSIS_DATA_DETAILED, format='json')
     force_authenticate(request, user=user)
     response = view(request)
 
     expected_results = {'nutri_score_by_basket': [
-        {'receipt_id': '1551533421', 'receipt_datetime': '2019-03-02T14:30:21Z',
-         'business_unit': 'Migros', 'nutri_score_average': 'C', 'nutri_score_indexed': 2.96}], 'nutri_score_by_week': [
+        {'receipt_id': '1551533421', 'receipt_datetime': '2019-03-02T14:30:21', 'business_unit': 'Migros',
+         'nutri_score_average': 'C', 'nutri_score_indexed': 2.96}], 'nutri_score_by_week': [
         {'name_calendar_week': '2019-08', 'nutri_score_average': 'C', 'nutri_score_indexed': 2.96,
-         'start_date': '2019-02-25T00:00:00Z', 'end_date': '2019-03-03T00:00:00Z'}], 'improvement_potential': [
+         'start_date': '2019-02-25', 'end_date': '2019-03-04'}], 'improvement_potential': [
         {'nutrient': 'saturatedFat', 'ofcom_point_average': 4.6, 'potential_percentage': 20.19, 'amount': 129.56,
          'unit': 'g', 'sources': [{'minor_category_id': 84, 'amount': 46.0, 'unit': 'g'},
                                   {'minor_category_id': 82, 'amount': 31.12, 'unit': 'g'},

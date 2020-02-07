@@ -51,7 +51,7 @@ def test_basket_analysis_nutri_score_by_week_is_valid():
 
     basket_analysis_api_test_instance = views.BasketAnalysisView()
     receipt_datetime = datetime.datetime.now()
-    receipt_datetime_formatted = receipt_datetime.strftime('%Y-%m-%dT%H:%M:%SZ')
+    receipt_datetime_formatted = receipt_datetime.isoformat()
     year_of_receipt = receipt_datetime.year
     calendar_week = receipt_datetime.strftime('%U')
     start_date, end_date = get_start_and_end_date_from_calendar_week(year_of_receipt, calendar_week)
