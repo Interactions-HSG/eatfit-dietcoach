@@ -68,6 +68,35 @@ def test_nutri_score_nutrient_amount():
     assert len(validated_nutrients) == 1
 
 
+@pytest.mark.django_db
+def test_salt_sodium_conversion():
+    assert MajorCategory.objects.count() == 0
+    assert MinorCategory.objects.count() == 0
+    assert Product.objects.count() == 0
+    assert NutritionFact.objects.count() == 0
+
+    major_category = mommy.make(MajorCategory, pk=16)
+    minor_category = mommy.make(MinorCategory, pk=82, category_major=major_category, nutri_score_category=MINERAL_WATER)
+
+    test_product = mommy.make(Product, minor_category=minor_category)
+    mommy.make(NutritionFact, product=test_product, name='salt', amount=5, unit_of_measure='mg')
+    mommy.make(NutritionFact, product=test_product, name='saturatedFat', amount=1.0, unit_of_measure='g')
+    mommy.make(NutritionFact, product=test_product, name='sugars', amount=1.0, unit_of_measure='g')
+    mommy.make(NutritionFact, product=test_product, name='energyKJ', amount=125.0, unit_of_measure='kcal')
+
+    assert Product.objects.count() == 1
+    assert NutritionFact.objects.count() == 4
+    assert ErrorLog.objects.count() == 0
+
+    validated_nutrients = get_and_validate_nutrients(test_product)
+
+    assert ErrorLog.objects.count() == 0
+    assert len(validated_nutrients) == 4
+
+    nutrient_sodium_amount = next(nutrient.amount for nutrient in validated_nutrients if nutrient.name == 'sodium')
+    assert nutrient_sodium_amount == 2.0
+
+
 def test_unit_of_measure_conversion():
     """
     Test cases:

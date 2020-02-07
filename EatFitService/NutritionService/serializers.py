@@ -143,6 +143,7 @@ class CurrentStudiesSerializer(serializers.ModelSerializer):
             'study_teaser_fr',
             'study_teaser_en',
             'study_teaser_it',
+            'link',
             'icon',
             'banner'   
         ]

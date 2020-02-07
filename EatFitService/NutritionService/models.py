@@ -574,6 +574,7 @@ class Matching(models.Model):
     article_id = models.CharField(max_length=255)
     article_type = models.CharField(max_length=255)
     gtin = models.BigIntegerField()
+    price_per_unit = models.FloatField(null=True, blank=True)
     eatfit_product = models.ForeignKey(Product, null=True, blank=True, editable=False)
 
     def save(self, *args, **kwargs):
@@ -582,7 +583,7 @@ class Matching(models.Model):
             if products.exists():
                 product = products[0]
                 self.eatfit_product = product
-        super(Matching, self).save(*args, **kwargs)
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.article_id
@@ -615,6 +616,7 @@ class CurrentStudies(models.Model):
     study_teaser_en = models.CharField(max_length=255)
     study_teaser_fr = models.CharField(max_length=255)
     study_teaser_it = models.CharField(max_length=255)
+    link = models.URLField(null=True, blank=True)
     icon = models.ImageField(upload_to="current_studies_icon")
     banner = models.ImageField(upload_to="current_studies_banner")
 
@@ -625,7 +627,6 @@ class CurrentStudies(models.Model):
     
     def __str__(self):
         return self.study_name
-
 
 
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
@@ -751,19 +752,22 @@ def get_and_validate_nutrients(product):
         SUGARS: 'g',
         DIETARY_FIBER: 'g',
         PROTEIN: 'g',
-        SODIUM: 'mg'
+        SODIUM: 'mg',
+        SALT: None
     }
     errors = []
     valid_nutrients = []
 
     for nutrient in nutrients:
-        if nutrient.name == SALT:
-            nutrient.name = SODIUM
-
         if nutrient.name not in nutrient_data.keys():
             continue
 
-        valid_condition_amount, _ = is_number(nutrient.amount)
+        valid_condition_amount, amount = is_number(nutrient.amount)
+
+        if nutrient.name == SALT:
+            nutrient.name = SODIUM
+            nutrient.amount = amount / 2.5
+
         if not valid_condition_amount:
             errors.append(
                 ErrorLog(gtin=product.gtin,

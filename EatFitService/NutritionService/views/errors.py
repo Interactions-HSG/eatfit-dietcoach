@@ -4,3 +4,7 @@ class SendReceiptsErrors:
     USER_NOT_FOUND = 'User not found.'
     USER_INACTIVE = 'User not active. Please check if user fulfills all relevant criteria.'
     UNKNOWN = 'unknown'
+
+
+class BasketAnalysisErrors(SendReceiptsErrors):
+    pass

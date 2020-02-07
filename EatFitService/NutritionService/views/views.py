@@ -9,7 +9,9 @@ from datetime import datetime
 import logging
 from suds.client import Client
 from suds.sudsobject import asdict
+from toolz import itertoolz, dicttoolz
 
+from django.db.models import F, Func
 from django.http import HttpResponse
 from django.http.response import HttpResponseForbidden
 from django.shortcuts import get_object_or_404
@@ -21,15 +23,16 @@ from rest_framework.response import Response
 from EatFitService.settings import TRUSTBOX_USERNAME, TRUSTBOX_PASSWORD, TRUSTBOX_URL
 from NutritionService import data_cleaning, reports
 from NutritionService.codecheck_integration.codecheck import import_from_codecheck
-from NutritionService.helpers import store_image, download_csv
+from NutritionService.helpers import store_image, download_csv, get_start_and_end_date_from_calendar_week
 from NutritionService.models import DigitalReceipt, NonFoundMatching, Matching, MajorCategory, MinorCategory, \
     HealthTipp, ImportLog, Product, Allergen, NutritionFact, Ingredient, NotFoundLog, ErrorLog, \
-    ReceiptToNutritionUser, calculate_ofcom_value, MarketRegion, Retailer, get_nutri_score_category, CurrentStudies
+    ReceiptToNutritionUser, calculate_ofcom_value, MarketRegion, Retailer, get_nutri_score_category, CurrentStudies, \
+    NutriScoreFacts, SALT, SATURATED_FAT, SUGARS, ENERGY_KCAL, SODIUM, ENERGY_KJ
 from NutritionService.nutriscore.calculations import unit_of_measure_conversion
 from NutritionService.serializers import MinorCategorySerializer, MajorCategorySerializer, HealthTippSerializer, \
     ProductSerializer, DigitalReceiptSerializer, CurrentStudiesSerializer
 from NutritionService.tasks import import_from_openfood
-from .errors import SendReceiptsErrors
+from .errors import SendReceiptsErrors, BasketAnalysisErrors
 
 logger = logging.getLogger('NutritionService.views')
 allowed_units_of_measure = ["g", "kg", "ml", "l"]
@@ -48,6 +51,276 @@ NUTRI_SCORE_NUMBER_TO_LETTER_MAP = {
     4: 'D',
     5: 'E'
 }
+UNITS = 'units'
+
+class BasketAnalysisView(generics.GenericAPIView):
+    serializer_class = DigitalReceiptSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    @staticmethod
+    def validate_product(product):
+        log_product_errors(product)
+        size_condition, _ = is_number(product.product_size)
+        unit_of_measure_condition = product.product_size_unit_of_measure is not None
+        nutrients_condition = NutritionFact.objects.filter(product=product,
+                                                           name__in=[SALT, SODIUM, SUGARS, SATURATED_FAT, ENERGY_KCAL,
+                                                                     ENERGY_KJ]).exists()
+        nutri_score_facts_condition = NutriScoreFacts.objects.filter(product=product).exists()
+        if unit_of_measure_condition:
+            unit_of_measure_condition = product.product_size_unit_of_measure.lower() in allowed_units_of_measure
+        nutri_score_condition = product.nutri_score_final is not None
+
+        return False not in [size_condition, unit_of_measure_condition, nutri_score_condition, nutrients_condition,
+                             nutri_score_facts_condition]
+
+    @staticmethod
+    def prepare_product_nutrients_and_ofcom_values(product, size, quantity, quantity_unit):
+        nutrients = list(NutritionFact.objects.filter(product=product,
+                                                      name__in=[SALT, SUGARS, SATURATED_FAT, ENERGY_KCAL]))
+        nutrients_grouped = itertoolz.groupby(lambda x: x.name, nutrients)
+        nutri_score_facts = NutriScoreFacts.objects.get(product=product)
+        minor_category = product.minor_category.id
+        nutrient_potential = []
+        for name, nutrient_values in nutrients_grouped.items():
+            unit = None
+            ofcom_value = None
+            if any(nutrient.is_mixed for nutrient in nutrient_values):
+                is_mixed = True
+                nutrient_amount = next(nutrient.amount for nutrient in nutrient_values if nutrient.is_mixed)
+            else:
+                is_mixed = False
+                nutrient_amount = next(nutrient.amount for nutrient in nutrient_values if nutrient.is_mixed is False)
+
+            if quantity_unit == UNITS:
+                amount = nutrient_amount * quantity
+            else:
+                # All nutrients per 100g/ml
+                amount = (nutrient_amount * size / 100)
+
+            if name == SALT:
+                unit = 'g'
+                if is_mixed:
+                    ofcom_value = nutri_score_facts.ofcom_n_salt_mixed
+                else:
+                    ofcom_value = nutri_score_facts.ofcom_n_salt
+            elif name == SUGARS:
+                unit = 'g'
+                if is_mixed:
+                    ofcom_value = nutri_score_facts.ofcom_n_sugars_mixed
+                else:
+                    ofcom_value = nutri_score_facts.ofcom_n_sugars
+            elif name == SATURATED_FAT:
+                unit = 'g'
+                if is_mixed:
+                    ofcom_value = nutri_score_facts.ofcom_n_saturated_fat_mixed
+                else:
+                    ofcom_value = nutri_score_facts.ofcom_n_saturated_fat
+            elif name == ENERGY_KCAL:
+                unit = 'kcal'
+                if is_mixed:
+                    ofcom_value = nutri_score_facts.ofcom_n_energy_kj_mixed
+                else:
+                    ofcom_value = nutri_score_facts.ofcom_n_energy_kj
+            else:
+                raise Exception(f'{name}: Unknown value')
+
+            nutrient_object = {'nutrient': name, 'minor_category_id': minor_category, 'product_size': size,
+                               'amount': amount, 'unit': unit, 'ofcom_value': ofcom_value}
+            nutrient_potential.append(nutrient_object)
+
+        return nutrient_potential
+
+    @staticmethod
+    def calculate_nutri_score_by_basket(nutri_score_by_article):
+        nutri_score_by_basket = []
+        items_by_basket = itertoolz.groupby('receipt_id', nutri_score_by_article)
+        for basket, items in items_by_basket.items():
+            accumulated_weight = sum(item['product_weight'] for item in items)
+            normalized_accumulated_nutri_score = sum(
+                (item['nutri_score'] * item['product_weight']) / accumulated_weight for item in items)
+            nutri_score = int(round(normalized_accumulated_nutri_score))
+            nutri_score_letter = NUTRI_SCORE_NUMBER_TO_LETTER_MAP[nutri_score]
+            business_unit = dicttoolz.get_in([0, 'business_unit'], items)
+            date_of_purchase = dicttoolz.get_in([0, 'receipt_datetime'], items)
+            nutri_score_by_basket.append({
+                'receipt_id': basket,
+                'receipt_datetime': date_of_purchase,
+                'business_unit': business_unit,
+                'nutri_score_average': nutri_score_letter,
+                'nutri_score_indexed': round(normalized_accumulated_nutri_score, 2)
+                })
+
+        return nutri_score_by_basket
+
+    @staticmethod
+    def calculate_nutri_score_by_week(nutri_score_by_article):
+        nutri_score_by_week = []
+        items_by_year = itertoolz.groupby('year_of_receipt', nutri_score_by_article)
+        for year, items in items_by_year.items():
+            accumulated_weights = itertoolz.reduceby('name_of_calendar_week',
+                                                     lambda acc, x: acc + x['product_weight'],
+                                                     items, 0)
+            accumulated_weighted_nutri_scores = itertoolz.reduceby('name_of_calendar_week',
+                                                                   lambda acc, x: acc + (
+                                                                               x['nutri_score'] * x['product_weight']),
+                                                                   items, 0)
+
+            normalized_accumulated_nutri_scores = dicttoolz.merge_with(lambda x: x[0] / x[1],
+                                                                       accumulated_weighted_nutri_scores,
+                                                                       accumulated_weights)
+
+            for calendar_week, weighted_nutri_score in normalized_accumulated_nutri_scores.items():
+                nutri_score = int(round(weighted_nutri_score))
+                nutri_score_letter = NUTRI_SCORE_NUMBER_TO_LETTER_MAP[nutri_score]
+                start_date, end_date = get_start_and_end_date_from_calendar_week(year, calendar_week)
+                nutri_score_by_week.append({
+                    'name_calendar_week': f'{year}-{calendar_week}',
+                    'nutri_score_average': nutri_score_letter,
+                    'nutri_score_indexed': round(weighted_nutri_score, 2),
+                    'start_date': start_date,
+                    'end_date': end_date
+                })
+
+        return nutri_score_by_week
+
+    @staticmethod
+    def calculate_improvement_potential(nutrient_potential):
+        total_size = sum(item['product_size'] for item in nutrient_potential)
+        weighted_ofcom_values_by_nutrient = itertoolz.reduceby('nutrient',
+                                                               lambda acc, x: acc + x['ofcom_value'] * x[
+                                                                   'product_size'] / total_size,
+                                                               nutrient_potential, 0)
+        total_weighted_ofcom_values = sum(weighted_ofcom_values_by_nutrient.values())
+        potential_percentages_by_nutrient = dicttoolz.valmap(
+            lambda x: round(x * 100 / total_weighted_ofcom_values, 2), weighted_ofcom_values_by_nutrient)
+        grouped_by_nutrient = itertoolz.groupby('nutrient', nutrient_potential)
+
+        improvement_potential = []
+        for nutrient, values in grouped_by_nutrient.items():
+            average_ofcom_value = sum(value['ofcom_value'] for value in values) / len(values)
+            potential_percentage = potential_percentages_by_nutrient[nutrient]
+            total_amount = sum(value['amount'] for value in values)
+            unit = dicttoolz.get_in([0, 'unit'], values)
+
+            amount_per_minor_category = itertoolz.reduceby('minor_category_id', lambda acc, x: acc + x['amount'],
+                                                           values, 0)
+            sources = [{'minor_category_id': category_id, 'amount': round(amount, 2), 'unit': unit} for
+                       category_id, amount in
+                       amount_per_minor_category.items()]
+            sources = sorted(sources, key=lambda x: x['amount'], reverse=True)
+
+            nutrient_potential = {
+                'nutrient': nutrient,
+                'ofcom_point_average': average_ofcom_value,
+                'potential_percentage': potential_percentage,
+                'amount': round(total_amount, 2),
+                'unit': unit,
+                'sources': sources
+            }
+
+            improvement_potential.append(nutrient_potential)
+
+        return improvement_potential
+
+    def post(self, request):
+        errors = BasketAnalysisErrors()
+
+        if not hasattr(request.user, 'partner'):
+            return Response({'error': errors.PARTNER_DOES_NOT_EXIST}, status=status.HTTP_403_FORBIDDEN)
+
+        serializer = self.serializer_class(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        validated_data = serializer.validated_data
+        r2n_username = validated_data.get('r2n_username')
+        r2n_partner = validated_data.get('r2n_partner')
+
+        try:
+            r2n_user = ReceiptToNutritionUser.objects.get(r2n_partner__name=r2n_partner, r2n_username=r2n_username)
+        except ReceiptToNutritionUser.DoesNotExist:
+            return Response({'error': errors.USER_NOT_FOUND}, status.HTTP_404_NOT_FOUND)
+
+        if not r2n_user.r2n_user_active:
+            return Response({'error': errors.USER_INACTIVE},
+                            status=status.HTTP_403_FORBIDDEN)
+
+        receipt_data = validated_data['receipts']
+        digital_receipt_list = []
+        nutri_score_by_article = []
+        nutrient_potential = []
+
+        for receipt in receipt_data:
+            articles = receipt['items']
+            receipt_id = receipt['receipt_id']
+            receipt_datetime = receipt['receipt_datetime']
+            receipt_datetime_formatted = receipt_datetime.strftime('%Y-%m-%dT%H:%M:%SZ')
+            year_of_receipt = receipt_datetime.year
+            calendar_week = receipt_datetime.strftime('%U')  # Assuming sunday is the first day of the week
+            for article in articles:
+                quantity = article['quantity']
+                quantity_unit = article['quantity_unit']
+                digital_receipt = DigitalReceipt(
+                    r2n_user=r2n_user,
+                    business_unit=receipt['business_unit'],
+                    receipt_id=receipt_id,
+                    receipt_datetime=receipt['receipt_datetime'],
+                    article_id=article['article_id'],
+                    article_type=article['article_type'],
+                    quantity=quantity,
+                    quantity_unit=quantity_unit,
+                    price=article['price'],
+                    price_currency=article['price_currency']
+                )
+                digital_receipt_list.append(digital_receipt)
+                product = match_receipt(digital_receipt)
+
+                if product is None:
+                    continue
+
+                if not self.validate_product(product):
+                    continue
+
+                _, product_size = is_number(product.product_size)
+                unit_of_measure = product.product_size_unit_of_measure.lower()
+                nutri_score_number = NUTRI_SCORE_LETTER_TO_NUMBER_MAP[product.nutri_score_final]
+
+                if unit_of_measure == 'kg':
+                    target_unit = 'g'
+                elif unit_of_measure == 'l':
+                    target_unit = 'ml'
+                else:
+                    target_unit = unit_of_measure
+
+                product_size = unit_of_measure_conversion(product_size, unit_of_measure, target_unit)
+
+                nutri_score_by_article.append({
+                    'name_of_calendar_week': calendar_week,
+                    'year_of_receipt': year_of_receipt,
+                    'nutri_score': nutri_score_number,
+                    'product_weight': product_size,
+                    'receipt_id': receipt_id,
+                    'receipt_datetime': receipt_datetime_formatted,
+                    'business_unit': receipt['business_unit'],
+                })
+                product_nutrients_and_ofcom_values = self.prepare_product_nutrients_and_ofcom_values(product,
+                                                                                                     product_size,
+                                                                                                     quantity,
+                                                                                                     quantity_unit)
+                nutrient_potential += product_nutrients_and_ofcom_values
+
+        nutri_score_by_basket = self.calculate_nutri_score_by_basket(nutri_score_by_article)
+        nutri_score_by_week = self.calculate_nutri_score_by_week(nutri_score_by_article)
+        improvement_potential = self.calculate_improvement_potential(nutrient_potential)
+
+        result = {
+            'nutri_score_by_basket': nutri_score_by_basket,
+            'nutri_score_by_week': nutri_score_by_week,
+            'improvement_potential': improvement_potential
+        }
+
+        DigitalReceipt.objects.bulk_create(digital_receipt_list)
+        return Response(result, status=status.HTTP_200_OK)
 
 
 class CurrentStudiesView(generics.ListAPIView):
@@ -77,7 +350,7 @@ class SendReceiptsView(generics.GenericAPIView, mixins.ListModelMixin, mixins.Cr
         VERSION = 2  # Current Version of API
 
         errors = SendReceiptsErrors()
-        
+
         if not hasattr(request.user, 'partner'):
             return Response({'error': errors.PARTNER_DOES_NOT_EXIST}, status=status.HTTP_403_FORBIDDEN)
 
@@ -338,10 +611,15 @@ def match_receipt(digital_receipt):
             return matched_product.eatfit_product
 
         except Matching.MultipleObjectsReturned:
-            # If more than one matching found return randomly one for now
-            # TODO return the one with the closest price
             matched_product = Matching.objects.filter(article_type=digital_receipt.article_type,
-                                                      article_id=digital_receipt.article_id).first()
+                                                      article_id=digital_receipt.article_id,
+                                                      price_per_unit__isnull=False).annotate(
+                absolute_price_difference=Func(F('price_per_unit') - price_per_unit, function='ABS')).order_by(
+                'absolute_price_difference').first()
+
+            if matched_product is None:
+                matched_product = Matching.objects.filter(article_type=digital_receipt.article_type,
+                                                          article_id=digital_receipt.article_id).first()
 
             return matched_product.eatfit_product
 
@@ -920,7 +1198,8 @@ def create_product(p):
                 Allergen.objects.update_or_create(product=product, name=attr["_canonicalName"],
                                                   defaults={"certainity": attr['value']})
             if attr['_canonicalName'] == 'ingredients':
-                Ingredient.objects.update_or_create(product = product, lang = attr["_languageCode"], defaults = {"text" : str(attr['value'])})
+                Ingredient.objects.update_or_create(product=product, lang=attr["_languageCode"],
+                                                    defaults={"text": str(attr['value'])})
         calculate_ofcom_value(product)
     except Exception as e:
         print(e)
