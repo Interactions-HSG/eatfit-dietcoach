@@ -25,7 +25,8 @@ def get_start_and_end_date_from_calendar_week(year, calendar_week):
     """
     sunday = datetime.datetime.strptime(f'{year}-{calendar_week}-1', "%Y-%W-%u").date()
     next_sunday = sunday + datetime.timedelta(weeks=1)
-    return sunday.isoformat(), next_sunday.isoformat()
+    result_format = '%Y-%m-%dT%H:%M:%SZ'
+    return sunday.strftime(result_format), next_sunday.strftime(result_format)
 
 
 def merge_dicts(*dict_args):
