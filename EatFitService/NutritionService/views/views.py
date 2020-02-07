@@ -79,18 +79,11 @@ class BasketAnalysisView(generics.GenericAPIView):
                                                       name__in=[SALT, SUGARS, SATURATED_FAT, ENERGY_KCAL]))
         nutrients_grouped = itertoolz.groupby(lambda x: x.name, nutrients)
         nutri_score_facts = NutriScoreFacts.objects.get(product=product)
-
         minor_category = product.minor_category.id
-
-        salt = {'nutrient': SALT, 'unit': 'g', 'minor_category_id': minor_category, 'product_size': size}
-        sugars = {'nutrient': SUGARS, 'unit': 'g', 'minor_category_id': minor_category, 'product_size': size}
-        saturated_fat = {'nutrient': SATURATED_FAT, 'unit': 'g', 'minor_category_id': minor_category,
-                         'product_size': size}
-        energy_kcal = {'nutrient': ENERGY_KCAL, 'unit': 'kcal', 'minor_category_id': minor_category,
-                       'product_size': size}
-
         nutrient_potential = []
         for name, nutrient_values in nutrients_grouped.items():
+            unit = None
+            ofcom_value = None
             if any(nutrient.is_mixed for nutrient in nutrient_values):
                 is_mixed = True
                 nutrient_amount = next(nutrient.amount for nutrient in nutrient_values if nutrient.is_mixed)
@@ -105,40 +98,33 @@ class BasketAnalysisView(generics.GenericAPIView):
                 amount = (nutrient_amount * size / 100)
 
             if name == SALT:
+                unit = 'g'
                 if is_mixed:
                     ofcom_value = nutri_score_facts.ofcom_n_salt_mixed
                 else:
                     ofcom_value = nutri_score_facts.ofcom_n_salt
-                salt['amount'] = amount
-                salt['ofcom_value'] = ofcom_value
-                nutrient_potential.append(salt)
-
-            if name == SUGARS:
+            elif name == SUGARS:
+                unit = 'g'
                 if is_mixed:
                     ofcom_value = nutri_score_facts.ofcom_n_sugars_mixed
                 else:
                     ofcom_value = nutri_score_facts.ofcom_n_sugars
-                sugars['amount'] = amount
-                sugars['ofcom_value'] = ofcom_value
-                nutrient_potential.append(sugars)
-
-            if name == SATURATED_FAT:
+            elif name == SATURATED_FAT:
+                unit = 'g'
                 if is_mixed:
                     ofcom_value = nutri_score_facts.ofcom_n_saturated_fat_mixed
                 else:
                     ofcom_value = nutri_score_facts.ofcom_n_saturated_fat
-                saturated_fat['amount'] = amount
-                saturated_fat['ofcom_value'] = ofcom_value
-                nutrient_potential.append(saturated_fat)
-
-            if name == ENERGY_KCAL:
+            elif name == ENERGY_KCAL:
+                unit = 'kcal'
                 if is_mixed:
                     ofcom_value = nutri_score_facts.ofcom_n_energy_kj_mixed
                 else:
                     ofcom_value = nutri_score_facts.ofcom_n_energy_kj
-                energy_kcal['amount'] = amount
-                energy_kcal['ofcom_value'] = ofcom_value
-                nutrient_potential.append(energy_kcal)
+
+            nutrient_object = {'nutrient': name, 'minor_category_id': minor_category, 'product_size': size,
+                               'amount': amount, 'unit': unit, 'ofcom_value': ofcom_value}
+            nutrient_potential.append(nutrient_object)
 
         return nutrient_potential
 
@@ -216,7 +202,8 @@ class BasketAnalysisView(generics.GenericAPIView):
 
             amount_per_minor_category = itertoolz.reduceby('minor_category_id', lambda acc, x: acc + x['amount'],
                                                            values, 0)
-            sources = [{'minor_category_id': category_id, 'amount': round(amount, 2), 'unit': unit} for category_id, amount in
+            sources = [{'minor_category_id': category_id, 'amount': round(amount, 2), 'unit': unit} for
+                       category_id, amount in
                        amount_per_minor_category.items()]
             sources = sorted(sources, key=lambda x: x['amount'], reverse=True)
 
@@ -265,7 +252,7 @@ class BasketAnalysisView(generics.GenericAPIView):
             articles = receipt['items']
             receipt_id = receipt['receipt_id']
             receipt_datetime = receipt['receipt_datetime']
-            receipt_datetime_formatted = receipt_datetime.strftime('%Y-%m-%dT%H:%M:%SZ')
+            receipt_datetime_formatted = receipt_datetime.isoformat()
             year_of_receipt = receipt_datetime.year
             calendar_week = receipt_datetime.strftime('%U')  # Assuming sunday is the first day of the week
             for article in articles:
