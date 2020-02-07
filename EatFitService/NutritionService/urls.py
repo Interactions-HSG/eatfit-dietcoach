@@ -33,6 +33,7 @@ urlpatterns = [
      url(r'^receipt2nutrition/send-receipts/$', views.SendReceiptsView.as_view(), name='send-receipts'),
      url(r'^receipt2nutrition/send-receipts-experimental/$', views.send_receipts_experimental,
          name='send-receipts-experimental'),
+     url(r'^receipt2nutrition/basket-analysis/$', views.BasketAnalysisView.as_view(), name='basket-analysis'),
      url(r'^receipt2nutrition/export/receipts/$', views.export_digital_receipts),
      url(r'^receipt2nutrition/export/matching/$', views.export_matching),
 
