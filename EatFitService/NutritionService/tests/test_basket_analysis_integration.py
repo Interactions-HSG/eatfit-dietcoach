@@ -50,9 +50,9 @@ def test_basket_analysis_api_forbidden_request():
 
 
 @pytest.mark.django_db
-def test_basket_analysis_api_serializer_invalid():
+def test_basket_analysis_api_request_data_body_invalid():
     """
-    Assert that invalid request data does not get processed.
+    Assert that the request data body ('receipts') conforms to the structure determined by DigitalReceiptSerializer
     """
     assert User.objects.count() == 0
     assert models.ReceiptToNutritionPartner.objects.count() == 0
@@ -63,13 +63,12 @@ def test_basket_analysis_api_serializer_invalid():
     assert User.objects.count() == 1
     assert models.ReceiptToNutritionPartner.objects.count() == 1
 
-    BASKET_ANALYSIS_DATA_SIMPLE['r2n_partner'] = ''
-    BASKET_ANALYSIS_DATA_SIMPLE['r2n_username'] = ''
+    bad_test_data = {'r2n_partner': PARTNER_AND_USER_NAME, 'r2n_user': PARTNER_AND_USER_NAME, 'receipts': 'ABC'}
 
     api_client = APIRequestFactory()
     view = views.BasketAnalysisView.as_view()
     url = reverse(URL_REVERSE)
-    request = api_client.post(url, BASKET_ANALYSIS_DATA_SIMPLE, format='json')
+    request = api_client.post(url, bad_test_data, format='json')
     force_authenticate(request, user=user)
     response = view(request)
 
