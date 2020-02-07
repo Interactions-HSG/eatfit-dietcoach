@@ -10,10 +10,16 @@ Possible log types:
 - `[security]` to invite users to upgrade in case of vulnerabilities.
 - `[chore]` for things like maintenance tasks
 
-### unreleased (2019-01-31)
+### v14 (2019-02-07)
 
 - [fixed] Fix wrong r2n_partner key in send-receipts API view
 - [fixed] Fix middleware bug with applicationinsights
+- [added] Add price_per_unit as additional criterion to matching table (EAT-15)
+- [chore] Move eatfitenv virtual environment out of repository (EAT-41)
+- [added] Return Matching object with smallest price difference when multiple objects exist (EAT-47)
+- [added] Add comment field to NonFoundMatching (EAT-96)
+- [fixed] Salt to sodium value conversion (EAT-98)
+- [added] Basket Analysis API (EAT-99)
 
 ### v13 (2019-12-22)
 - [changed] Rebuild SendReceipts view and refactor on basis of send_receipts_experimental (EAT-92)
