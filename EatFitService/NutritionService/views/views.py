@@ -121,6 +121,8 @@ class BasketAnalysisView(generics.GenericAPIView):
                     ofcom_value = nutri_score_facts.ofcom_n_energy_kj_mixed
                 else:
                     ofcom_value = nutri_score_facts.ofcom_n_energy_kj
+            else:
+                raise Exception(f'{name}: Unknown value')
 
             nutrient_object = {'nutrient': name, 'minor_category_id': minor_category, 'product_size': size,
                                'amount': amount, 'unit': unit, 'ofcom_value': ofcom_value}
@@ -252,7 +254,7 @@ class BasketAnalysisView(generics.GenericAPIView):
             articles = receipt['items']
             receipt_id = receipt['receipt_id']
             receipt_datetime = receipt['receipt_datetime']
-            receipt_datetime_formatted = receipt_datetime.isoformat()
+            receipt_datetime_formatted = receipt_datetime.strftime('%Y-%m-%dT%H:%M:%SZ')
             year_of_receipt = receipt_datetime.year
             calendar_week = receipt_datetime.strftime('%U')  # Assuming sunday is the first day of the week
             for article in articles:
