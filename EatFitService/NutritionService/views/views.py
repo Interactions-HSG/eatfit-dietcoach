@@ -10,6 +10,7 @@ import logging
 from suds.client import Client
 from suds.sudsobject import asdict
 
+from django.db.models import F, Func
 from django.http import HttpResponse
 from django.http.response import HttpResponseForbidden
 from django.shortcuts import get_object_or_404
@@ -338,10 +339,15 @@ def match_receipt(digital_receipt):
             return matched_product.eatfit_product
 
         except Matching.MultipleObjectsReturned:
-            # If more than one matching found return randomly one for now
-            # TODO return the one with the closest price
             matched_product = Matching.objects.filter(article_type=digital_receipt.article_type,
-                                                      article_id=digital_receipt.article_id).first()
+                                                      article_id=digital_receipt.article_id,
+                                                      price_per_unit__isnull=False).annotate(
+                absolute_price_difference=Func(F('price_per_unit') - price_per_unit, function='ABS')).order_by(
+                'absolute_price_difference').first()
+
+            if matched_product is None:
+                matched_product = Matching.objects.filter(article_type=digital_receipt.article_type,
+                                                          article_id=digital_receipt.article_id).first()
 
             return matched_product.eatfit_product
 

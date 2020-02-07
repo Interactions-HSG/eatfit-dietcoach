@@ -574,6 +574,7 @@ class Matching(models.Model):
     article_id = models.CharField(max_length=255)
     article_type = models.CharField(max_length=255)
     gtin = models.BigIntegerField()
+    price_per_unit = models.FloatField(null=True, blank=True)
     eatfit_product = models.ForeignKey(Product, null=True, blank=True, editable=False)
 
     def save(self, *args, **kwargs):
@@ -582,7 +583,7 @@ class Matching(models.Model):
             if products.exists():
                 product = products[0]
                 self.eatfit_product = product
-        super(Matching, self).save(*args, **kwargs)
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.article_id
