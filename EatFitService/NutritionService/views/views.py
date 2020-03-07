@@ -122,7 +122,7 @@ class BasketAnalysisView(generics.GenericAPIView):
                 else:
                     ofcom_value = nutri_score_facts.ofcom_n_energy_kj
             else:
-                raise Exception(f'{name}: Unknown value')
+                continue
 
             nutrient_object = {'nutrient': name, 'minor_category_id': minor_category, 'product_size': size,
                                'amount': amount, 'unit': unit, 'ofcom_value': ofcom_value}
@@ -346,7 +346,7 @@ class SendReceiptsView(generics.GenericAPIView, mixins.ListModelMixin, mixins.Cr
         return False not in [size_condition, unit_of_measure_condition, nutri_score_condition]
 
     def post(self, request):
-        MAXIMUM_RECEIPTS = 10  #  Maximum number of baskets which should be processed
+        MAXIMUM_RECEIPTS = 12  #  Maximum number of baskets which should be processed
         VERSION = 2  # Current Version of API
 
         errors = SendReceiptsErrors()
@@ -493,7 +493,7 @@ def send_receipts_experimental(request):
         result = {"receipts": []}
         digital_receipt_list = []
 
-        for receipt in serializer.validated_data["receipts"][:10]:
+        for receipt in serializer.validated_data["receipts"][:12]:
 
             nutri_score_array = []
             for article in receipt["items"]:
@@ -563,7 +563,7 @@ def send_receipts_experimental(request):
 
             result["receipts"].append(receipt_object)
 
-        for receipt in serializer.validated_data["receipts"][10:]:
+        for receipt in serializer.validated_data["receipts"][12:]:
             for article in receipt["items"]:
                 digital_receipt = DigitalReceipt(r2n_user=r2n_user,
                                                  business_unit=receipt["business_unit"],
