@@ -810,7 +810,7 @@ def get_product(request, gtin):
     """
     products = Product.objects.filter(gtin=gtin)\
         .select_related('nutri_score_facts')\
-        .prefetch_related('allergens', 'ingredients', 'nutrients')
+        .prefetch_related('ingredients', 'nutrients')
     if products.exists():
         result = __prepare_product_data(request, products, False)
     else:
