@@ -10,6 +10,12 @@ Possible log types:
 - `[security]` to invite users to upgrade in case of vulnerabilities.
 - `[chore]` for things like maintenance tasks
 
+
+### v15 (2020-03-07)
+- [fixed] Reduced number of database queries for product view
+- [remove] Remove product save() call on product view, only save() if nutriscore is missing
+- [added] Add result cache for product view of 1 hr
+
 ### v14 (2019-02-07)
 
 - [fixed] Fix wrong r2n_partner key in send-receipts API view

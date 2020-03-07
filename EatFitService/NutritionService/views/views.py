@@ -808,8 +808,9 @@ def get_product(request, gtin):
 
     query param: resultType, values: 'array', 'dictionary'
     """
-    products = Product.objects.filter(gtin=gtin).prefetch_related('allergens', 'ingredients', 'nutrients',
-                                                                  'nutri_score_facts')
+    products = Product.objects.filter(gtin=gtin)\
+        .select_related('nutri_score_facts')\
+        .prefetch_related('ingredients', 'nutrients')
     if products.exists():
         result = __prepare_product_data(request, products, False)
     else:
@@ -829,9 +830,12 @@ def get_product(request, gtin):
 
 def __prepare_product_data(request, products, weighted_product, price=None):
     result_type = request.GET.get("resultType", "array")
+    products.update(found_count=F('found_count') + 1)
     for product in products:
-        product.found_count = product.found_count + 1
-        product.save()
+        # If nutriscore has not been calculated, calculate it
+        if not product.nutri_score_final:
+            logger.info('Product gtin=%s has no nutriscore. Calculating now.' % product.gtin)
+            product.save()
     serializer = ProductSerializer(products, many=True, context={'weighted_article': weighted_product, "price": price})
     result = {}
     result["success"] = True
