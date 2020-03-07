@@ -830,7 +830,12 @@ def get_product(request, gtin):
 
 def __prepare_product_data(request, products, weighted_product, price=None):
     result_type = request.GET.get("resultType", "array")
-    products.update(found_count=F('found_count')+1)
+    products.update(found_count=F('found_count') + 1)
+    for product in products:
+        # If nutriscore has not been calculated, calculate it
+        if not product.nutri_score_final:
+            logger.info('Product gtin=%s has no nutriscore. Calculating now.' % product.gtin)
+            product.save()
     serializer = ProductSerializer(products, many=True, context={'weighted_article': weighted_product, "price": price})
     result = {}
     result["success"] = True
