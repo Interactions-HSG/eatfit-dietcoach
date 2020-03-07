@@ -2,14 +2,16 @@ from NutritionService.views import views, crowdsource_views, utils_view
 from NutritionService import legacy_views
 from rest_framework import routers
 import NutritionService
+
 from django.conf.urls import url, include
+from django.views.decorators.cache import cache_page
 
 router = routers.DefaultRouter()
 
 urlpatterns = [
      url(r'^', include(router.urls)),
+     url(r'^products/(?P<gtin>\d{0,50})/$', cache_page(3600)(NutritionService.views.views.get_product)),
 
-     url(r'^products/(?P<gtin>\d{0,50})/$', NutritionService.views.views.get_product),
      url(r'^products/better-products/(?P<gtin>\d{0,50})/', NutritionService.views.views.get_better_products_gtin),
      url(r'^products/better-products/category/(?P<minor_category_pk>\d+)/', NutritionService.views.views.get_better_products_minor_category),
      url(r'^product/report/$', views.report_product),
