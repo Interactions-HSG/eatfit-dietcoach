@@ -764,7 +764,7 @@ def get_and_validate_nutrients(product):
 
         valid_condition_amount, amount = is_number(nutrient.amount)
 
-        if nutrient.name == SALT:
+        if nutrient.name == SALT and valid_condition_amount:
             nutrient.name = SODIUM
             nutrient.amount = amount / 2.5
 
