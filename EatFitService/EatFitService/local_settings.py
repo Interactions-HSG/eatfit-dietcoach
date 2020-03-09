@@ -31,16 +31,17 @@ LOGGING = {
     'disable_existing_loggers': False,
     'formatters': {
         'verbose': {
-            'format': '[%(levelname)s %(asctime)s %(name)s]: %(message)s',
-            'style': '{',
+            'format': '%(levelname)s %(asctime)s %(name)s: %(message)s',
         },
     },
     'handlers': {
         'console': {
             'class': 'logging.StreamHandler',
+            'level': 'DEBUG',
+            'formatter': 'verbose'
         },
         'file': {
-            'level': 'WARNING',
+            'level': 'DEBUG',
             'class': 'logging.FileHandler',
             'filename': '/var/log/nutrition-service.log',
             'formatter': 'verbose'
@@ -49,17 +50,17 @@ LOGGING = {
     'loggers': {
         'NutritionService': {
             'handlers': ['file'],
-            'level': 'WARNING',
+            'level': 'DEBUG',
             'propagate': True,
         },
         # Log all exceptions in logfile
         '': {
-            'handlers': ['console'],
+            'handlers': ['console', 'file'],
             'level': 'DEBUG',
             'propagate': True
         },
         'django.db.backends':{
-            'handlers': ['console'],
+            'handlers': ['console', 'file'],
             'level': 'DEBUG',
             'propagate': True,
         }

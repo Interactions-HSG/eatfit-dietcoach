@@ -181,8 +181,7 @@ LOGGING = {
     'disable_existing_loggers': False,
     'formatters': {
         'verbose': {
-            'format': '[%(levelname)s %(asctime)s %(name)s]: %(message)s',
-            'style': '{',
+            'format': '%(levelname)s %(asctime)s %(name)s: %(message)s',
         },
     },
     'handlers': {
@@ -212,5 +211,4 @@ STATICFILES_STORAGE = 'EatFitService.azure_storage_backend.AzureStaticStorage'
 
 STATIC_URL = 'https://eatfitmedias.blob.core.windows.net/static/'
 MEDIA_URL = 'https://eatfitmedias.blob.core.windows.net/media/'
-
 
