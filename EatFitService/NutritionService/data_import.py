@@ -98,46 +98,47 @@ class AllergensImport(ImportBase):
             reader = csv.DictReader(csv_file)
 
             for count, row in enumerate(reader):
-
-                update_row_headers = {header: row[header] for header in update_headers}
-                update_allergens = {transform_csv_headers[key]: value for key, value in update_row_headers.items()}
-
-                create_row_headers = {header: row[header] for header in create_headers}
-                create_allergens = {transform_csv_headers[key]: value for key, value in create_row_headers.items()}
-
                 try:
-                    product_object = Product.objects.get(gtin=int(row['gtin']))
+                    update_row_headers = {header: row[header] for header in update_headers}
+                    update_allergens = {transform_csv_headers[key]: value for key, value in update_row_headers.items()}
 
-                    if update_allergens:
-                        self.update_or_create_fields(product_object, update_allergens)
+                    create_row_headers = {header: row[header] for header in create_headers}
+                    create_allergens = {transform_csv_headers[key]: value for key, value in create_row_headers.items()}
 
-                    if create_allergens:
-                        self.create_fields(product_object, create_allergens)
+                    try:
+                        product_object = Product.objects.get(gtin=int(row['gtin']))
 
-                except Product.DoesNotExist:
+                        if update_allergens:
+                            self.update_or_create_fields(product_object, update_allergens)
 
-                    log_dict = {
-                        'import_type': 'Allergens',
-                        'file_name': self.csv_file_path,
-                        'row_data': 'Row ' + str(count) + ': ' + ', '.join(row),
-                        'error_field': 'allergens foreign key field',
-                        'error_message': 'Product ' + str(row['gtin']) + ' does not exist.'
-                    }
-                    ImportErrorLog.objects.create(**log_dict)
+                        if create_allergens:
+                            self.create_fields(product_object, create_allergens)
+
+                    except Product.DoesNotExist:
+
+                        log_dict = {
+                            'import_type': 'Allergens',
+                            'file_name': self.csv_file_path,
+                            'row_data': 'Row ' + str(count) + ': ' + ', '.join(row),
+                            'error_field': 'allergens foreign key field',
+                            'error_message': 'Product ' + str(row['gtin']) + ' does not exist.'
+                        }
+                        ImportErrorLog.objects.create(**log_dict)
+                        continue
+
+                    except Product.MultipleObjectsReturned:
+
+                        log_dict = {
+                            'file_name': self.csv_file_path,
+                            'import_type': 'Allergens',
+                            'row_data': 'Row ' + str(count) + ': ' + ', '.join(row),
+                            'error_field': 'allergens foreign key field',
+                            'error_message': 'Multiple products with ' + str(row['gtin']) + ' found.'
+                        }
+                        ImportErrorLog.objects.create(**log_dict)
+                        continue
+                except:
                     continue
-
-                except Product.MultipleObjectsReturned:
-
-                    log_dict = {
-                        'file_name': self.csv_file_path,
-                        'import_type': 'Allergens',
-                        'row_data': 'Row ' + str(count) + ': ' + ', '.join(row),
-                        'error_field': 'allergens foreign key field',
-                        'error_message': 'Multiple products with ' + str(row['gtin']) + ' found.'
-                    }
-                    ImportErrorLog.objects.create(**log_dict)
-                    continue
-
 
 class NutrientsImport(ImportBase):
     HEADERS = NUTRIENTS_HEADERS
@@ -181,45 +182,46 @@ class NutrientsImport(ImportBase):
             reader = csv.DictReader(csv_file)
 
             for count, row in enumerate(reader):
-
-                update_row_headers = {header: row[header] for header in update_headers}
-                update_nutrients = {transform_csv_headers[key]: value for key, value in update_row_headers.items()}
-
-                create_row_headers = {header: row[header] for header in create_headers}
-                create_nutrients = {transform_csv_headers[key]: value for key, value in create_row_headers.items()}
-
                 try:
-                    product_object = Product.objects.get(gtin=int(row['gtin']))
+                    update_row_headers = {header: row[header] for header in update_headers}
+                    update_nutrients = {transform_csv_headers[key]: value for key, value in update_row_headers.items()}
 
-                    if update_nutrients:
-                        self.update_or_create_fields(product_object, update_nutrients)
+                    create_row_headers = {header: row[header] for header in create_headers}
+                    create_nutrients = {transform_csv_headers[key]: value for key, value in create_row_headers.items()}
 
-                    if create_nutrients:
-                        self.create_fields(product_object, create_nutrients)
+                    try:
+                        product_object = Product.objects.get(gtin=int(row['gtin']))
 
-                except Product.DoesNotExist:
+                        if update_nutrients:
+                            self.update_or_create_fields(product_object, update_nutrients)
 
-                    log_dict = {
-                        'import_type': 'Nutrients',
-                        'file_name': self.csv_file_path,
-                        'row_data': 'Row ' + str(count) + ': ' + ', '.join(row),
-                        'error_field': 'nutrients foreign key field',
-                        'error_message': 'Product ' + str(row['gtin']) + ' does not exist.'
-                    }
-                    ImportErrorLog.objects.create(**log_dict)
+                        if create_nutrients:
+                            self.create_fields(product_object, create_nutrients)
+
+                    except Product.DoesNotExist:
+
+                        log_dict = {
+                            'import_type': 'Nutrients',
+                            'file_name': self.csv_file_path,
+                            'row_data': 'Row ' + str(count) + ': ' + ', '.join(row),
+                            'error_field': 'nutrients foreign key field',
+                            'error_message': 'Product ' + str(row['gtin']) + ' does not exist.'
+                        }
+                        ImportErrorLog.objects.create(**log_dict)
+                        continue
+
+                    except Product.MultipleObjectsReturned:
+                        log_dict = {
+                            'import_type': 'Nutrients',
+                            'file_name': self.csv_file_path,
+                            'row_data': 'Row ' + str(count) + ': ' + ', '.join(row),
+                            'error_field': 'nutrients foreign key field',
+                            'error_message': 'Multiple products with GTIN: ' + str(row['gtin']) + ' found.'
+                        }
+                        ImportErrorLog.objects.create(**log_dict)
+                        continue
+                except:
                     continue
-
-                except Product.MultipleObjectsReturned:
-                    log_dict = {
-                        'import_type': 'Nutrients',
-                        'file_name': self.csv_file_path,
-                        'row_data': 'Row ' + str(count) + ': ' + ', '.join(row),
-                        'error_field': 'nutrients foreign key field',
-                        'error_message': 'Multiple products with GTIN: ' + str(row['gtin']) + ' found.'
-                    }
-                    ImportErrorLog.objects.create(**log_dict)
-                    continue
-
 
 class ProductsImport(ImportBase):
     HEADERS = PRODUCT_HEADERS
@@ -343,66 +345,69 @@ class ProductsImport(ImportBase):
             reader = csv.DictReader(csv_file)
 
             for count, row in enumerate(reader):
+                try:
+                    row.update({'counter': count})
 
-                row.update({'counter': count})
+                    update_row_headers = {header: row[header] for header in update_headers}
+                    update_products = {transform_csv_headers[key]: value for key, value in update_row_headers.items()}
 
-                update_row_headers = {header: row[header] for header in update_headers}
-                update_products = {transform_csv_headers[key]: value for key, value in update_row_headers.items()}
+                    create_row_headers = {header: row[header] for header in create_headers}
+                    create_products = {transform_csv_headers[key]: value for key, value in create_row_headers.items()}
 
-                create_row_headers = {header: row[header] for header in create_headers}
-                create_products = {transform_csv_headers[key]: value for key, value in create_row_headers.items()}
+                    safe_update_products = {key: value for key, value in update_products.items() if key in safe_headers}
+                    safe_create_products = {key: value for key, value in create_products.items() if key in safe_headers}
 
-                safe_update_products = {key: value for key, value in update_products.items() if key in safe_headers}
-                safe_create_products = {key: value for key, value in create_products.items() if key in safe_headers}
+                    ingredients_update_condition = row['ingredients'] is not None and 'ingredients' in update_products.keys()
+                    image_update_condition = row['imageLink'] is not None and 'original_image_url' in update_products.keys()
+                    major_category_base_condition = row['major'] is not None and row['major'] != 'null'
+                    minor_category_base_condition = row['minor'] is not None and row['minor'] != 'null'
+                    major_category_update_condition = major_category_base_condition and 'major' in update_products.keys()
+                    minor_category_update_condition = minor_category_base_condition and 'minor' in update_products.keys()
+                    retailer_update_condition = row['retailer'] is not None and 'retailer' in update_products.keys()
+                    market_region_update_condition = row['market_region'] is not None and 'market_region' in update_products.keys()
 
-                ingredients_update_condition = row['ingredients'] is not None and 'ingredients' in update_products.keys()
-                image_update_condition = row['imageLink'] is not None and 'original_image_url' in update_products.keys()
-                major_category_base_condition = row['major'] is not None and row['major'] != 'null'
-                minor_category_base_condition = row['minor'] is not None and row['minor'] != 'null'
-                major_category_update_condition = major_category_base_condition and 'major' in update_products.keys()
-                minor_category_update_condition = minor_category_base_condition and 'minor' in update_products.keys()
-                retailer_update_condition = row['retailer'] is not None and 'retailer' in update_products.keys()
-                market_region_update_condition = row['market_region'] is not None and 'market_region' in update_products.keys()
+                    ingredients_create_condition = row['ingredients'] is not None and 'ingredients' in create_products.keys()
+                    retailer_create_condition = row['retailer'] is not None and 'retailer' in create_products.keys()
+                    market_region_create_condition = row['market_region'] is not None and 'market_region' in create_products.keys()
 
-                ingredients_create_condition = row['ingredients'] is not None and 'ingredients' in create_products.keys()
-                retailer_create_condition = row['retailer'] is not None and 'retailer' in create_products.keys()
-                market_region_create_condition = row['market_region'] is not None and 'market_region' in create_products.keys()
+                    minor_category = MinorCategory.objects.get(id=int(row['minor']))
+                    product_object, created = Product.objects.get_or_create(gtin=int(row['gtin']), minor_category=minor_category)
 
-                product_object, created = Product.objects.get_or_create(gtin=int(row['gtin']))
+                    # Safe update
+                    product_object.__dict__.update(safe_update_products)
 
-                # Safe update
-                product_object.__dict__.update(safe_update_products)
+                    # Safe create
+                    for key, value in safe_create_products.items():
+                        if product_object.__dict__.get(key) is None:
+                            product_object.__dict__.update({key: value})
 
-                # Safe create
-                for key, value in safe_create_products.items():
-                    if product_object.__dict__.get(key) is None:
-                        product_object.__dict__.update({key: value})
+                    if ingredients_update_condition:
+                        self.update_or_create_ingredient(product_object, row)
 
-                if ingredients_update_condition:
-                    self.update_or_create_ingredient(product_object, row)
+                    if ingredients_create_condition:
+                        self.create_ingredient(product_object, row)
 
-                if ingredients_create_condition:
-                    self.create_ingredient(product_object, row)
+                    if image_update_condition:
+                        self.update_or_create_image(product_object, row['imageLink'])
 
-                if image_update_condition:
-                    self.update_or_create_image(product_object, row['imageLink'])
+                    if (created and major_category_base_condition) or major_category_update_condition:
+                        self.update_major_category(product_object, row)
 
-                if (created and major_category_base_condition) or major_category_update_condition:
-                    self.update_major_category(product_object, row)
+                    if (created and minor_category_base_condition) or minor_category_update_condition:
+                        self.update_minor_category(product_object, row)
 
-                if (created and minor_category_base_condition) or minor_category_update_condition:
-                    self.update_minor_category(product_object, row)
+                    if retailer_update_condition:
+                        self.update_or_create_retailer(product_object, row)
 
-                if retailer_update_condition:
-                    self.update_or_create_retailer(product_object, row)
+                    if retailer_create_condition:
+                        self.create_retailer(product_object, row)
 
-                if retailer_create_condition:
-                    self.create_retailer(product_object, row)
+                    if market_region_update_condition:
+                        self.update_or_create_market_region(product_object, row)
 
-                if market_region_update_condition:
-                    self.update_or_create_market_region(product_object, row)
+                    if market_region_create_condition:
+                        self.create_market_region(product_object, row)
 
-                if market_region_create_condition:
-                    self.create_market_region(product_object, row)
-
-                product_object.save()
+                    product_object.save()
+                except:
+                    continue
