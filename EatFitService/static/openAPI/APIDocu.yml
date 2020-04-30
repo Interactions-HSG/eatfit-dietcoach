@@ -40,12 +40,13 @@ paths:
   /health-tipps/:
     get:
       summary: Returns a list of health tipps.
-      description: Provide *at least* a nutrient or category to query data. You can also combine the two.
+      description: 'You have to specify either a nutrient (e.g. salt, totalFat, saturatedFat, totalCarbohydrate, sugars, protein, energyKJ, energyKcal, dietaryFiber) or one of the minor categories (see /category/minor/ API), or you can also specify both: nutrient and minor category to get a corresponding health-tipp.'
       parameters:
         - in: query
           name: nutrient
           schema:
             type: string
+            enum: ['energyKJ', 'totalFat', 'saturatedFat', 'salt', 'sugars', 'protein', 'totalCarbohydrate', 'dietaryFiber', 'sodium']
           description: Name of the nutrient of which to get the healt tipps.
         - in: query
           name: category
@@ -67,7 +68,7 @@ paths:
   /products/better-products/category/{minor_category_id}:
     get:
       summary: Returns a list of better products.
-      description: (/products/better-products/category/{minor_category_id}  description)
+      description: This list returns very healthy alternatives within a category.
       parameters:
         - in: path
           name: minor_category_id
@@ -115,7 +116,7 @@ paths:
   /products/better-products/{gtin}:
     get:
       summary: Returns a list of better products.
-      description: (/products/better-products/{gtin}  description)
+      description: Returns healthier alternatives for a specific product.
       parameters:
         - in: path
           name: gtin
@@ -164,7 +165,7 @@ paths:
   /products/{gtin}:
     get:
       summary: Returns a product.
-      description: (/products/{gtin}  description)
+      description: Returns a product's nutritional profile, category, name, and other related information
       parameters:
         - in: path
           name: gtin

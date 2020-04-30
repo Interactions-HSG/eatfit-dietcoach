@@ -33,7 +33,8 @@ EatFitService/media/
 EatFitService/.vs/
 EatFitService/.idea/
 EatFitService/localenv/
-EatFitService/static/
+EatFitService/static/admin
+EatFitService/static/rest_framework
 EatFitService/nutritiondb.json
 EatFitService/logs/
 EatFitService/imports/
