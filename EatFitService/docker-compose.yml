@@ -44,12 +44,3 @@ services:
       - .:/home/eatfit/eatfitrepo/EatFitService
     environment:
       - DJANGO_SETTINGS_MODULE=EatFitService.local_settings
-
-  swagger-ui:
-    image: swaggerapi/swagger-ui:latest
-    ports:
-      - 83:8080
-    volumes:
-      - .:/app_data
-    environment:
-      - SWAGGER_JSON=/app_data/APIDocu.yml
