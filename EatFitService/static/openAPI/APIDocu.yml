@@ -1,0 +1,481 @@
+openapi: 3.0.0
+info:
+  title: EatFit
+  description: Beschreibung
+  version: V0.1
+servers:
+  - url: https://eatfit-service.foodcoa.ch/
+    description: Live server
+  - url: http://localhost/
+    description: Local test installation
+
+paths:
+  /category/major/:
+    get:
+      summary: Returns a list of major categories.
+      description: (/category/major/  description)
+      responses:
+        '200':    # status code
+          description: A JSON array of major categories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MajorCategory'
+  /category/minor/:
+    get:
+      summary: Returns a list of minor categories.
+      description: (/category/minor/  description)
+      responses:
+        '200':    # status code
+          description: A JSON array of minor categories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MinorCategory'
+
+  /health-tipps/:
+    get:
+      summary: Returns a list of health tipps.
+      description: 'You have to specify either a nutrient (e.g. salt, totalFat, saturatedFat, totalCarbohydrate, sugars, protein, energyKJ, energyKcal, dietaryFiber) or one of the minor categories (see /category/minor/ API), or you can also specify both: nutrient and minor category to get a corresponding health-tipp.'
+      parameters:
+        - in: query
+          name: nutrient
+          schema:
+            type: string
+            enum: ['energyKJ', 'totalFat', 'saturatedFat', 'salt', 'sugars', 'protein', 'totalCarbohydrate', 'dietaryFiber', 'sodium']
+          description: Name of the nutrient of which to get the healt tipps.
+        - in: query
+          name: category
+          schema:
+            type: integer
+          description: ID of the miner category of which to get the healt tipps.
+      responses:
+        '200':
+          description: A JSON array of health tipps.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/HealthTipp'
+        '400':
+          description: Bad Request. Did you provide at least either a nutrient or category?
+
+  /products/better-products/category/{minor_category_id}:
+    get:
+      summary: Returns a list of better products.
+      description: This list returns very healthy alternatives within a category.
+      parameters:
+        - in: path
+          name: minor_category_id
+          description: The ID of a minor category
+          required: true
+          schema:
+            type: integer
+        - in: query
+          name: sortBy
+          schema:
+            type: string
+            enum: ['ofcomValue', 'energyKJ', 'totalFat', 'saturatedFat', 'salt', 'sugars', 'protein', 'totalCarbohydrate', 'dietaryFiber', 'healthPercentage', 'sodium']
+        - in: query
+          name: resultType
+          schema:
+            type: string
+            enum: ['array', 'dictionary']
+        - in: query
+          name: marketRegion
+          schema:
+            type: string
+          example: ch
+        - in: query
+          name: retailer
+          schema:
+            type: string
+          example: migros
+      responses:
+        '200':
+          description: A list of better products.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  products:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Product'
+        '404':
+          description: The minor category was not found. Make sure the minor_category_id exists.
+
+  /products/better-products/{gtin}:
+    get:
+      summary: Returns a list of better products.
+      description: Returns healthier alternatives for a specific product.
+      parameters:
+        - in: path
+          name: gtin
+          description: The GTIN of a product
+          required: true
+          schema:
+            type: integer
+        - in: query
+          name: sortBy
+          schema:
+            type: string
+            enum: ['ofcomValue', 'energyKJ', 'totalFat', 'saturatedFat', 'salt', 'sugars', 'protein', 'totalCarbohydrate', 'dietaryFiber', 'healthPercentage', 'sodium']
+        - in: query
+          name: resultType
+          schema:
+            type: string
+            enum: ['array', 'dictionary']
+        - in: query
+          name: marketRegion
+          schema:
+            type: string
+          example: ch
+        - in: query
+          name: retailer
+          schema:
+            type: string
+          example: migros
+      responses:
+        '200':
+          description: A list of better products.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  products:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Product'
+        '404':
+          description: The minor category was not found. Make sure the minor_category_id exists.
+
+
+  /products/{gtin}:
+    get:
+      summary: Returns a product.
+      description: Returns a product's nutritional profile, category, name, and other related information
+      parameters:
+        - in: path
+          name: gtin
+          description: The GTIN of a product
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: A product.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  products:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Product'
+
+  /receipt2nutrition/send-receipts/:
+    post:
+      summary: send a receipt.
+      description: (/receipt2nutrition/send-receipts/  description)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DigitalReceipt'
+      responses:
+        '200':
+          description: Returns the receipts with their nutriscore.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  receipts:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        receipt_id:
+                          type: string
+                        receipt_datetime:
+                          type: string
+                        business_unit:
+                          type: string
+                        nutriscore:
+                          type: string
+                        nutriscore_indexed:
+                          type: string
+                        r2n_version_code:
+                          type: integer
+                          format: int32
+        '400':
+          description: Invalid post data. The response will contain information about the fields that are missing/invalid.
+        '403':
+          description: Unauthorized. Maybe you are not a "partner" and can not use this API endpoint.
+        '404':
+          description: Unauthorized. Maybe you are not a "partner" and can not use this API endpoint. Or the fields "r2n_username" and "r2n_username" are missing.
+
+
+components:
+  schemas:
+    MajorCategory:
+      type: object
+      properties:
+        id:
+          type: integer
+        name_de:
+          type: string
+        name_en:
+          type: string
+        name_it:
+          type: string
+        name_fr:
+          type: string
+
+    MinorCategory:
+      type: object
+      properties:
+        id:
+          type: integer
+        name_de:
+          type: string
+        name_en:
+          type: string
+        name_it:
+          type: string
+        name_fr:
+          type: string
+        nwd_subcategory_id:
+          type: string
+        nutri_score_category:
+          type: string
+        icon:
+          type: string
+        category_major:
+          type: integer
+
+    HealthTipp:
+      type: object
+      properties:
+        name_de:
+          type: string
+        name_en:
+          type: string
+        name_it:
+          type: string
+        name_fr:
+          type: string
+        image:
+          type: string
+
+    Product:
+      type: object
+      properties:
+        gtin:
+          type: integer
+          format: int64
+        product_name_en:
+          type: string
+        product_name_de:
+          type: string
+        product_name_fr:
+          type: string
+        product_name_it:
+          type: string
+        producer:
+          type: string
+        product_size:
+          type: string
+        product_size_unit_of_measure:
+          type: string
+        serving_size:
+          type: string
+        comment:
+          type: string
+        image:
+          type: string
+        back_image:
+          type: string
+          format: nullable
+        major_category:
+          type: integer
+          format: int32
+        minor_category:
+          type: integer
+          format: int32
+        allergens:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+        ingredients:
+          type: array
+          items:
+            type: object
+            properties:
+              lang:
+                type: string
+              text:
+                type: string
+        nutrients:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              amount:
+                type: number
+              unit_of_measure:
+                type: string
+        source:
+          type: string
+        source_checked:
+          type: boolean
+        health_percentage:
+          type: integer
+          format: int32
+        weighted_article:
+          type: boolean
+        price:
+          type: integer
+          format: int32
+        ofcom_value:
+          type: integer
+          format: int32
+        nutri_score_final:
+          type: string
+        nutri_score_facts:
+          type: object
+          properties:
+            fvpn_total_percentage:
+              type: integer
+              format: int32
+            fvpn_total_percentage_estimated:
+              type: integer
+              format: int32
+            fruit_percentage:
+              type: integer
+              format: int32
+            vegetable_percentage:
+              type: integer
+              format: int32
+            pulses_percentage:
+              type: integer
+              format: int32
+            nuts_percentage:
+              type: integer
+              format: int32
+            fruit_percentage_dried:
+              type: integer
+              format: int32
+            vegetable_percentage_dried:
+              type: integer
+              format: int32
+            pulses_percentage_dried:
+              type: integer
+              format: int32
+            ofcom_n_energy_kj:
+              type: integer
+              format: int32
+            ofcom_n_saturated_fat:
+              type: integer
+              format: int32
+            ofcom_n_sugars:
+              type: integer
+              format: int32
+            ofcom_n_salt:
+              type: integer
+              format: int32
+            ofcom_p_protein:
+              type: integer
+              format: int32
+            ofcom_p_fvpn:
+              type: integer
+              format: int32
+            ofcom_p_dietary_fiber:
+              type: integer
+              format: int32
+            ofcom_n_energy_kj_mixed:
+              type: string
+              format: nullable
+            ofcom_n_saturated_fat_mixed:
+              type: string
+              format: nullable
+            ofcom_n_sugars_mixed:
+              type: string
+              format: nullable
+            ofcom_n_salt_mixed:
+              type: string
+              format: nullable
+            ofcom_p_protein_mixed:
+              type: string
+              format: nullable
+            ofcom_p_fvpn_mixed:
+              type: string
+              format: nullable
+            ofcom_p_dietary_fiber_mixed:
+              type: string
+              format: nullable
+
+    DigitalReceipt:
+      type: object
+      properties:
+        r2n_username:
+          type: string
+        r2n_partner:
+          type: string
+        receipts:
+          type: array
+          items:
+            type: object
+            properties:
+              items:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    article_id:
+                      type: integer
+                      format: int32
+                    article_type:
+                      type: string
+                    quantity:
+                      type: number
+                    quantity_unit:
+                      type: string
+                    price:
+                      type: number
+                    price_currency:
+                      type: string
+              business_unit:
+                type: string
+              receipt_id:
+                type: string
+              receipt_datetime:
+                type: string
+
+  securitySchemes:
+    BasicAuth:
+      type: http
+      scheme: basic
+security:
+  - BasicAuth: []
