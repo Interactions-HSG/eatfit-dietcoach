@@ -35,3 +35,5 @@ pytest -s -v
 ## Upload Images to Azure
 `azcopy --source [IMAGE FILE] --dest-key [KEY] --destination https://eatfitmedias.blob.core.windows.net/media/ --recursive`
 
+## Swagger UI
+can be found under the url `/static/swagger/`
