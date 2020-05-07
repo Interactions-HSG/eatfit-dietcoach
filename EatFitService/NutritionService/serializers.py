@@ -133,6 +133,12 @@ class DigitalReceiptSerializer(serializers.Serializer):
     r2n_username = serializers.CharField()
     receipts = ReceiptSerializer(many=True)
 
+
+class Text2GTINSerializer(serializers.Serializer):
+    r2n_partner = serializers.CharField()
+    r2n_username = serializers.CharField()
+    articles = ArticleSerializer(many=True)
+
 class CurrentStudiesSerializer(serializers.ModelSerializer):
     class Meta:
         model = CurrentStudies
