@@ -9,7 +9,7 @@ RUN openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
     -out /etc/letsencrypt/live/localhost/fullchain.pem \
     -subj /CN=localhost
 WORKDIR "/home/eatfit/eatfitrepo/EatFitService"
-COPY . .
+ADD . .
 ADD ./000-default-le-ssl.conf /etc/apache2/sites-enabled/000-default-le-ssl.conf
 ADD ./000-default.conf /etc/apache2/sites-enabled/000-default.conf
 ADD ./options-ssl-apache.conf /etc/letsencrypt/options-ssl-apache.conf
@@ -30,3 +30,5 @@ RUN chown -R www-data:www-data /home/eatfit/eatfitrepo/EatFitService
 RUN chmod 775 -R /home/eatfit/eatfitrepo/EatFitService
 RUN touch /var/log/nutrition-service.log
 RUN chmod 777 /var/log/nutrition-service.log
+RUN mkdir ./cache
+RUN chmod 777 ./cache

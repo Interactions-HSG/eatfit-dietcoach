@@ -15,6 +15,9 @@ Possible log types:
 - [fixed] Reduced number of database queries for product view
 - [remove] Remove product save() call on product view, only save() if nutriscore is missing
 - [added] Add result cache for product view of 1 hr
+- [fixed] Fix logging formatter configuration
+- [changed] Change max entries for caching to 10000
+
 
 ### v14 (2019-02-07)
 

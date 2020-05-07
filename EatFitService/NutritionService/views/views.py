@@ -30,8 +30,9 @@ from NutritionService.models import DigitalReceipt, NonFoundMatching, Matching, 
     NutriScoreFacts, SALT, SATURATED_FAT, SUGARS, ENERGY_KCAL, SODIUM, ENERGY_KJ
 from NutritionService.nutriscore.calculations import unit_of_measure_conversion
 from NutritionService.serializers import MinorCategorySerializer, MajorCategorySerializer, HealthTippSerializer, \
-    ProductSerializer, DigitalReceiptSerializer, CurrentStudiesSerializer
+    ProductSerializer, DigitalReceiptSerializer, CurrentStudiesSerializer, Text2GTINSerializer
 from NutritionService.tasks import import_from_openfood
+
 from .errors import SendReceiptsErrors, BasketAnalysisErrors
 
 logger = logging.getLogger('NutritionService.views')
@@ -327,6 +328,52 @@ class CurrentStudiesView(generics.ListAPIView):
     queryset = CurrentStudies.objects.all()
     serializer_class = CurrentStudiesSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+class SendReceiptsGetProductIdsView(generics.GenericAPIView):
+    def post(self, request):
+        errors = SendReceiptsErrors()
+
+        if not hasattr(request.user, 'partner'):
+            return Response({'error': errors.PARTNER_DOES_NOT_EXIST}, status=status.HTTP_403_FORBIDDEN)
+
+        serializer = Text2GTINSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        validated_data = serializer.validated_data
+        r2n_username = validated_data.get('r2n_username')
+        r2n_partner = validated_data.get('r2n_partner')
+
+        try:
+            r2n_user = ReceiptToNutritionUser.objects.get(r2n_partner__name=r2n_partner, r2n_username=r2n_username)
+        except ReceiptToNutritionUser.DoesNotExist:
+            return Response({'error': errors.USER_NOT_FOUND}, status.HTTP_404_NOT_FOUND)
+
+        if not r2n_user.r2n_user_active:
+            return Response({'error': errors.USER_INACTIVE},
+                            status=status.HTTP_403_FORBIDDEN)
+
+        products = []
+        for article in validated_data['articles']:
+            digital_receipt = DigitalReceipt(
+                r2n_user=r2n_user,
+                article_id=article['article_id'],
+                article_type=article['article_type'],
+                quantity=article['quantity'],
+                quantity_unit=article['quantity_unit'],
+                price=article['price'],
+                price_currency=article['price_currency']
+            )
+            product = match_receipt(digital_receipt)
+            if product:
+                products.append({
+                    "article_id": article['article_id'],
+                    "article_type": article['article_type'],
+                    "eatfit_id": product.id,
+                    "gtin": product.gtin,
+                })
+
+        return Response(products, status=status.HTTP_200_OK)
 
 
 class SendReceiptsView(generics.GenericAPIView, mixins.ListModelMixin, mixins.CreateModelMixin):
