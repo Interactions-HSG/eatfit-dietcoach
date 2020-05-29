@@ -953,6 +953,66 @@ def get_better_products_minor_category(request, minor_category_pk):
     minor_category = get_object_or_404(MinorCategory.objects.all(), pk=minor_category_pk)
     return __get_better_products(request, minor_category, None)
 
+@api_view(['GET'])
+@permission_classes((permissions.IsAuthenticated,))
+def get_worse_products_minor_category(request, minor_category_pk):
+    """
+    query param: sortBy, values: 'ofcomValue', 'energyKJ', 'totalFat', 'saturatedFat', 'salt', 'sugars', 'protein',
+                                 'totalCarbohydrate', 'dietaryFiber', 'healthPercentage' - this is the fruit and veg %,
+                                 'sodium'
+    query param: resultType, values: 'array', 'dictionary'
+    """
+    minor_category = get_object_or_404(MinorCategory.objects.all(), pk=minor_category_pk)
+    return __get_worse_products(request, minor_category, None)
+
+@api_view(['GET'])
+@permission_classes((permissions.IsAuthenticated,))
+def get_worse_products_gtin(request, gtin):
+    """
+    query param: sortBy, values: 'ofcomValue', 'energyKJ', 'totalFat', 'saturatedFat', 'salt', 'sugars', 'protein',
+                                 'totalCarbohydrate', 'dietaryFiber', 'healthPercentage' - this is the fruit and veg %,
+                                 'sodium'
+    query param: resultType, values: 'array', 'dictionary'
+    query param: marketRegion, values: 'ch', 'de', 'au', 'fr', 'it'
+    query param: retailer, values: 'migros', 'coop', 'denner', 'farmy', 'volg', 'edeka'
+    """
+    product = get_object_or_404(Product.objects.all(), gtin=gtin)
+    return __get_worse_products(request, product.minor_category, product.major_category)
+
+
+def __get_worse_products(request, minor_category, major_category):
+    sort_by = request.GET.get("sortBy", "ofcomValue")
+    result_type = request.GET.get("resultType", "array")
+    market_region = request.GET.get("marketRegion", None)
+    retailer = request.GET.get("retailer", None)
+    number_of_results = 20
+
+    better_products_query = _get_better_products_query(minor_category, major_category, market_region, retailer,
+                                                       number_of_results)
+
+    if sort_by == 'ofcomValue':
+        better_products_query = better_products_query.order_by('-ofcom_value')
+    elif sort_by == 'healthPercentage':
+        better_products_query = better_products_query.order_by('-health_percentage')
+    else:
+        better_products_query = better_products_query.filter(nutrients__name=sort_by).order_by('-nutrients__amount')
+
+    results_found = better_products_query.count()
+
+    products = list(better_products_query[:number_of_results])
+
+    if results_found > 0:
+        serializer = ProductSerializer(products, many=True)
+        result = {"success": True}
+        if result_type == "array":
+            result["products"] = serializer.data
+        else:
+            result["products"] = []
+            for p in serializer.data:
+                result["products"].append(__change_product_objects(p))
+    else:
+        result = {"success": False, "products": None}
+    return Response(result)
 
 @api_view(['GET'])
 @permission_classes((permissions.IsAuthenticated,))
@@ -970,16 +1030,43 @@ def get_better_products_gtin(request, gtin):
 
 
 def __get_better_products(request, minor_category, major_category):
-    market_region_map = MarketRegion.MARKET_REGION_QUERY_MAP
     sort_by = request.GET.get("sortBy", "ofcomValue")
     result_type = request.GET.get("resultType", "array")
     market_region = request.GET.get("marketRegion", None)
     retailer = request.GET.get("retailer", None)
     number_of_results = 20
+
+    better_products_query = _get_better_products_query(minor_category, major_category, market_region, retailer, number_of_results)
+    
+    if sort_by == 'ofcomValue':
+        better_products_query = better_products_query.order_by('ofcom_value')
+    elif sort_by == 'healthPercentage':
+        better_products_query = better_products_query.order_by('health_percentage')
+    else:
+        better_products_query = better_products_query.filter(nutrients__name=sort_by).order_by('nutrients__amount')
+
+    results_found = better_products_query.count()
+
+    products = list(better_products_query[:number_of_results])
+
+    if results_found > 0:
+        serializer = ProductSerializer(products, many=True)
+        result = {"success": True}
+        if result_type == "array":
+            result["products"] = serializer.data
+        else:
+            result["products"] = []
+            for p in serializer.data:
+                result["products"].append(__change_product_objects(p))
+    else:
+        result = {"success": False, "products": None}
+    return Response(result)
+
+def _get_better_products_query(minor_category, major_category, market_region, retailer, number_of_results):
+    better_products_query = Product.objects.prefetch_related('nutrients', 'market_region', 'retailer')
     results_found = 0
 
-    better_products_query = Product.objects.prefetch_related('nutrients', 'market_region', 'retailer')
-
+    market_region_map = MarketRegion.MARKET_REGION_QUERY_MAP
     if market_region:
         market_region = market_region.lower()
         market_region_value = market_region_map.get(market_region, market_region)
@@ -997,31 +1084,9 @@ def __get_better_products(request, minor_category, major_category):
 
     if results_found < number_of_results and major_category:
         better_products_query = better_products_query.filter(major_category=major_category)
-        results_found = better_products_query.count()
-
-    if sort_by == 'ofcomValue':
-        better_products_query = better_products_query.order_by('ofcom_value')
-    elif sort_by == 'healthPercentage':
-        better_products_query = better_products_query.order_by('health_percentage')
-    else:
-        better_products_query = better_products_query.filter(nutrients__name=sort_by).order_by('nutrients__amount')
 
     better_products_query = better_products_query.exclude(nutri_score_final__isnull=True)
-
-    products = list(better_products_query[:number_of_results])
-
-    if results_found > 0:
-        serializer = ProductSerializer(products, many=True)
-        result = {"success": True}
-        if result_type == "array":
-            result["products"] = serializer.data
-        else:
-            result["products"] = []
-            for p in serializer.data:
-                result["products"].append(__change_product_objects(p))
-    else:
-        result = {"success": False, "products": None}
-    return Response(result)
+    return better_products_query
 
 
 @api_view(['GET'])

@@ -14,6 +14,8 @@ urlpatterns = [
 
      url(r'^products/better-products/(?P<gtin>\d{0,50})/', NutritionService.views.views.get_better_products_gtin),
      url(r'^products/better-products/category/(?P<minor_category_pk>\d+)/', NutritionService.views.views.get_better_products_minor_category),
+     url(r'^products/worse-products/(?P<gtin>\d{0,50})/', NutritionService.views.views.get_worse_products_gtin),
+     url(r'^products/worse-products/category/(?P<minor_category_pk>\d+)/', NutritionService.views.views.get_worse_products_minor_category),
      url(r'^product/report/$', views.report_product),
      url(r'^product/missing/$', views.report_missing_gtin),
 
