@@ -1006,6 +1006,8 @@ def __get_better_products(request, minor_category, major_category):
     else:
         better_products_query = better_products_query.filter(nutrients__name=sort_by).order_by('nutrients__amount')
 
+    better_products_query = better_products_query.exclude(nutri_score_final__isnull=True)
+
     products = list(better_products_query[:number_of_results])
 
     if results_found > 0:
