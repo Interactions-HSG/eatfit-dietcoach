@@ -592,6 +592,9 @@ class Matching(models.Model):
         verbose_name = "Matching"
         verbose_name_plural = "Matchings"
         db_table = 'matching'
+        indexes = [
+            models.Index(fields=['article_type', 'article_id']),
+        ]
 
 
 class NonFoundMatching(models.Model):
