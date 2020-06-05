@@ -54,6 +54,9 @@ NUTRI_SCORE_NUMBER_TO_LETTER_MAP = {
 }
 UNITS = 'units'
 
+def nutri_score_number_to_letter(nutri_score):
+    return sorted(NUTRI_SCORE_NUMBER_TO_LETTER_MAP.items(), key=lambda i: abs(i[0] - nutri_score))[0][1]
+
 class BasketAnalysisView(generics.GenericAPIView):
     serializer_class = DigitalReceiptSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -140,7 +143,7 @@ class BasketAnalysisView(generics.GenericAPIView):
             normalized_accumulated_nutri_score = sum(
                 (item['nutri_score'] * item['product_weight']) / accumulated_weight for item in items)
             nutri_score = int(round(normalized_accumulated_nutri_score))
-            nutri_score_letter = NUTRI_SCORE_NUMBER_TO_LETTER_MAP[nutri_score]
+            nutri_score_letter = nutri_score_number_to_letter(nutri_score)
             business_unit = dicttoolz.get_in([0, 'business_unit'], items)
             date_of_purchase = dicttoolz.get_in([0, 'receipt_datetime'], items)
             nutri_score_by_basket.append({
@@ -172,7 +175,7 @@ class BasketAnalysisView(generics.GenericAPIView):
 
             for calendar_week, weighted_nutri_score in normalized_accumulated_nutri_scores.items():
                 nutri_score = int(round(weighted_nutri_score))
-                nutri_score_letter = NUTRI_SCORE_NUMBER_TO_LETTER_MAP[nutri_score]
+                nutri_score_letter = nutri_score_number_to_letter(nutri_score)
                 start_date, end_date = get_start_and_end_date_from_calendar_week(year, calendar_week)
                 nutri_score_by_week.append({
                     'name_calendar_week': f'{year}-{calendar_week}',
@@ -478,7 +481,7 @@ class SendReceiptsView(generics.GenericAPIView, mixins.ListModelMixin, mixins.Cr
                 total_nutri_score_letter = errors.UNKNOWN
             else:
                 total_nutri_score_raw = sum(nutri_scores) / product_weights_sum
-                total_nutri_score_letter = sorted(NUTRI_SCORE_NUMBER_TO_LETTER_MAP.items(), key=lambda i: abs(i[0] - total_nutri_score_raw))[0][1]
+                total_nutri_score_letter = nutri_score_number_to_letter(total_nutri_score_raw)
                 total_nutri_score_raw = round(total_nutri_score_raw, 9)
 
 

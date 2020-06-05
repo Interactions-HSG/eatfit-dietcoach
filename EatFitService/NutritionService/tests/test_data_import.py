@@ -565,7 +565,7 @@ def test_product_import_minor_category():
     assert test_prod.minor_category is not None
 
     new_cat = MinorCategory.objects.create(id=56, name_de='Umher')
-
+    new_cat.save()
     factory = RequestFactory()
 
     with open('NutritionService/tests/products_test.csv', 'rb') as infile:

@@ -205,6 +205,21 @@ TEST_DATA_LONG = {
                     "price_currency": "CHF"
                 }
             ]
+        },
+        {
+            "receipt_id": "1551533431",
+            "receipt_datetime": "2019-03-02T14:30:21Z",
+            "business_unit": "Migros",
+            "items": [
+                {
+                    "article_id": "Apfel Braeburn",
+                    "article_type": "Migros_long_v1",
+                    "quantity": 0.712,
+                    "quantity_unit": "kg",
+                    "price": "1.85",
+                    "price_currency": "CHF"
+                }
+            ]
         }
     ]
 }

@@ -370,8 +370,16 @@ class ProductsImport(ImportBase):
                     retailer_create_condition = row['retailer'] is not None and 'retailer' in create_products.keys()
                     market_region_create_condition = row['market_region'] is not None and 'market_region' in create_products.keys()
 
-                    minor_category = MinorCategory.objects.get(id=int(row['minor']))
-                    product_object, created = Product.objects.get_or_create(gtin=int(row['gtin']), minor_category=minor_category)
+                    try:
+                        minor_category = MinorCategory.objects.get(id=int(row['minor']))
+                    except:
+                        minor_category = None
+
+                    if Product.objects.filter(gtin=int(row['gtin'])).exists():
+                        product_object = Product.objects.filter(gtin=int(row['gtin'])).get()
+                        created = False
+                    else:
+                        product_object, created = Product.objects.get_or_create(gtin=int(row['gtin']), minor_category=minor_category)
 
                     # Safe update
                     product_object.__dict__.update(safe_update_products)
@@ -409,5 +417,5 @@ class ProductsImport(ImportBase):
                         self.create_market_region(product_object, row)
 
                     product_object.save()
-                except:
+                except Exception as inst:
                     continue

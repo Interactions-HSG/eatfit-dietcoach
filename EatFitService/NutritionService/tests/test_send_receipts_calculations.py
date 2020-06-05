@@ -33,7 +33,7 @@ def test_receipt2nutrition_partner_is_valid():
     user = User.objects.create_user(username='test', password='test')
     r2n_partner = mommy.make(ReceiptToNutritionPartner, user=user, name='Kevin')
     r2n_user = mommy.make(ReceiptToNutritionUser, r2n_partner=r2n_partner, r2n_username='Kevin')
-    test_product = mommy.make(Product)
+    test_product = mommy.make(Product, nutri_score_by_manufacturer='A')
     mommy.make(Matching, eatfit_product=test_product, article_id='Apfel Braeburn', article_type='Migros_long_v1')
 
     assert test_product.product_size is None
@@ -41,7 +41,6 @@ def test_receipt2nutrition_partner_is_valid():
     assert test_product.data_score < 25
     assert test_product.minor_category is None
     assert test_product.major_category is None
-    assert test_product.nutri_score_final is None
 
     TEST_DATA['r2n_partner'] = r2n_partner.name
     TEST_DATA['r2n_username'] = r2n_user.r2n_username
@@ -64,8 +63,6 @@ def test_receipt2nutrition_partner_is_valid():
     assert DigitalReceipt.objects.count() == 1
     assert RECEIPTS_KEY in response.data
     assert len(response.data[RECEIPTS_KEY]) == 1
-    assert response.data[RECEIPTS_KEY][-1]['nutriscore'] == errors.UNKNOWN
-    assert response.data[RECEIPTS_KEY][-1]['nutriscore_indexed'] == errors.UNKNOWN
 
 
 @pytest.mark.django_db
@@ -135,9 +132,9 @@ def test_too_many_receipts():
 
     assert response.status_code == status.HTTP_200_OK
     assert NonFoundMatching.objects.count() == 0
-    assert DigitalReceipt.objects.count() == 12
+    assert DigitalReceipt.objects.count() == 13
     assert RECEIPTS_KEY in response.data
-    assert len(response.data[RECEIPTS_KEY]) == 12
+    assert len(response.data[RECEIPTS_KEY]) == 13
     assert response.data[RECEIPTS_KEY][-1]['nutriscore'] == errors.MAXIMUM_REACHED
     assert response.data[RECEIPTS_KEY][-1]['nutriscore_indexed'] == errors.MAXIMUM_REACHED
 
@@ -293,5 +290,5 @@ def test_receipt_valid():
     assert DigitalReceipt.objects.count() == 5
     assert RECEIPTS_KEY in response.data
     assert len(response.data[RECEIPTS_KEY]) == 1
-    assert response.data[RECEIPTS_KEY][0]['nutriscore_indexed'] == 3
+    assert response.data[RECEIPTS_KEY][0]['nutriscore_indexed'] == 2.9
     assert response.data[RECEIPTS_KEY][0]['nutriscore'] == 'C'
