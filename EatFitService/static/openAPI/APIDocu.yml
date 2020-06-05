@@ -161,6 +161,102 @@ paths:
         '404':
           description: The minor category was not found. Make sure the minor_category_id exists.
 
+  /products/worse-products/category/{minor_category_id}:
+    get:
+      summary: Returns a list of worse products.
+      description: This list returns worse products within a category.
+      parameters:
+        - in: path
+          name: minor_category_id
+          description: The ID of a minor category
+          required: true
+          schema:
+            type: integer
+        - in: query
+          name: sortBy
+          schema:
+            type: string
+            enum: ['ofcomValue', 'energyKJ', 'totalFat', 'saturatedFat', 'salt', 'sugars', 'protein', 'totalCarbohydrate', 'dietaryFiber', 'healthPercentage', 'sodium']
+        - in: query
+          name: resultType
+          schema:
+            type: string
+            enum: ['array', 'dictionary']
+        - in: query
+          name: marketRegion
+          schema:
+            type: string
+          example: ch
+        - in: query
+          name: retailer
+          schema:
+            type: string
+          example: migros
+      responses:
+        '200':
+          description: A list of worse products.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  products:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Product'
+        '404':
+          description: The minor category was not found. Make sure the minor_category_id exists.
+
+  /products/worse-products/{gtin}:
+    get:
+      summary: Returns a list of worse products.
+      description: Returns worse alternatives for a specific product.
+      parameters:
+        - in: path
+          name: gtin
+          description: The GTIN of a product
+          required: true
+          schema:
+            type: integer
+        - in: query
+          name: sortBy
+          schema:
+            type: string
+            enum: ['ofcomValue', 'energyKJ', 'totalFat', 'saturatedFat', 'salt', 'sugars', 'protein', 'totalCarbohydrate', 'dietaryFiber', 'healthPercentage', 'sodium']
+        - in: query
+          name: resultType
+          schema:
+            type: string
+            enum: ['array', 'dictionary']
+        - in: query
+          name: marketRegion
+          schema:
+            type: string
+          example: ch
+        - in: query
+          name: retailer
+          schema:
+            type: string
+          example: migros
+      responses:
+        '200':
+          description: A list of worse products.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  products:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Product'
+        '404':
+          description: The minor category was not found. Make sure the minor_category_id exists.
+
 
   /products/{gtin}:
     get:
