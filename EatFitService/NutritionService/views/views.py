@@ -38,21 +38,24 @@ from .errors import SendReceiptsErrors, BasketAnalysisErrors
 logger = logging.getLogger('NutritionService.views')
 allowed_units_of_measure = ["g", "kg", "ml", "l"]
 NUTRI_SCORE_LETTER_TO_NUMBER_MAP = {
-    'A': 1,
-    'B': 2,
-    'C': 3,
-    'D': 4,
-    'E': 5
+    'A': 4.5,
+    'B': 3.5,
+    'C': 2.5,
+    'D': 1.5,
+    'E': 0.5
 }
 
 NUTRI_SCORE_NUMBER_TO_LETTER_MAP = {
-    1: 'A',
-    2: 'B',
-    3: 'C',
-    4: 'D',
-    5: 'E'
+    4.5: 'A',
+    3.5: 'B',
+    2.5: 'C',
+    1.5: 'D',
+    0.5: 'E'
 }
 UNITS = 'units'
+
+def nutri_score_number_to_letter(nutri_score):
+    return sorted(NUTRI_SCORE_NUMBER_TO_LETTER_MAP.items(), key=lambda i: abs(i[0] - nutri_score))[0][1]
 
 class BasketAnalysisView(generics.GenericAPIView):
     serializer_class = DigitalReceiptSerializer
@@ -140,7 +143,7 @@ class BasketAnalysisView(generics.GenericAPIView):
             normalized_accumulated_nutri_score = sum(
                 (item['nutri_score'] * item['product_weight']) / accumulated_weight for item in items)
             nutri_score = int(round(normalized_accumulated_nutri_score))
-            nutri_score_letter = NUTRI_SCORE_NUMBER_TO_LETTER_MAP[nutri_score]
+            nutri_score_letter = nutri_score_number_to_letter(nutri_score)
             business_unit = dicttoolz.get_in([0, 'business_unit'], items)
             date_of_purchase = dicttoolz.get_in([0, 'receipt_datetime'], items)
             nutri_score_by_basket.append({
@@ -172,7 +175,7 @@ class BasketAnalysisView(generics.GenericAPIView):
 
             for calendar_week, weighted_nutri_score in normalized_accumulated_nutri_scores.items():
                 nutri_score = int(round(weighted_nutri_score))
-                nutri_score_letter = NUTRI_SCORE_NUMBER_TO_LETTER_MAP[nutri_score]
+                nutri_score_letter = nutri_score_number_to_letter(nutri_score)
                 start_date, end_date = get_start_and_end_date_from_calendar_week(year, calendar_week)
                 nutri_score_by_week.append({
                     'name_calendar_week': f'{year}-{calendar_week}',
@@ -445,39 +448,49 @@ class SendReceiptsView(generics.GenericAPIView, mixins.ListModelMixin, mixins.Cr
                 if product is None:
                     continue
 
-                if not self.product_is_valid(product):
+                if article['quantity_unit'] in ['unit', 'units']:
+                    # Calculate units
+                    # Check if we have all the information to calculate nutri score:
+                    if not is_number(product.product_size):
+                        continue
+
+                    weight = float(product.product_size)
+                    if product.product_size_unit_of_measure.lower() in ["kg", "l"]:
+                        weight = float(product.product_size) * 1000  # weight in g or ml
+
+                    product_weight_in_basket = digital_receipt.quantity * weight
+                elif article['quantity_unit'] in ['kg', 'g', 'l', 'ml']:
+                    # Calculate with weight
+                    weight = float(article['quantity'])
+                    if article['quantity_unit'] in ["kg", "l"]:
+                        weight = float(article['quantity']) * 1000  # weight in g or ml
+
+
+                    product_weight_in_basket = weight
+                else:
                     continue
 
-                _, product_size = is_number(product.product_size)
-                unit_of_measure = product.product_size_unit_of_measure.lower()
                 nutri_score_number = NUTRI_SCORE_LETTER_TO_NUMBER_MAP[product.nutri_score_final]
 
-                if unit_of_measure == 'kg':
-                    target_unit = 'g'
-                elif unit_of_measure == 'l':
-                    target_unit = 'ml'
-                else:
-                    target_unit = unit_of_measure
+                nutri_scores.append(nutri_score_number * product_weight_in_basket)
+                product_weights_sum += product_weight_in_basket
 
-                product_size = unit_of_measure_conversion(product_size, unit_of_measure, target_unit)
-
-                nutri_scores.append(nutri_score_number * product_size)
-                product_weights_sum += product_size
 
             if not nutri_scores or product_weights_sum == 0:
-                total_nutri_score = errors.UNKNOWN
+                total_nutri_score_raw = errors.UNKNOWN
                 total_nutri_score_letter = errors.UNKNOWN
             else:
                 total_nutri_score_raw = sum(nutri_scores) / product_weights_sum
-                total_nutri_score = int(round(total_nutri_score_raw))
-                total_nutri_score_letter = NUTRI_SCORE_NUMBER_TO_LETTER_MAP[total_nutri_score]
+                total_nutri_score_letter = nutri_score_number_to_letter(total_nutri_score_raw)
+                total_nutri_score_raw = round(total_nutri_score_raw, 9)
+
 
             receipt_object = {
                 'receipt_id': receipt['receipt_id'],
                 'receipt_datetime': receipt['receipt_datetime'],
                 'business_unit': receipt['business_unit'],
                 'nutriscore': total_nutri_score_letter,
-                'nutriscore_indexed': total_nutri_score,
+                'nutriscore_indexed': total_nutri_score_raw,
                 'r2n_version_code': VERSION
             }
             result['receipts'].append(receipt_object)
