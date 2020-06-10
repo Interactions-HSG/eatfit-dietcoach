@@ -228,7 +228,7 @@ def test_basket_analysis_api_matching_multiple():
     user = User.objects.create_user(username=TEST_USER_AND_PASSWORD, password=TEST_USER_AND_PASSWORD)
     r2n_partner = mommy.make(models.ReceiptToNutritionPartner, user=user, name=PARTNER_AND_USER_NAME)
     r2n_user = mommy.make(models.ReceiptToNutritionUser, r2n_partner=r2n_partner, r2n_username=PARTNER_AND_USER_NAME)
-    test_product = mommy.make(models.Product)
+    test_product = mommy.make(models.Product, nutri_score_by_manufacturer='A')
     mommy.make(models.Matching, article_id=ARTICLE_ID_SIMPLE, article_type=ARTICLE_TYPE_SIMPLE, gtin=0,
                eatfit_product=test_product)
     mommy.make(models.Matching, article_id=ARTICLE_ID_SIMPLE, article_type=ARTICLE_TYPE_SIMPLE, gtin=1,
@@ -270,7 +270,7 @@ def test_basket_analysis_api_matching_multiple_price_does_not_exist():
     user = User.objects.create_user(username=TEST_USER_AND_PASSWORD, password=TEST_USER_AND_PASSWORD)
     r2n_partner = mommy.make(models.ReceiptToNutritionPartner, user=user, name=PARTNER_AND_USER_NAME)
     r2n_user = mommy.make(models.ReceiptToNutritionUser, r2n_partner=r2n_partner, r2n_username=PARTNER_AND_USER_NAME)
-    test_product = mommy.make(models.Product)
+    test_product = mommy.make(models.Product, nutri_score_by_manufacturer='A')
     mommy.make(models.Matching, article_id=ARTICLE_ID_SIMPLE, article_type=ARTICLE_TYPE_SIMPLE, gtin=0,
                eatfit_product=test_product, price_per_unit=None)
     mommy.make(models.Matching, article_id=ARTICLE_ID_SIMPLE, article_type=ARTICLE_TYPE_SIMPLE, gtin=1,
@@ -320,7 +320,7 @@ def test_basket_analysis_api_matching_multiple_some_prices_exist():
     user = User.objects.create_user(username=TEST_USER_AND_PASSWORD, password=TEST_USER_AND_PASSWORD)
     r2n_partner = mommy.make(models.ReceiptToNutritionPartner, user=user, name=PARTNER_AND_USER_NAME)
     r2n_user = mommy.make(models.ReceiptToNutritionUser, r2n_partner=r2n_partner, r2n_username=PARTNER_AND_USER_NAME)
-    test_product = mommy.make(models.Product)
+    test_product = mommy.make(models.Product, nutri_score_by_manufacturer='A')
     mommy.make(models.Matching, article_id=ARTICLE_ID_SIMPLE, article_type=ARTICLE_TYPE_SIMPLE, gtin=0,
                eatfit_product=test_product, price_per_unit=None)
     mommy.make(models.Matching, article_id=ARTICLE_ID_SIMPLE, article_type=ARTICLE_TYPE_SIMPLE, gtin=1,
@@ -367,7 +367,7 @@ def test_basket_analysis_api_matching_multiple_by_price():
     user = User.objects.create_user(username=TEST_USER_AND_PASSWORD, password=TEST_USER_AND_PASSWORD)
     r2n_partner = mommy.make(models.ReceiptToNutritionPartner, user=user, name=PARTNER_AND_USER_NAME)
     r2n_user = mommy.make(models.ReceiptToNutritionUser, r2n_partner=r2n_partner, r2n_username=PARTNER_AND_USER_NAME)
-    test_product = mommy.make(models.Product)
+    test_product = mommy.make(models.Product, nutri_score_by_manufacturer='A')
     mommy.make(models.Matching, article_id=ARTICLE_ID_SIMPLE, article_type=ARTICLE_TYPE_SIMPLE, gtin=0,
                eatfit_product=test_product, price_per_unit=10)
     mommy.make(models.Matching, article_id=ARTICLE_ID_SIMPLE, article_type=ARTICLE_TYPE_SIMPLE, gtin=1,
@@ -416,7 +416,7 @@ def test_basket_analysis_api_matching_valid():
     user = User.objects.create_user(username=TEST_USER_AND_PASSWORD, password=TEST_USER_AND_PASSWORD)
     r2n_partner = mommy.make(models.ReceiptToNutritionPartner, user=user, name=PARTNER_AND_USER_NAME)
     r2n_user = mommy.make(models.ReceiptToNutritionUser, r2n_partner=r2n_partner, r2n_username=PARTNER_AND_USER_NAME)
-    test_product = mommy.make(models.Product)
+    test_product = mommy.make(models.Product, nutri_score_by_manufacturer='A')
     mommy.make(models.Matching, article_id=ARTICLE_ID_SIMPLE, article_type=ARTICLE_TYPE_SIMPLE,
                eatfit_product=test_product)
 
@@ -474,7 +474,7 @@ def test_basket_analysis_api_is_valid():
 
     first_product = mommy.make(models.Product, gtin=1, product_name_de='DV extra fin Chia & Quinoa 4PP 184g',
                                major_category=major_category, minor_category=first_minor_category, health_percentage=1,
-                               product_size_unit_of_measure='kg', product_size='1.729')
+                               product_size_unit_of_measure='kg', product_size='1.729', nutri_score_by_manufacturer='A')
     mommy.make(models.Matching, eatfit_product=first_product, article_id='DV extra fin Chia & Quinoa 4PP 184g',
                article_type='Migros_long_v1', gtin=1)
     mommy.make(models.NutritionFact, product=first_product, name='totalFat', amount=16.0, unit_of_measure='g')
@@ -601,8 +601,8 @@ def test_basket_analysis_api_is_valid():
 
     expected_results = {'nutri_score_by_basket': [
         {'receipt_id': '1551533421', 'receipt_datetime': '2019-03-02T14:30:21Z', 'business_unit': 'Migros',
-         'nutri_score_average': 'C', 'nutri_score_indexed': 2.96}], 'nutri_score_by_week': [
-        {'name_calendar_week': '2019-08', 'nutri_score_average': 'C', 'nutri_score_indexed': 2.96,
+         'nutri_score_average': 'A', 'nutri_score_indexed': 3.51}], 'nutri_score_by_week': [
+        {'name_calendar_week': '2019-08', 'nutri_score_average': 'A', 'nutri_score_indexed': 3.51,
          'start_date': '2019-02-25T00:00:00Z', 'end_date': '2019-03-04T00:00:00Z'}], 'improvement_potential': [
         {'nutrient': 'saturatedFat', 'ofcom_point_average': 4.6, 'potential_percentage': 20.19, 'amount': 129.56,
          'unit': 'g', 'sources': [{'minor_category_id': 84, 'amount': 46.0, 'unit': 'g'},

@@ -102,7 +102,7 @@ def test_matching_multiple_price_does_not_exist():
     user = User.objects.create_user(username=TEST_USER_AND_PASSWORD, password=TEST_USER_AND_PASSWORD )
     r2n_partner = mommy.make(ReceiptToNutritionPartner, user=user, name=PARTNER_AND_USER_NAME)
     r2n_user = mommy.make(ReceiptToNutritionUser, r2n_partner=r2n_partner, r2n_username=PARTNER_AND_USER_NAME)
-    test_product = mommy.make(Product)
+    test_product = mommy.make(Product, nutri_score_by_manufacturer='A')
     mommy.make(Matching, article_id=ARTICLE_ID, article_type=ARTICLE_TYPE, gtin=0,
                eatfit_product=test_product, price_per_unit=None)
     mommy.make(Matching, article_id=ARTICLE_ID, article_type=ARTICLE_TYPE, gtin=1,
@@ -153,7 +153,7 @@ def test_matching_multiple_some_prices_exist():
     user = User.objects.create_user(username=TEST_USER_AND_PASSWORD, password=TEST_USER_AND_PASSWORD )
     r2n_partner = mommy.make(ReceiptToNutritionPartner, user=user, name=PARTNER_AND_USER_NAME)
     r2n_user = mommy.make(ReceiptToNutritionUser, r2n_partner=r2n_partner, r2n_username=PARTNER_AND_USER_NAME)
-    test_product = mommy.make(Product)
+    test_product = mommy.make(Product, nutri_score_by_manufacturer='A')
     mommy.make(Matching, article_id=ARTICLE_ID, article_type=ARTICLE_TYPE, gtin=0,
                eatfit_product=test_product, price_per_unit=None)
     mommy.make(Matching, article_id=ARTICLE_ID, article_type=ARTICLE_TYPE, gtin=1,
@@ -201,7 +201,7 @@ def test_matching_multiple_by_price():
     user = User.objects.create_user(username=TEST_USER_AND_PASSWORD, password=TEST_USER_AND_PASSWORD)
     r2n_partner = mommy.make(ReceiptToNutritionPartner, user=user, name=PARTNER_AND_USER_NAME)
     r2n_user = mommy.make(ReceiptToNutritionUser, r2n_partner=r2n_partner, r2n_username=PARTNER_AND_USER_NAME)
-    test_product = mommy.make(Product)
+    test_product = mommy.make(Product, nutri_score_by_manufacturer='A')
     mommy.make(Matching, article_id=ARTICLE_ID, article_type=ARTICLE_TYPE, gtin=0,
                eatfit_product=test_product, price_per_unit=10)
     mommy.make(Matching, article_id=ARTICLE_ID, article_type=ARTICLE_TYPE, gtin=1,
@@ -248,7 +248,7 @@ def test_matching_valid():
     user = User.objects.create_user(username=TEST_USER_AND_PASSWORD, password=TEST_USER_AND_PASSWORD)
     r2n_partner = mommy.make(ReceiptToNutritionPartner, user=user, name=PARTNER_AND_USER_NAME)
     r2n_user = mommy.make(ReceiptToNutritionUser, r2n_partner=r2n_partner, r2n_username=PARTNER_AND_USER_NAME)
-    test_product = mommy.make(Product)
+    test_product = mommy.make(Product, nutri_score_by_manufacturer='A')
     mommy.make(Matching, article_id=ARTICLE_ID, article_type=ARTICLE_TYPE, eatfit_product=test_product)
 
     TEST_DATA['r2n_partner'] = r2n_partner.name

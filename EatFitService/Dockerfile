@@ -30,5 +30,6 @@ RUN chown -R www-data:www-data /home/eatfit/eatfitrepo/EatFitService
 RUN chmod 775 -R /home/eatfit/eatfitrepo/EatFitService
 RUN touch /var/log/nutrition-service.log
 RUN chmod 777 /var/log/nutrition-service.log
-RUN mkdir ./cache
+RUN mkdir -p ./cache
 RUN chmod 777 ./cache
+RUN pip install -r requirements.txt

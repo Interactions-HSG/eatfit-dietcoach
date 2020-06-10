@@ -105,13 +105,13 @@ def test_get_better_products_sort_by_health_percentage():
 
     # Products
     first_product = mommy.make(Product, gtin=4004980511200, minor_category=min_cat_82,
-                               major_category=maj_cat_16, health_percentage=10.0)
+                               major_category=maj_cat_16, health_percentage=10.0, nutri_score_by_manufacturer='A')
 
     second_product = mommy.make(Product, gtin=29000076501, minor_category=min_cat_82,
-                                major_category=maj_cat_16, ofcom_value=1, health_percentage=30.0)
+                                major_category=maj_cat_16, ofcom_value=1, health_percentage=30.0, nutri_score_by_manufacturer='A')
 
     third_product = mommy.make(Product, gtin=30111187612, minor_category=min_cat_82,
-                               major_category=maj_cat_16, health_percentage=20.0)
+                               major_category=maj_cat_16, health_percentage=20.0, nutri_score_by_manufacturer='A')
 
     assert MajorCategory.objects.count() == 1
     assert MinorCategory.objects.count() == 1
@@ -156,20 +156,20 @@ def test_get_better_products_sort_by_protein():
     # Products
 
     first_product = mommy.make(Product, gtin=4004980511200, minor_category=min_cat_82,
-                               major_category=maj_cat_16)
+                               major_category=maj_cat_16, nutri_score_by_manufacturer='A')
     test_nutrients = {'name': 'protein', 'amount': 10, 'unit_of_measure': 'g', 'is_mixed': True}
     first_product.nutrients.create(**test_nutrients)
     first_product.save()
 
     second_product = mommy.make(Product, gtin=29000076501, minor_category=min_cat_82,
-                                major_category=maj_cat_16)
+                                major_category=maj_cat_16, nutri_score_by_manufacturer='A')
 
     test_nutrients = {'name': 'protein', 'amount': 270, 'unit_of_measure': 'g', 'is_mixed': False}
     second_product.nutrients.create(**test_nutrients)
     second_product.save()
 
     third_product = mommy.make(Product, gtin=30111187612, minor_category=min_cat_82,
-                               major_category=maj_cat_16)
+                               major_category=maj_cat_16, nutri_score_by_manufacturer='A')
 
     test_nutrients = {'name': 'protein', 'amount': 50, 'unit_of_measure': 'mg', 'is_mixed': False}
     third_product.nutrients.create(**test_nutrients)
@@ -186,6 +186,7 @@ def test_get_better_products_sort_by_protein():
     request = factory.get('/products/better-products/{}/?sortBy=protein'.format(first_product.gtin))
     force_authenticate(request, user=user)
     response = view(request, first_product.gtin)
+    response.render()
     response_data = json.loads(response.rendered_content)
 
     first_product_protein_amount = response_data['products'][0]['nutrients'][0]['amount']
@@ -219,10 +220,10 @@ def test_get_better_products_market_regions():
     # Products
 
     first_product = mommy.make(Product, gtin=4004980511200, minor_category=min_cat_82,
-                               major_category=maj_cat_16)
+                               major_category=maj_cat_16, nutri_score_by_manufacturer='A')
 
     second_product = mommy.make(Product, gtin=29000076501, minor_category=min_cat_82,
-                                major_category=maj_cat_16)
+                                major_category=maj_cat_16, nutri_score_by_manufacturer='A')
 
     # Market Regions
 
@@ -293,10 +294,10 @@ def test_get_better_products_retailers():
     # Products
 
     first_product = mommy.make(Product, gtin=4004980511200, minor_category=min_cat_82,
-                               major_category=maj_cat_16)
+                               major_category=maj_cat_16, nutri_score_by_manufacturer='A')
 
     second_product = mommy.make(Product, gtin=29000076501, minor_category=min_cat_82,
-                                major_category=maj_cat_16)
+                                major_category=maj_cat_16, nutri_score_by_manufacturer='A')
 
     # Retailers
 
