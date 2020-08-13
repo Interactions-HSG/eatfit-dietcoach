@@ -28,8 +28,8 @@ def test_user_partner_exists():
 
     assert User.objects.count() == 1
 
-    TEST_DATA['r2n_partner'] = ''
-    TEST_DATA['r2n_username'] = ''
+    TEST_DATA['r2n_partner'] = 'none'
+    TEST_DATA['r2n_username'] = 'none'
 
     api_client = APIRequestFactory()
     view = views.SendReceiptsView.as_view()

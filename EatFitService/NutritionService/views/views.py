@@ -57,6 +57,26 @@ UNITS = 'units'
 def nutri_score_number_to_letter(nutri_score):
     return sorted(NUTRI_SCORE_NUMBER_TO_LETTER_MAP.items(), key=lambda i: abs(i[0] - nutri_score))[0][1]
 
+def authorize_partner(request, r2n_username, r2n_partner):
+    errors = SendReceiptsErrors()
+
+    if not hasattr(request.user, 'partner'):
+        return Response({'error': errors.PARTNER_DOES_NOT_EXIST}, status=status.HTTP_403_FORBIDDEN)
+
+    try:
+        r2n_user = ReceiptToNutritionUser.objects.get(r2n_partner__name=r2n_partner, r2n_username=r2n_username)
+    except ReceiptToNutritionUser.DoesNotExist:
+        return Response({'error': errors.USER_NOT_FOUND}, status.HTTP_404_NOT_FOUND)
+
+    if not r2n_user.r2n_user_active:
+        return Response({'error': errors.USER_INACTIVE},
+                        status=status.HTTP_403_FORBIDDEN)
+
+    return True
+
+class BasketDetailedAnalysisView(generics.GenericAPIView):
+    pass
+
 class BasketAnalysisView(generics.GenericAPIView):
     serializer_class = DigitalReceiptSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -401,9 +421,6 @@ class SendReceiptsView(generics.GenericAPIView, mixins.ListModelMixin, mixins.Cr
 
         errors = SendReceiptsErrors()
 
-        if not hasattr(request.user, 'partner'):
-            return Response({'error': errors.PARTNER_DOES_NOT_EXIST}, status=status.HTTP_403_FORBIDDEN)
-
         serializer = self.serializer_class(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -412,14 +429,11 @@ class SendReceiptsView(generics.GenericAPIView, mixins.ListModelMixin, mixins.Cr
         r2n_username = validated_data.get('r2n_username')
         r2n_partner = validated_data.get('r2n_partner')
 
-        try:
-            r2n_user = ReceiptToNutritionUser.objects.get(r2n_partner__name=r2n_partner, r2n_username=r2n_username)
-        except ReceiptToNutritionUser.DoesNotExist:
-            return Response({'error': errors.USER_NOT_FOUND}, status.HTTP_404_NOT_FOUND)
+        validation = authorize_partner(request, r2n_username, r2n_partner)
+        if isinstance(validation, Response):
+            return validation
 
-        if not r2n_user.r2n_user_active:
-            return Response({'error': errors.USER_INACTIVE},
-                            status=status.HTTP_403_FORBIDDEN)
+        r2n_user = ReceiptToNutritionUser.objects.get(r2n_partner__name=r2n_partner, r2n_username=r2n_username)
 
         receipt_data = validated_data['receipts']
         digital_receipt_list = []
