@@ -5,7 +5,7 @@ Definition of views.
 """
 
 from __future__ import print_function, division
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging
 from suds.client import Client
 from suds.sudsobject import asdict
@@ -27,7 +27,8 @@ from NutritionService.helpers import store_image, download_csv, get_start_and_en
 from NutritionService.models import DigitalReceipt, NonFoundMatching, Matching, MajorCategory, MinorCategory, \
     HealthTipp, ImportLog, Product, Allergen, NutritionFact, Ingredient, NotFoundLog, ErrorLog, \
     ReceiptToNutritionUser, calculate_ofcom_value, MarketRegion, Retailer, get_nutri_score_category, CurrentStudies, \
-    NutriScoreFacts, SALT, SATURATED_FAT, SUGARS, ENERGY_KCAL, SODIUM, ENERGY_KJ
+    NutriScoreFacts, SALT, SATURATED_FAT, SUGARS, ENERGY_KCAL, SODIUM, ENERGY_KJ, PROTEIN, DIETARY_FIBER, FVPN, \
+    TOTAL_CARBOHYDRATE, TOTAL_FAT
 from NutritionService.nutriscore.calculations import unit_of_measure_conversion
 from NutritionService.serializers import MinorCategorySerializer, MajorCategorySerializer, HealthTippSerializer, \
     ProductSerializer, DigitalReceiptSerializer, CurrentStudiesSerializer, Text2GTINSerializer
@@ -53,6 +54,7 @@ NUTRI_SCORE_NUMBER_TO_LETTER_MAP = {
     0.5: 'E'
 }
 UNITS = 'units'
+KJ_TO_KCAL_FACTOR = 0.2388
 
 def nutri_score_number_to_letter(nutri_score):
     return sorted(NUTRI_SCORE_NUMBER_TO_LETTER_MAP.items(), key=lambda i: abs(i[0] - nutri_score))[0][1]
@@ -74,8 +76,365 @@ def authorize_partner(request, r2n_username, r2n_partner):
 
     return True
 
+def calculate_nutri_score(product, article):
+    if article['quantity_unit'] in ['unit', 'units']:
+        # Calculate units
+        # Check if we have all the information to calculate nutri score:
+        if not is_number(product.product_size):
+            raise ValueError(f"Unknown product_size")
+
+        weight = float(product.product_size)
+        if product.product_size_unit_of_measure.lower() in ["kg", "l"]:
+            weight = float(product.product_size) * 1000  # weight in g or ml
+
+        product_weight_in_basket = article['quantity'] * weight
+    elif article['quantity_unit'] in ['kg', 'g', 'l', 'ml']:
+        # Calculate with weight
+        weight = float(article['quantity'])
+        if article['quantity_unit'] in ["kg", "l"]:
+            weight = float(article['quantity']) * 1000  # weight in g or ml
+
+        product_weight_in_basket = weight
+    else:
+        raise ValueError(f"Unknown quantity unit {article['quantity_unit']}")
+
+    nutri_score_number = NUTRI_SCORE_LETTER_TO_NUMBER_MAP[product.nutri_score_final]
+
+    nutri_score = nutri_score_number * product_weight_in_basket
+
+    return (nutri_score, product_weight_in_basket)
+
 class BasketDetailedAnalysisView(generics.GenericAPIView):
-    pass
+    serializer_class = DigitalReceiptSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def _reset_data(self):
+        self.nutri_score_by_week = {}
+        self.nutri_score_by_minor_category = {}
+        self.nutri_sources = {}
+
+    def _calculate_nutri_score_from_list(self, nutri_scores: list, total_weight: int ):
+        total_nutri_score_raw = sum(nutri_scores) / total_weight
+        total_nutri_score_letter = nutri_score_number_to_letter(total_nutri_score_raw)
+        total_nutri_score_raw = round(total_nutri_score_raw, 9)
+
+        return total_nutri_score_raw, total_nutri_score_letter
+
+    def _add_nutri_score_by_week(self, year, week, nutri_score, weight):
+        if f'{year}-{week}' not in self.nutri_score_by_week:
+            self.nutri_score_by_week[f'{year}-{week}'] = {
+                'weight': 0,
+                'nutri_scores': [],
+                'year': year,
+                'week': week
+            }
+
+        self.nutri_score_by_week[f'{year}-{week}']['weight'] += weight
+        self.nutri_score_by_week[f'{year}-{week}']['nutri_scores'].append(nutri_score)
+
+    def _get_nutri_score_info_by_week(self):
+        data = []
+        for key, value in self.nutri_score_by_week.items():
+            score, letter = self._calculate_nutri_score_from_list(value['nutri_scores'], value['weight'])
+            data.append({
+                'name_calendar_week': key,
+                'nutri_score_average': letter,
+                'nutri_score_indexed': score,
+                'start_date': datetime.strptime(key + '-1', "%Y-%W-%w"),
+                'end_date': datetime.strptime(key + '-6', "%Y-%W-%w") + timedelta(days=1, hours=23, minutes=59,
+                                                                                  seconds=59)
+            })
+
+        return data
+
+    def _add_nutri_score_by_minor_category(self, product, nutri_score, weight):
+        minor_category_id = product.minor_category.pk
+        if minor_category_id not in self.nutri_score_by_minor_category:
+            self.nutri_score_by_minor_category[minor_category_id] = {
+                'weight': 0,
+                'nutri_scores': [],
+            }
+
+        self.nutri_score_by_minor_category[minor_category_id]['weight'] += weight
+        self.nutri_score_by_minor_category[minor_category_id]['nutri_scores'].append(nutri_score)
+
+    def _get_nutri_score_info_by_minor_category(self):
+        data = []
+        for key, value in self.nutri_score_by_minor_category.items():
+            data.append({
+                'minor_category_id': key,
+                'amount': value['weight'],
+                'unit': 'g',
+            })
+
+        return data
+
+    def _add_product_for_nutri_sources(self, product, amount):
+        try:
+            nutri_score_fact = NutriScoreFacts.objects.get(product=product)
+
+            self._add_nutri_source_fact('salt', nutri_score_fact.ofcom_n_salt, SALT, amount, product)
+            self._add_nutri_source_fact('saturatedFat', nutri_score_fact.ofcom_n_saturated_fat, SATURATED_FAT, amount, product)
+            self._add_nutri_source_fact('sugars', nutri_score_fact.ofcom_n_sugars, SUGARS, amount, product)
+            self._add_nutri_source_fact('energyKcal', nutri_score_fact.ofcom_n_energy_kj * KJ_TO_KCAL_FACTOR, ENERGY_KCAL, amount, product)
+            self._add_nutri_source_fact('protein', nutri_score_fact.ofcom_p_protein, PROTEIN, amount, product)
+            self._add_nutri_source_fact('dietaryFiber', nutri_score_fact.ofcom_p_dietary_fiber, DIETARY_FIBER, amount, product)
+
+        except NutriScoreFacts.DoesNotExist:
+            pass
+
+        self._add_FVPN_nutri_source_fact(amount, product)
+
+        self._add_neutral_nutri_source('totalCarbohydrate', TOTAL_CARBOHYDRATE, amount, product)
+        self._add_neutral_nutri_source('totalFat', TOTAL_FAT, amount, product)
+
+    def _add_FVPN_nutri_source_fact(self, product_weight, product):
+        nutrient_name = "FVPN"
+
+        if product_weight <= 0 or product.health_percentage is None:
+            return
+
+        try:
+            nutri_score_fact = NutriScoreFacts.objects.get(product=product)
+
+            if nutrient_name not in self.nutri_sources:
+                self.nutri_sources[nutrient_name] = {
+                    'weighted_ofcom_values': [],
+                    'unit': "g",
+                    'amount': 0,
+                    'categories': {}
+                }
+
+            ofcom_amount = product_weight*product.health_percentage/100
+            weighted_ofcom_value = nutri_score_fact.ofcom_p_fvpn * ofcom_amount
+            self.nutri_sources[nutrient_name]['weighted_ofcom_values'].append(weighted_ofcom_value)
+            self.nutri_sources[nutrient_name]['amount'] += ofcom_amount
+
+            minor_category_id = product.minor_category_id
+
+            if minor_category_id not in self.nutri_sources[nutrient_name]['categories']:
+                self.nutri_sources[nutrient_name]['categories'][minor_category_id] = []
+
+            self.nutri_sources[nutrient_name]['categories'][minor_category_id].append(ofcom_amount)
+        except NutriScoreFacts.DoesNotExist:
+            return
+
+    def _add_nutri_source_fact(self, nutrient_name, ofcom_value, nutrition_fact_lookup_name, product_weight, product):
+        if ofcom_value is None or product_weight <= 0:
+            return
+
+        try:
+            nutrition_fact = NutritionFact.objects.get(product=product, name=nutrition_fact_lookup_name)
+
+            if nutrient_name not in self.nutri_sources:
+                self.nutri_sources[nutrient_name] = {
+                    'weighted_ofcom_values': [],
+                    'unit': nutrition_fact.unit_of_measure,
+                    'amount': 0,
+                    'categories': {}
+                }
+
+            ofcom_amount = (product_weight/100)*nutrition_fact.amount
+            weighted_ofcom_value = ofcom_value * ofcom_amount
+            self.nutri_sources[nutrient_name]['weighted_ofcom_values'].append(weighted_ofcom_value)
+            self.nutri_sources[nutrient_name]['amount'] += ofcom_amount
+
+            minor_category_id = product.minor_category_id
+
+            if minor_category_id not in self.nutri_sources[nutrient_name]['categories']:
+                self.nutri_sources[nutrient_name]['categories'][minor_category_id] = []
+
+            self.nutri_sources[nutrient_name]['categories'][minor_category_id].append(ofcom_amount)
+        except NutritionFact.DoesNotExist:
+            return
+
+    def _add_neutral_nutri_source(self, nutrient_name, nutrition_fact_lookup_name, product_weight, product):
+        if product_weight <= 0:
+            return
+
+        try:
+            nutrition_fact = NutritionFact.objects.get(product=product, name=nutrition_fact_lookup_name)
+
+            if nutrient_name not in self.nutri_sources:
+                self.nutri_sources[nutrient_name] = {
+                    'unit': nutrition_fact.unit_of_measure,
+                    'amount': 0,
+                    'categories': {}
+                }
+
+            ofcom_amount = (product_weight/100)*nutrition_fact.amount
+            self.nutri_sources[nutrient_name]['amount'] += ofcom_amount
+
+            minor_category_id = product.minor_category_id
+
+            if minor_category_id not in self.nutri_sources[nutrient_name]['categories']:
+                self.nutri_sources[nutrient_name]['categories'][minor_category_id] = []
+
+            self.nutri_sources[nutrient_name]['categories'][minor_category_id].append(ofcom_amount)
+        except NutritionFact.DoesNotExist:
+            return
+
+    def _get_nutri_sources(self):
+        negative_nutrients_names = [
+            'salt',
+            'saturatedFat',
+            'sugars',
+            'energyKcal',
+        ]
+        positive_nutrients_names = [
+            'protein',
+            'dietaryFiber',
+            'FVPN',
+        ]
+        data = {
+            'negative_nutrients': [],
+            'positive_nutrients': [],
+            'neutral_nutrients': [],
+        }
+        for key, value in self.nutri_sources.items():
+            nutrient_data = {
+                'nutrient': key,
+                'amount': value['amount'],
+                'unit': value['unit'],
+                'sources': [],
+            }
+
+            if 'weighted_ofcom_values' in value:
+                nutrient_data['ofcom_point_average'] = round(sum(value['weighted_ofcom_values'])/value['amount'], 9)
+
+            for cat_id, cat_amount in value['categories'].items():
+                cat_amout_sum = sum(cat_amount)
+                if cat_amout_sum > 0:
+                    nutrient_data['sources'].append({
+                        'minor_category_id': cat_id,
+                        'amount': cat_amout_sum,
+                        'unit': value['unit'],
+                    })
+
+            if key in negative_nutrients_names:
+                data['negative_nutrients'].append(nutrient_data)
+            elif key in positive_nutrients_names:
+                data['positive_nutrients'].append(nutrient_data)
+            else:
+                data['neutral_nutrients'].append(nutrient_data)
+
+        return data
+
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        validated_data = serializer.validated_data
+        r2n_username = validated_data.get('r2n_username')
+        r2n_partner = validated_data.get('r2n_partner')
+
+        validation = authorize_partner(request, r2n_username, r2n_partner)
+        if isinstance(validation, Response):
+            return validation
+
+        r2n_user = ReceiptToNutritionUser.objects.get(r2n_partner__name=r2n_partner, r2n_username=r2n_username)
+
+        receipt_list = validated_data['receipts']
+        digital_receipt_list = []
+        nutri_score_by_receipt = []
+
+        num_of_baskets = len(receipt_list)
+        num_of_products = 0
+        num_of_known_products = 0
+        total_weight_of_known_products = 0
+
+        self._reset_data()
+
+        for receipt in receipt_list:
+            receipt_datetime = receipt['receipt_datetime']
+            receipt_datetime_formatted = receipt_datetime.strftime('%Y-%m-%dT%H:%M:%SZ')
+            year_of_receipt = receipt_datetime.year
+            calendar_week = receipt_datetime.strftime('%U')  # Assuming sunday is the first day of the week
+            nutri_scores_by_receipt = []
+            product_weights_sum_by_receipt = 0
+
+            for article in receipt['items']:
+                digital_receipt = DigitalReceipt(
+                    r2n_user=r2n_user,
+                    business_unit=receipt['business_unit'],
+                    receipt_datetime=receipt['receipt_datetime'],
+                    article_id=article['article_id'],
+                    article_type=article['article_type'],
+                    quantity=article['quantity'],
+                    quantity_unit=article['quantity_unit'],
+                    price=article['price'],
+                    price_currency=article['price_currency']
+                )
+                digital_receipt_list.append(digital_receipt)
+
+                product = match_receipt(digital_receipt)
+                num_of_products += 1
+                if product is None:
+                    continue
+                num_of_known_products += 1
+
+                nutri_score, product_weight_in_basket = calculate_nutri_score(product, article)
+
+                total_weight_of_known_products += product_weight_in_basket
+
+                # nutri_score_by_article.append({
+                #     'name_of_calendar_week': calendar_week,
+                #     'year_of_receipt': year_of_receipt,
+                #     'nutri_score': nutri_score,
+                #     'product_weight': product_weight_in_basket,
+                #     'receipt_datetime': receipt_datetime_formatted,
+                #     'business_unit': receipt['business_unit'],
+                # })
+
+                nutri_scores_by_receipt.append(nutri_score)
+                product_weights_sum_by_receipt += product_weight_in_basket
+
+                self._add_nutri_score_by_week(year_of_receipt, calendar_week, nutri_score, product_weight_in_basket)
+                self._add_nutri_score_by_minor_category(product, nutri_score,
+                                                        product_weight_in_basket)
+                self._add_product_for_nutri_sources(product, product_weight_in_basket)
+
+                # product_nutrients_and_ofcom_values = self.prepare_product_nutrients_and_ofcom_values(product,
+                #                                                                                      product_size,
+                #                                                                                      quantity,
+                #                                                                                      quantity_unit)
+                # nutrient_potential += product_nutrients_and_ofcom_values
+
+            nutri_score_average_for_receipt, nutri_score_letter_for_receipt = self._calculate_nutri_score_from_list(
+                nutri_scores_by_receipt, product_weights_sum_by_receipt)
+
+            nutri_score_by_receipt.append({
+                'receipt_datetime': receipt_datetime_formatted,
+                'business_unit': receipt['business_unit'],
+                'nutri_score_average': nutri_score_letter_for_receipt,
+                'nutri_score_indexed': nutri_score_average_for_receipt,
+            })
+
+
+        # nutri_score_by_basket = self.calculate_nutri_score_by_basket(nutri_score_by_article)
+        # nutri_score_by_week = self.calculate_nutri_score_by_week(nutri_score_by_article)
+        # improvement_potential = self.calculate_improvement_potential(nutrient_potential)
+
+        result = {
+            'nutri_score_by_basket': nutri_score_by_receipt,
+            'nutri_score_by_week': self._get_nutri_score_info_by_week(),
+            'overall_purchase_statistics': {
+                'number_of_baskets': num_of_baskets,
+                'number_of_products': num_of_products,
+                'number_of_detected_products': num_of_known_products,
+                'total_weight_of_detected_products': total_weight_of_known_products,
+                'total_weight_unit': 'g',
+            },
+            'distribution_by_minor_category': self._get_nutri_score_info_by_minor_category(),
+            'nutrient_sources': self._get_nutri_sources(),
+            # 'nutri_score_by_basket': nutri_score_by_basket,
+            # 'nutri_score_by_week': nutri_score_by_week,
+            # 'improvement_potential': improvement_potential
+        }
+
+        DigitalReceipt.objects.bulk_create(digital_receipt_list)
+        return Response(result, status=status.HTTP_200_OK)
 
 class BasketAnalysisView(generics.GenericAPIView):
     serializer_class = DigitalReceiptSerializer
@@ -462,32 +821,17 @@ class SendReceiptsView(generics.GenericAPIView, mixins.ListModelMixin, mixins.Cr
                 if product is None:
                     continue
 
-                if article['quantity_unit'] in ['unit', 'units']:
-                    # Calculate units
-                    # Check if we have all the information to calculate nutri score:
-                    if not is_number(product.product_size):
-                        continue
 
-                    weight = float(product.product_size)
-                    if product.product_size_unit_of_measure.lower() in ["kg", "l"]:
-                        weight = float(product.product_size) * 1000  # weight in g or ml
+                try:
+                    nutri_score, product_weight_in_basket = calculate_nutri_score(product, article)
 
-                    product_weight_in_basket = digital_receipt.quantity * weight
-                elif article['quantity_unit'] in ['kg', 'g', 'l', 'ml']:
-                    # Calculate with weight
-                    weight = float(article['quantity'])
-                    if article['quantity_unit'] in ["kg", "l"]:
-                        weight = float(article['quantity']) * 1000  # weight in g or ml
+                    nutri_scores.append(nutri_score)
 
-
-                    product_weight_in_basket = weight
-                else:
+                    product_weights_sum += product_weight_in_basket
+                except ValueError:
+                    # To mimic old behaviour... We continue on these errors and do not include these scores
                     continue
 
-                nutri_score_number = NUTRI_SCORE_LETTER_TO_NUMBER_MAP[product.nutri_score_final]
-
-                nutri_scores.append(nutri_score_number * product_weight_in_basket)
-                product_weights_sum += product_weight_in_basket
 
 
             if not nutri_scores or product_weights_sum == 0:

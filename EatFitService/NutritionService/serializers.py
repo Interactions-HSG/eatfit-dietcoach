@@ -122,7 +122,7 @@ class ArticleSerializer(serializers.Serializer):
 
 
 class ReceiptSerializer(serializers.Serializer):
-    receipt_id = serializers.CharField()
+    receipt_id = serializers.CharField(required=False)
     business_unit = serializers.CharField()
     receipt_datetime = serializers.DateTimeField()
     items = ArticleSerializer(many=True)
