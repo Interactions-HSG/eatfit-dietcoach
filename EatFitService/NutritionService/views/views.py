@@ -104,11 +104,13 @@ def calculate_nutri_score(product, article):
 
     return (nutri_score, product_weight_in_basket)
 
-class BasketDetailedAnalysisView(generics.GenericAPIView):
+from rest_framework.views import APIView
+class BasketDetailedAnalysisView(APIView):
     serializer_class = DigitalReceiptSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-    def _reset_data(self):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.nutri_score_by_week = {}
         self.nutri_score_by_minor_category = {}
         self.nutri_sources = {}
@@ -191,8 +193,10 @@ class BasketDetailedAnalysisView(generics.GenericAPIView):
     def _add_FVPN_nutri_source_fact(self, product_weight, product):
         nutrient_name = "FVPN"
 
-        if product_weight <= 0 or product.health_percentage is None:
-            return
+        if product.health_percentage is None:
+            health_percentage = 0
+        else:
+            health_percentage = product.health_percentage
 
         try:
             nutri_score_fact = NutriScoreFacts.objects.get(product=product)
@@ -202,20 +206,23 @@ class BasketDetailedAnalysisView(generics.GenericAPIView):
                     'weighted_ofcom_values': [],
                     'unit': "g",
                     'amount': 0,
+                    'weighted_amount': 0,
                     'categories': {}
                 }
 
-            ofcom_amount = product_weight*product.health_percentage/100
-            weighted_ofcom_value = nutri_score_fact.ofcom_p_fvpn * ofcom_amount
+            weighted_ofcom_value = nutri_score_fact.ofcom_p_fvpn * product_weight
             self.nutri_sources[nutrient_name]['weighted_ofcom_values'].append(weighted_ofcom_value)
-            self.nutri_sources[nutrient_name]['amount'] += ofcom_amount
+            self.nutri_sources[nutrient_name]['weighted_amount'] += product_weight
+
+            amount = product_weight*health_percentage/100
+            self.nutri_sources[nutrient_name]['amount'] += amount
 
             minor_category_id = product.minor_category_id
 
             if minor_category_id not in self.nutri_sources[nutrient_name]['categories']:
                 self.nutri_sources[nutrient_name]['categories'][minor_category_id] = []
 
-            self.nutri_sources[nutrient_name]['categories'][minor_category_id].append(ofcom_amount)
+            self.nutri_sources[nutrient_name]['categories'][minor_category_id].append(amount)
         except NutriScoreFacts.DoesNotExist:
             return
 
@@ -300,7 +307,10 @@ class BasketDetailedAnalysisView(generics.GenericAPIView):
             }
 
             if 'weighted_ofcom_values' in value:
-                nutrient_data['ofcom_point_average'] = round(sum(value['weighted_ofcom_values'])/value['amount'], 9)
+                amount = value['amount']
+                if 'weighted_amount' in value:
+                    amount = value['weighted_amount']
+                nutrient_data['ofcom_point_average'] = round(sum(value['weighted_ofcom_values'])/amount, 9)
 
             for cat_id, cat_amount in value['categories'].items():
                 cat_amout_sum = sum(cat_amount)
@@ -344,8 +354,6 @@ class BasketDetailedAnalysisView(generics.GenericAPIView):
         num_of_known_products = 0
         total_weight_of_known_products = 0
 
-        self._reset_data()
-
         for receipt in receipt_list:
             receipt_datetime = receipt['receipt_datetime']
             receipt_datetime_formatted = receipt_datetime.strftime('%Y-%m-%dT%H:%M:%SZ')
@@ -378,15 +386,6 @@ class BasketDetailedAnalysisView(generics.GenericAPIView):
 
                 total_weight_of_known_products += product_weight_in_basket
 
-                # nutri_score_by_article.append({
-                #     'name_of_calendar_week': calendar_week,
-                #     'year_of_receipt': year_of_receipt,
-                #     'nutri_score': nutri_score,
-                #     'product_weight': product_weight_in_basket,
-                #     'receipt_datetime': receipt_datetime_formatted,
-                #     'business_unit': receipt['business_unit'],
-                # })
-
                 nutri_scores_by_receipt.append(nutri_score)
                 product_weights_sum_by_receipt += product_weight_in_basket
 
@@ -394,12 +393,6 @@ class BasketDetailedAnalysisView(generics.GenericAPIView):
                 self._add_nutri_score_by_minor_category(product, nutri_score,
                                                         product_weight_in_basket)
                 self._add_product_for_nutri_sources(product, product_weight_in_basket)
-
-                # product_nutrients_and_ofcom_values = self.prepare_product_nutrients_and_ofcom_values(product,
-                #                                                                                      product_size,
-                #                                                                                      quantity,
-                #                                                                                      quantity_unit)
-                # nutrient_potential += product_nutrients_and_ofcom_values
 
             nutri_score_average_for_receipt, nutri_score_letter_for_receipt = self._calculate_nutri_score_from_list(
                 nutri_scores_by_receipt, product_weights_sum_by_receipt)
@@ -412,13 +405,10 @@ class BasketDetailedAnalysisView(generics.GenericAPIView):
             })
 
 
-        # nutri_score_by_basket = self.calculate_nutri_score_by_basket(nutri_score_by_article)
-        # nutri_score_by_week = self.calculate_nutri_score_by_week(nutri_score_by_article)
-        # improvement_potential = self.calculate_improvement_potential(nutrient_potential)
-
         result = {
             'nutri_score_by_basket': nutri_score_by_receipt,
             'nutri_score_by_week': self._get_nutri_score_info_by_week(),
+            
             'overall_purchase_statistics': {
                 'number_of_baskets': num_of_baskets,
                 'number_of_products': num_of_products,
@@ -426,11 +416,9 @@ class BasketDetailedAnalysisView(generics.GenericAPIView):
                 'total_weight_of_detected_products': total_weight_of_known_products,
                 'total_weight_unit': 'g',
             },
+            
             'distribution_by_minor_category': self._get_nutri_score_info_by_minor_category(),
             'nutrient_sources': self._get_nutri_sources(),
-            # 'nutri_score_by_basket': nutri_score_by_basket,
-            # 'nutri_score_by_week': nutri_score_by_week,
-            # 'improvement_potential': improvement_potential
         }
 
         DigitalReceipt.objects.bulk_create(digital_receipt_list)
