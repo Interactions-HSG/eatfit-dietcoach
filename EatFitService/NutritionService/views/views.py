@@ -116,7 +116,10 @@ class BasketDetailedAnalysisView(APIView):
         self.nutri_sources = {}
 
     def _calculate_nutri_score_from_list(self, nutri_scores: list, total_weight: int ):
-        total_nutri_score_raw = sum(nutri_scores) / total_weight
+        if total_weight == 0:
+            total_nutri_score_raw = sum(nutri_scores)
+        else:
+            total_nutri_score_raw = sum(nutri_scores) / total_weight
         total_nutri_score_letter = nutri_score_number_to_letter(total_nutri_score_raw)
         total_nutri_score_raw = round(total_nutri_score_raw, 9)
 
