@@ -18,6 +18,55 @@ RECEIPTS_KEY = 'receipts'
 errors = SendReceiptsErrors()
 
 @pytest.mark.django_db
+def test_receipt2nutrition_partner_not_found():
+    user = User.objects.create_user(username='test', password='test')
+    r2n_partner = mommy.make(ReceiptToNutritionPartner, user=user, name='Kevin')
+    r2n_user = mommy.make(ReceiptToNutritionUser, r2n_partner=r2n_partner, r2n_username='Kevin')
+
+    TEST_DATA['r2n_partner'] = "nobody"
+    TEST_DATA['r2n_username'] = "nobody"
+
+    api_client = APIRequestFactory()
+    view = views.SendReceiptsView.as_view()
+    url = reverse('send-receipts')
+    request = api_client.post(url, TEST_DATA, format='json')
+    force_authenticate(request, user=user)
+    response = view(request)
+
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+
+@pytest.mark.django_db
+def test_receipt2nutrition_partner_not_exists():
+    user = User.objects.create_user(username='test', password='test')
+
+    api_client = APIRequestFactory()
+    view = views.SendReceiptsView.as_view()
+    url = reverse('send-receipts')
+    request = api_client.post(url, TEST_DATA, format='json')
+    force_authenticate(request, user=user)
+    response = view(request)
+
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+
+@pytest.mark.django_db
+def test_receipt2nutrition_partner_inactive():
+    user = User.objects.create_user(username='test', password='test')
+    r2n_partner = mommy.make(ReceiptToNutritionPartner, user=user, name='Kevin')
+    r2n_user = mommy.make(ReceiptToNutritionUser, r2n_partner=r2n_partner, r2n_username='Kevin', r2n_user_active=False)
+
+    TEST_DATA['r2n_partner'] = r2n_partner.name
+    TEST_DATA['r2n_username'] = r2n_user.r2n_username
+
+    api_client = APIRequestFactory()
+    view = views.SendReceiptsView.as_view()
+    url = reverse('send-receipts')
+    request = api_client.post(url, TEST_DATA, format='json')
+    force_authenticate(request, user=user)
+    response = view(request)
+
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+
+@pytest.mark.django_db
 def test_receipt2nutrition_partner_is_valid():
     """
     Assert that the r2n_user is a valid r2n_partner and can successfully call the API with matching product.
