@@ -119,3 +119,18 @@ def test_category_amount(fvpn_test_data, init_products, user):
                response_data['distribution_by_minor_category'])
     assert any(d['amount'] == 1000.0 for d in
                response_data['distribution_by_minor_category'])
+
+@pytest.mark.django_db
+def test_unknown_products(fvpn_test_data, user):
+    factory = APIRequestFactory()
+    request = factory.post('/receipt2nutrition/basket-detailed-analysis/', fvpn_test_data, format='json')
+    force_authenticate(request, user=user)
+    response = BasketDetailedAnalysisView.as_view()(request)
+    response_data = json.loads(response.rendered_content)
+
+    assert response_data['nutri_score_by_basket'][0]['nutri_score_average'] == 'unknown'
+    assert response_data['nutri_score_by_basket'][0]['nutri_score_indexed'] == 'unknown'
+
+    assert response_data['overall_purchase_statistics']['number_of_products'] == 2
+    assert response_data['overall_purchase_statistics']['number_of_detected_products'] == 0
+    assert response_data['overall_purchase_statistics']['total_weight_of_detected_products'] == 0
