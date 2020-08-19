@@ -33,7 +33,7 @@ from NutritionService.nutriscore.calculations import unit_of_measure_conversion
 from NutritionService.serializers import MinorCategorySerializer, MajorCategorySerializer, HealthTippSerializer, \
     ProductSerializer, DigitalReceiptSerializer, CurrentStudiesSerializer, Text2GTINSerializer
 from NutritionService.tasks import import_from_openfood
-
+from rest_framework.views import APIView
 from .errors import SendReceiptsErrors, BasketAnalysisErrors
 
 logger = logging.getLogger('NutritionService.views')
@@ -104,7 +104,7 @@ def calculate_nutri_score(product, article):
 
     return (nutri_score, product_weight_in_basket)
 
-from rest_framework.views import APIView
+
 class BasketDetailedAnalysisView(APIView):
     serializer_class = DigitalReceiptSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -313,7 +313,11 @@ class BasketDetailedAnalysisView(APIView):
                 amount = value['amount']
                 if 'weighted_amount' in value:
                     amount = value['weighted_amount']
-                nutrient_data['ofcom_point_average'] = round(sum(value['weighted_ofcom_values'])/amount, 9)
+
+                if amount == 0:
+                    nutrient_data['ofcom_point_average'] = 0
+                else:
+                    nutrient_data['ofcom_point_average'] = round(sum(value['weighted_ofcom_values'])/amount, 9)
 
             for cat_id, cat_amount in value['categories'].items():
                 cat_amout_sum = sum(cat_amount)
