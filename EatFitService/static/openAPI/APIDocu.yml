@@ -327,6 +327,205 @@ paths:
         '404':
           description: Unauthorized. Maybe you are not a "partner" and can not use this API endpoint. Or the fields "r2n_username" and "r2n_username" are missing.
 
+  /receipt2nutrition/basket-detailed-analysis/:
+    post:
+      summary: analyze a basket.
+      description: (/receipt2nutrition/basket-detailed-analysis/  description)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DigitalReceiptNoReceiptID'
+      responses:
+        '200':
+          description: Returns the analysis.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  nutri_score_by_basket:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        receipt_datetime:
+                          type: string
+                          format: date-time
+                          example: "2020-02-20T11:49:59Z"
+                        business_unit:
+                          type: string
+                          example: Migros
+                        nutri_score_average:
+                          type: string
+                          example: C
+                        nutri_score_indexed:
+                          type: number
+                          example: 2.5
+                  nutri_score_by_week:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name_calendar_week:
+                          type: string
+                          example: 2020-07
+                        nutri_score_average:
+                          type: string
+                          example: C
+                        nutri_score_indexed:
+                          type: number
+                          example: 2.5
+                        start_date:
+                          type: string
+                          example: "2020-02-17T00:00:00"
+                        end_date:
+                          type: string
+                          example: "2020-02-23T23:59:59"
+                  overall_purchase_statistics:
+                    type: object
+                    properties:
+                      number_of_baskets:
+                        type: integer
+                        format: int32
+                        example: 2
+                      number_of_products:
+                        type: integer
+                        format: int32
+                        example: 4
+                      number_of_detected_products:
+                        type: integer
+                        format: int32
+                        example: 2
+                      total_weight_of_detected_products:
+                        type: integer
+                        format: int32
+                        example: 3600
+                      total_weight_unit:
+                        type: string
+                        example: g
+                  distribution_by_minor_category:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        minor_category_id:
+                          type: integer
+                          format: int32
+                          example: 79
+                        amount:
+                          type: integer
+                          format: int32
+                          example: 3600
+                        unit:
+                          type: string
+                          example: g
+                  nutrient_sources:
+                    type: object
+                    properties:
+                      negative_nutrients:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            nutrient:
+                              type: string
+                              example: salt
+                            amount:
+                              type: integer
+                              format: int32
+                              example: 18
+                            unit:
+                              type: string
+                              example: g
+                            sources:
+                              type: array
+                              items:
+                                type: object
+                                properties:
+                                  minor_category_id:
+                                    type: integer
+                                    format: int32
+                                    example: 79
+                                  amount:
+                                    type: integer
+                                    format: int32
+                                    example: 18
+                                  unit:
+                                    type: string
+                                    example: g
+                            ofcom_point_average:
+                              type: integer
+                              format: int32
+                              example: 2
+                      positive_nutrients:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            nutrient:
+                              type: string
+                              example: protein
+                            amount:
+                              type: integer
+                              format: int32
+                              example: 684
+                            unit:
+                              type: string
+                              example: g
+                            sources:
+                              type: array
+                              items:
+                                type: object
+                                properties:
+                                  minor_category_id:
+                                    type: integer
+                                    format: int32
+                                    example: 79
+                                  amount:
+                                    type: integer
+                                    format: int32
+                                    example: 684
+                                  unit:
+                                    type: string
+                                    example: g
+                            ofcom_point_average:
+                              type: integer
+                              format: int32
+                              example: 5
+                      neutral_nutrients:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            nutrient:
+                              type: string
+                              example: totalCarbohydrate
+                            amount:
+                              type: integer
+                              format: int32
+                              example: 54
+                            unit:
+                              type: string
+                              example: g
+                            sources:
+                              type: array
+                              items:
+                                type: object
+                                properties:
+                                  minor_category_id:
+                                    type: integer
+                                    format: int32
+                                    example: 79
+                                  amount:
+                                    type: integer
+                                    format: int32
+                                    example: 54
+                                  unit:
+                                    type: string
+                                    example: g
+
 
 components:
   schemas:
@@ -565,6 +764,41 @@ components:
               business_unit:
                 type: string
               receipt_id:
+                type: string
+              receipt_datetime:
+                type: string
+
+    DigitalReceiptNoReceiptID:
+      type: object
+      properties:
+        r2n_username:
+          type: string
+        r2n_partner:
+          type: string
+        receipts:
+          type: array
+          items:
+            type: object
+            properties:
+              items:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    article_id:
+                      type: integer
+                      format: int32
+                    article_type:
+                      type: string
+                    quantity:
+                      type: number
+                    quantity_unit:
+                      type: string
+                    price:
+                      type: number
+                    price_currency:
+                      type: string
+              business_unit:
                 type: string
               receipt_datetime:
                 type: string
