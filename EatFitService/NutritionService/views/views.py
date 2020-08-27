@@ -176,9 +176,8 @@ class BasketDetailedAnalysisView(APIView):
         return data
 
     def _add_product_for_nutri_sources(self, product, amount):
-        try:
-            nutri_score_fact = NutriScoreFacts.objects.get(product=product)
-
+        nutri_score_fact = NutriScoreFacts.objects.filter(product=product).first()
+        if nutri_score_fact is not None:
             self._add_nutri_source_fact('salt', nutri_score_fact.ofcom_n_salt, SALT, amount, product)
             self._add_nutri_source_fact('saturatedFat', nutri_score_fact.ofcom_n_saturated_fat, SATURATED_FAT, amount, product)
             self._add_nutri_source_fact('sugars', nutri_score_fact.ofcom_n_sugars, SUGARS, amount, product)
@@ -186,8 +185,6 @@ class BasketDetailedAnalysisView(APIView):
             self._add_nutri_source_fact('protein', nutri_score_fact.ofcom_p_protein, PROTEIN, amount, product)
             self._add_nutri_source_fact('dietaryFiber', nutri_score_fact.ofcom_p_dietary_fiber, DIETARY_FIBER, amount, product)
 
-        except NutriScoreFacts.DoesNotExist:
-            pass
 
         self._add_FVPN_nutri_source_fact(amount, product)
 
@@ -203,7 +200,11 @@ class BasketDetailedAnalysisView(APIView):
             health_percentage = product.health_percentage
 
         try:
-            nutri_score_fact = NutriScoreFacts.objects.get(product=product)
+            nutri_score_fact = NutriScoreFacts.objects.filter(product=product).first()
+            if nutri_score_fact is None:
+                ofcom_fvpn = 0
+            else:
+                ofcom_fvpn = nutri_score_fact.ofcom_p_fvpn
 
             if nutrient_name not in self.nutri_sources:
                 self.nutri_sources[nutrient_name] = {
@@ -214,7 +215,7 @@ class BasketDetailedAnalysisView(APIView):
                     'categories': {}
                 }
 
-            weighted_ofcom_value = nutri_score_fact.ofcom_p_fvpn * product_weight
+            weighted_ofcom_value = ofcom_fvpn * product_weight
             self.nutri_sources[nutrient_name]['weighted_ofcom_values'].append(weighted_ofcom_value)
             self.nutri_sources[nutrient_name]['weighted_amount'] += product_weight
 
@@ -234,56 +235,55 @@ class BasketDetailedAnalysisView(APIView):
         if ofcom_value is None or product_weight <= 0:
             return
 
-        try:
-            nutrition_fact = NutritionFact.objects.get(product=product, name=nutrition_fact_lookup_name)
+        nutrition_fact = NutritionFact.objects.filter(product=product, name=nutrition_fact_lookup_name).first()
 
-            if nutrient_name not in self.nutri_sources:
-                self.nutri_sources[nutrient_name] = {
-                    'weighted_ofcom_values': [],
-                    'unit': nutrition_fact.unit_of_measure,
-                    'amount': 0,
-                    'categories': {}
-                }
-
-            ofcom_amount = (product_weight/100)*nutrition_fact.amount
-            weighted_ofcom_value = ofcom_value * ofcom_amount
-            self.nutri_sources[nutrient_name]['weighted_ofcom_values'].append(weighted_ofcom_value)
-            self.nutri_sources[nutrient_name]['amount'] += ofcom_amount
-
-            minor_category_id = product.minor_category_id
-
-            if minor_category_id not in self.nutri_sources[nutrient_name]['categories']:
-                self.nutri_sources[nutrient_name]['categories'][minor_category_id] = []
-
-            self.nutri_sources[nutrient_name]['categories'][minor_category_id].append(ofcom_amount)
-        except NutritionFact.DoesNotExist:
+        if nutrition_fact is None:
             return
+
+        if nutrient_name not in self.nutri_sources:
+            self.nutri_sources[nutrient_name] = {
+                'weighted_ofcom_values': [],
+                'unit': nutrition_fact.unit_of_measure,
+                'amount': 0,
+                'categories': {}
+            }
+
+        ofcom_amount = (product_weight/100)*nutrition_fact.amount
+        weighted_ofcom_value = ofcom_value * ofcom_amount
+        self.nutri_sources[nutrient_name]['weighted_ofcom_values'].append(weighted_ofcom_value)
+        self.nutri_sources[nutrient_name]['amount'] += ofcom_amount
+
+        minor_category_id = product.minor_category_id
+
+        if minor_category_id not in self.nutri_sources[nutrient_name]['categories']:
+            self.nutri_sources[nutrient_name]['categories'][minor_category_id] = []
+
+        self.nutri_sources[nutrient_name]['categories'][minor_category_id].append(ofcom_amount)
 
     def _add_neutral_nutri_source(self, nutrient_name, nutrition_fact_lookup_name, product_weight, product):
         if product_weight <= 0:
             return
 
-        try:
-            nutrition_fact = NutritionFact.objects.get(product=product, name=nutrition_fact_lookup_name)
-
-            if nutrient_name not in self.nutri_sources:
-                self.nutri_sources[nutrient_name] = {
-                    'unit': nutrition_fact.unit_of_measure,
-                    'amount': 0,
-                    'categories': {}
-                }
-
-            ofcom_amount = (product_weight/100)*nutrition_fact.amount
-            self.nutri_sources[nutrient_name]['amount'] += ofcom_amount
-
-            minor_category_id = product.minor_category_id
-
-            if minor_category_id not in self.nutri_sources[nutrient_name]['categories']:
-                self.nutri_sources[nutrient_name]['categories'][minor_category_id] = []
-
-            self.nutri_sources[nutrient_name]['categories'][minor_category_id].append(ofcom_amount)
-        except NutritionFact.DoesNotExist:
+        nutrition_fact = NutritionFact.objects.filter(product=product, name=nutrition_fact_lookup_name).first()
+        if nutrition_fact is None:
             return
+
+        if nutrient_name not in self.nutri_sources:
+            self.nutri_sources[nutrient_name] = {
+                'unit': nutrition_fact.unit_of_measure,
+                'amount': 0,
+                'categories': {}
+            }
+
+        ofcom_amount = (product_weight/100)*nutrition_fact.amount
+        self.nutri_sources[nutrient_name]['amount'] += ofcom_amount
+
+        minor_category_id = product.minor_category_id
+
+        if minor_category_id not in self.nutri_sources[nutrient_name]['categories']:
+            self.nutri_sources[nutrient_name]['categories'][minor_category_id] = []
+
+        self.nutri_sources[nutrient_name]['categories'][minor_category_id].append(ofcom_amount)
 
     def _get_nutri_sources(self):
         negative_nutrients_names = [
@@ -371,36 +371,45 @@ class BasketDetailedAnalysisView(APIView):
             product_weights_sum_by_receipt = 0
 
             for article in receipt['items']:
-                digital_receipt = DigitalReceipt(
-                    r2n_user=r2n_user,
-                    business_unit=receipt['business_unit'],
-                    receipt_datetime=receipt['receipt_datetime'],
-                    article_id=article['article_id'],
-                    article_type=article['article_type'],
-                    quantity=article['quantity'],
-                    quantity_unit=article['quantity_unit'],
-                    price=article['price'],
-                    price_currency=article['price_currency']
-                )
-                digital_receipt_list.append(digital_receipt)
-
-                product = match_receipt(digital_receipt)
+                product = None
                 num_of_products += 1
-                if product is None:
-                    continue
-                num_of_known_products += 1
+                try:
+                    digital_receipt = DigitalReceipt(
+                        r2n_user=r2n_user,
+                        business_unit=receipt['business_unit'],
+                        receipt_datetime=receipt['receipt_datetime'],
+                        article_id=article['article_id'],
+                        article_type=article['article_type'],
+                        quantity=article['quantity'],
+                        quantity_unit=article['quantity_unit'],
+                        price=article['price'],
+                        price_currency=article['price_currency']
+                    )
+                    digital_receipt_list.append(digital_receipt)
 
-                nutri_score, product_weight_in_basket = calculate_nutri_score(product, article)
+                    product = match_receipt(digital_receipt)
+                    if product is None or product.major_category_id in [20, 21] or product.nutri_score_final is None:
+                        continue
+                    num_of_known_products += 1
 
-                total_weight_of_known_products += product_weight_in_basket
+                    nutri_score, product_weight_in_basket = calculate_nutri_score(product, article)
 
-                nutri_scores_by_receipt.append(nutri_score)
-                product_weights_sum_by_receipt += product_weight_in_basket
+                    total_weight_of_known_products += product_weight_in_basket
 
-                self._add_nutri_score_by_week(year_of_receipt, calendar_week, nutri_score, product_weight_in_basket)
-                self._add_nutri_score_by_minor_category(product, nutri_score,
-                                                        product_weight_in_basket)
-                self._add_product_for_nutri_sources(product, product_weight_in_basket)
+                    nutri_scores_by_receipt.append(nutri_score)
+                    product_weights_sum_by_receipt += product_weight_in_basket
+
+                    self._add_nutri_score_by_week(year_of_receipt, calendar_week, nutri_score, product_weight_in_basket)
+                    self._add_nutri_score_by_minor_category(product, nutri_score,
+                                                            product_weight_in_basket)
+                    self._add_product_for_nutri_sources(product, product_weight_in_basket)
+                except Exception as e:
+                    gtin = 0
+                    if product and product.gtin is not None:
+                        gtin = product.gtin
+                    ErrorLog.objects.create(gtin=gtin, reporting_app="basket-detailed-analysis",
+                                            error_description=f'Unknown error: {getattr(e, "message", str(e))}')
+
 
             nutri_score_average_for_receipt, nutri_score_letter_for_receipt = self._calculate_nutri_score_from_list(
                 nutri_scores_by_receipt, product_weights_sum_by_receipt)
