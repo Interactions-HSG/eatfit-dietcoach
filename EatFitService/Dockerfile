@@ -1,6 +1,6 @@
-FROM python:3.6-stretch
+FROM python:3.6
 RUN apt-get update
-RUN apt-get install -y apt-utils supervisor python3 python3-dev default-libmysqlclient-dev build-essential unixodbc unixodbc-dev apache2 apache2-utils apache2-dev
+RUN apt-get install -y supervisor python3 python3-dev default-libmysqlclient-dev build-essential unixodbc unixodbc-dev apache2 apache2-utils apache2-dev
 RUN apt-get clean
 RUN rm -rf /var/lib/apt/lists/*
 RUN mkdir -p /etc/letsencrypt/live/localhost
